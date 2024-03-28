@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}}</title>
+</head>
+<body>
+
+    <header>
+        <h1>{{.Title}}</h1>
+    </header>
+
+    <main>
+        <section>
+            <h2>Items</h2>
+
+            <ul>
+                {{range .Items}}
+                    <li>
+                        <h3><a href="/items/{{.ID}}">{{.Title}}</a></h3>
+                    </li>
+                {{end}}
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>Donations and Private messages: </p>
+        <p><span class="address">{{.Address}}</span></p>
+        <p>&copy; 2024 | secretnamebasis </p>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!-- public/item_detail.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}}</title>
+
+</head>
+<body>
+
+    <header>
+        <h1>{{.Title}}</h1>
+    </header>
+
+    <main>
+        <h2>{{.Item.Title}}</h2>
+        <p style="white-space: pre-line;">{{.Item.Content}}</p>
+        <p><em>Created: {{.Item.CreatedAt}}</em></p>
+    </main>
+
+    <footer>
+        <p>Donations and Private messages: </p>
+        <p><span class="address">{{.Address}}</span></p>
+        <p>&copy; 2024 | secretnamebasis </p>
+    </footer>
+
+</body>
+</html>
