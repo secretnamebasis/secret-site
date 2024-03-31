@@ -23,21 +23,31 @@ func Draw(app *fiber.App) {
 func defineViewsRoutes(app *fiber.App, mw *middleware.Middleware) {
 	// Create a route group for views
 	viewsGroup := app.Group("/")
-	viewsGroup.Use(mw.HelmetMiddleware(), mw.LogRequests(), mw.RateLimiter())
+	viewsGroup.Use(
+		mw.HelmetMiddleware(),
+		mw.LogRequests(),
+		mw.RateLimiter(),
+	)
 
 	// Define view routes
 	viewsGroup.Get("/", views.Home)
+	viewsGroup.Get("/about", views.About)
 	viewsGroup.Get("/items/:id", views.Item)
-	viewsGroup.Get("/api/ping", api.Ping)
 }
 
 // defineAPIRoutes defines routes for APIs
 func defineAPIRoutes(app *fiber.App, mw *middleware.Middleware) {
 	// Create a route group for API endpoints
 	apiGroup := app.Group("/api")
+	apiGroup.Get("/ping", api.Ping)
 
 	// Apply middleware for API endpoints
-	apiGroup.Use(mw.HelmetMiddleware(), mw.AuthRequired(), mw.LogRequests(), mw.RateLimiter())
+	apiGroup.Use(
+		mw.HelmetMiddleware(),
+		// mw.AuthRequired(),
+		mw.LogRequests(),
+		mw.RateLimiter(),
+	)
 
 	// Define API routes for items
 	items := apiGroup.Group("/items")

@@ -9,26 +9,33 @@ import (
 	"github.com/secretnamebasis/secret-site/app/models"
 )
 
-// CreateUser creates a new user in the database
+// CreateUserHandler creates a new user via HTTP request
 func CreateUser(c *fiber.Ctx) error {
 	var newUser models.User
 
-	if err := c.BodyParser(&newUser); err != nil || newUser.User == "" || newUser.Wallet == "" {
+	// Parse request body
+	if err := c.BodyParser(&newUser); err != nil {
 		return ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
 	}
 
-	nextID, _ := controllers.NextUserID()
-	password := uuid.New().String()
-
-	user := models.User{
-		ID:        nextID,
-		User:      newUser.User,
-		Wallet:    newUser.Wallet,
-		Password:  password,
-		CreatedAt: time.Now(),
+	// Validate user data
+	if err := validateUserData(newUser); err != nil {
+		return ErrorResponse(c, fiber.StatusBadRequest, err.Error())
 	}
 
-	if err := controllers.CreateUser(user); err != nil {
+	// Check if user already exists
+	if err := checkUserExistence(newUser); err != nil {
+		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	// Validate user wallet
+	if err := validateWalletAddress(newUser.Wallet); err != nil {
+		return ErrorResponse(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	// Generate ID and password
+	user, err := createUserRecord(newUser)
+	if err != nil {
 		return ErrorResponse(c, fiber.StatusInternalServerError, "Error creating user")
 	}
 
@@ -61,8 +68,24 @@ func UpdateUser(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var updatedUser models.User
 
-	if err := c.BodyParser(&updatedUser); err != nil || updatedUser.User == "" || updatedUser.Wallet == "" {
+	// Parse request body
+	if err := c.BodyParser(&updatedUser); err != nil {
 		return ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
+	}
+
+	// Validate user data
+	if err := validateUserData(updatedUser); err != nil {
+		return ErrorResponse(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	// Check if user already exists
+	if err := checkUserExistence(updatedUser); err != nil {
+		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	// Validate user data
+	if err := validateWalletAddress(updatedUser.Wallet); err != nil {
+		return ErrorResponse(c, fiber.StatusBadRequest, err.Error())
 	}
 
 	if err := controllers.UpdateUser(id, updatedUser); err != nil {
@@ -76,9 +99,39 @@ func UpdateUser(c *fiber.Ctx) error {
 func DeleteUser(c *fiber.Ctx) error {
 	id := c.Params("id")
 
+	// Check if the user exists
+	_, err := controllers.GetUserByID(id)
+	if err != nil {
+		return ErrorResponse(c, fiber.StatusNotFound, "User not found")
+	}
+
+	// Delete the user
 	if err := controllers.DeleteUser(id); err != nil {
 		return ErrorResponse(c, fiber.StatusInternalServerError, "Error deleting user")
 	}
 
 	return SuccessResponse(c, fiber.Map{"message": "User deleted successfully"})
+}
+
+// createUserRecord creates a new user record in the database
+func createUserRecord(newUser models.User) (models.User, error) {
+	// Generate ID and password
+	nextID, _ := controllers.NextUserID()
+	password := uuid.New().String()
+
+	user := models.User{
+		ID:        nextID,
+		User:      newUser.User,
+		Wallet:    newUser.Wallet,
+		Password:  password,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	err := controllers.CreateUserRecord(user)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	return user, nil
 }

@@ -8,4 +8,5 @@ type User struct {
 	Wallet    string    `json:"wallet"`
 	Password  string    `json:"password"`
 	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }

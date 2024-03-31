@@ -1,0 +1,5 @@
+ENDPOINT="http://127.0.0.1:3000/api/users"
+CREATE_ADDRESS_FAIL="dero1qynmz4tgkmtmmspqmywvjjmtl0x8vn5ahz4xwaldw0hu6r5500hryqgptvnj"
+UPDATE_ADDRESS_FAIL="dero1qyvqpdftj8r6005xs20rnflakmwa5pdxg9vcjzdcuywq2t8skqhvwqglt6x0"
+CREATE_ADDRESS_SUCCESS="dero1qynmz4tgkmtmmspqmywvjjmtl0x8vn5ahz4xwaldw0hu6r5500hryqgptvnj8"
+UPDATE_ADDRESS_SUCCESS="dero1qyvqpdftj8r6005xs20rnflakmwa5pdxg9vcjzdcuywq2t8skqhvwqglt6x0g"

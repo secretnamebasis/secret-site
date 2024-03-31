@@ -1,6 +1,8 @@
 package exports
 
-import "github.com/deroproject/derohe/rpc"
+import (
+	"github.com/deroproject/derohe/rpc"
+)
 
 const (
 	APP_NAME    = "secret-site"
@@ -8,6 +10,7 @@ const (
 )
 
 var (
+	Env               string
 	DeroAddress       *rpc.Address
 	DeroAddressResult rpc.GetAddress_Result
 )

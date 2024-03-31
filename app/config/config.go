@@ -11,6 +11,7 @@ import (
 // Config struct to hold configuration parameters
 type Server struct {
 	Port int
+	Env  string
 }
 
 // Config func to get env value from key

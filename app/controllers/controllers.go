@@ -13,13 +13,23 @@ const (
 )
 
 // CreateItem creates a new item in the database.
-func CreateItem(item models.Item) error {
+func CreateItemRecord(item models.Item) error {
 	return db.CreateRecord(bucketItems, item)
 }
 
 // CreateUser creates a new user in the database.
-func CreateUser(user models.User) error {
+func CreateUserRecord(user models.User) error {
 	return db.CreateRecord(bucketUsers, user)
+}
+
+// GetUserByUsername retrieves a user by username from the database
+func GetUserByUsername(username string) (*models.User, error) {
+	return db.GetUserByField("user", username)
+}
+
+// GetUserByWallet retrieves a user by wallet address from the database
+func GetUserByWallet(wallet string) (*models.User, error) {
+	return db.GetUserByField("wallet", wallet)
 }
 
 // AllItems retrieves all items from the database.

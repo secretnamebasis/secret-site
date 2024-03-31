@@ -22,7 +22,7 @@ type HomeData struct {
 // Home renders the home page
 func Home(c *fiber.Ctx) error {
 	// Fetch Dero wallet address
-	if err := dero.Address(); err != nil {
+	if err := dero.GetWalletAddress(); err != nil {
 		return fiber.NewError(http.StatusInternalServerError, "Failed to fetch Dero wallet address")
 	}
 

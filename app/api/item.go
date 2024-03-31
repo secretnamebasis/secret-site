@@ -24,7 +24,7 @@ func CreateItem(c *fiber.Ctx) error {
 		CreatedAt: time.Now(),
 	}
 
-	if err := controllers.CreateItem(item); err != nil {
+	if err := controllers.CreateItemRecord(item); err != nil {
 		return ErrorResponse(c, fiber.StatusInternalServerError, "Error creating item")
 	}
 

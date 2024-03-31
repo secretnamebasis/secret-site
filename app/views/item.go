@@ -19,7 +19,7 @@ type ItemData struct {
 }
 
 func Item(c *fiber.Ctx) error {
-	if err := dero.Address(); err != nil {
+	if err := dero.GetWalletAddress(); err != nil {
 		return err
 	}
 

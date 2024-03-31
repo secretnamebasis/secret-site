@@ -9,12 +9,15 @@ import (
 	"github.com/ybbus/jsonrpc"
 )
 
-func Call(
-	endpoint string,
-	object interface{},
-	method string,
-) error {
-	// Create options for the JSON-RPC client
+// CallRPCNode is a generic function to make JSON-RPC calls to the DERO node.
+func CallRPCNode(endpoint string, object interface{}, method string, params interface{}) error {
+	rpcClient := jsonrpc.NewClient(endpoint)
+	err := rpcClient.CallFor(&object, method, params)
+	return err
+}
+
+// CallRPCWallet is a generic function to make JSON-RPC calls to the DERO wallet.
+func CallRPCWallet(endpoint string, object interface{}, method string, params interface{}) error {
 	opts := &jsonrpc.RPCClientOpts{
 		CustomHeaders: map[string]string{
 			"Authorization": "Basic " +
@@ -27,41 +30,58 @@ func Call(
 				),
 		},
 	}
-	rpcClient := jsonrpc.NewClientWithOpts(
-		endpoint,
-		opts,
-	)
-
-	err := rpcClient.CallFor(&object, method)
-
+	rpcClient := jsonrpc.NewClientWithOpts(endpoint, opts)
+	err := rpcClient.CallFor(&object, method, params)
 	return err
 }
 
-func Address() error {
+// GetWalletAddress fetches the DERO wallet address.
+func GetWalletAddress() error {
 	endpoint := "http://" +
-		config.Env("DERO_SERVER_IP") +
+		config.Env("DERO_WALLET_IP") +
 		":" +
 		config.Env("DERO_WALLET_PORT") +
 		"/json_rpc"
-
-	err := Call(
-		endpoint,
-		&exports.DeroAddressResult,
-		"GetAddress",
-	)
-
+	params := map[string]interface{}{}
+	err := CallRPCWallet(endpoint, &exports.DeroAddressResult, "GetAddress", params)
 	if err != nil {
 		return err
 	}
+	_, err = rpc.NewAddress(exports.DeroAddressResult.Address)
+	return err
+}
 
-	exports.DeroAddress,
-		err = rpc.NewAddress(
-		exports.DeroAddressResult.Address,
-	)
+// GetEncryptedBalanceResponse represents the JSON-RPC response for encrypted balance.
+type GetEncryptedBalanceResponse struct {
+	JSONRPC string `json:"jsonrpc"`
+	ID      string `json:"id"`
+	Result  struct {
+		SCID         string `json:"scid"`
+		Data         string `json:"data"`
+		Registration int    `json:"registration"`
+		Bits         int    `json:"bits"`
+		Height       int    `json:"height"`
+		TopoHeight   int    `json:"topoheight"`
+		BlockHash    string `json:"blockhash"`
+		TreeHash     string `json:"treehash"`
+		DHeight      int    `json:"dheight"`
+		DTopoHeight  int    `json:"dtopoheight"`
+		DTreeHash    string `json:"dtreehash"`
+		Status       string `json:"status"`
+	} `json:"result"`
+}
 
-	if err != nil {
-		return err
+// GetEncryptedBalance fetches the encrypted balance for the given address.
+func GetEncryptedBalance(address string) (*GetEncryptedBalanceResponse, error) {
+	endpoint := "http://" + config.Env("DERO_NODE_IP") + ":" + config.Env("DERO_NODE_PORT") + "/json_rpc"
+	params := map[string]interface{}{
+		"address":    address,
+		"topoheight": -1,
 	}
-
-	return nil
+	var response GetEncryptedBalanceResponse
+	err := CallRPCNode(endpoint, &response, "DERO.GetEncryptedBalance", params)
+	if err != nil {
+		return nil, err
+	}
+	return &response, nil
 }

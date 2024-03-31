@@ -3,25 +3,30 @@ package db
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"reflect"
 	"strconv"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/secretnamebasis/secret-site/app/exports"
 	"github.com/secretnamebasis/secret-site/app/models"
 
 	"go.etcd.io/bbolt"
 )
 
 var (
-	DB           *bbolt.DB
-	itemsBucket  = []byte("items")
-	usersBucket  = []byte("users")
-	databasePath = "database/" + exports.APP_NAME + ".db"
+	DB          *bbolt.DB
+	itemsBucket = []byte("items")
+	usersBucket = []byte("users")
 )
 
-func InitDB() error {
+func InitDB(env string) error {
+	var databasePath = "database/" + env + ".db"
 	var err error
+	if err := os.MkdirAll("database", 0755); err != nil {
+		return err
+	}
+
 	DB, err = bbolt.Open(databasePath, 0600, nil)
 	if err != nil {
 		return err
@@ -120,6 +125,44 @@ func GetRecordByID(bucketName, id string, record interface{}) error {
 	})
 }
 
+// getUserByField retrieves a user by a specific field (e.g., username or wallet) from the database
+func GetUserByField(field string, value string) (*models.User, error) {
+	var user models.User
+	err := DB.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte("users"))
+		if b == nil {
+			return fmt.Errorf("bucket %q not found ", "users")
+		}
+
+		// Iterate through the bucket to find the user by the specified field
+		c := b.Cursor()
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			var u models.User
+			if err := json.Unmarshal(v, &u); err != nil {
+				return err
+			}
+			if field == "username" && u.User == value {
+				user = u
+				return nil
+			} else if field == "wallet" && u.Wallet == value {
+				user = u
+				return nil
+			}
+		}
+		return nil // User not found
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if user.ID == 0 {
+		return nil, nil // User not found
+	}
+
+	return &user, nil
+}
+
 // UpdateRecord updates a record in the specified bucket with the provided ID and updated data.
 func UpdateRecord(bucketName, id string, updatedRecord interface{}) error {
 	return DB.Update(func(tx *bbolt.Tx) error {
@@ -149,6 +192,7 @@ func UpdateRecord(bucketName, id string, updatedRecord interface{}) error {
 			// Preserve the ID and creation timestamp
 			updatedRecord.ID = existingItem.ID
 			updatedRecord.CreatedAt = existingItem.CreatedAt
+			updatedRecord.UpdatedAt = time.Now()
 		case *models.User:
 			var existingUser models.User
 			if err := json.Unmarshal(recordJSON, &existingUser); err != nil {
@@ -171,6 +215,7 @@ func UpdateRecord(bucketName, id string, updatedRecord interface{}) error {
 			// Preserve the ID and creation timestamp
 			updatedRecord.ID = existingUser.ID
 			updatedRecord.CreatedAt = existingUser.CreatedAt
+			updatedRecord.UpdatedAt = time.Now()
 		default:
 			return fmt.Errorf("unsupported record type")
 		}
