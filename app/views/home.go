@@ -21,8 +21,8 @@ type HomeData struct {
 
 // Home renders the home page
 func Home(c *fiber.Ctx) error {
-	// Fetch Dero wallet address
-	if err := dero.GetWalletAddress(); err != nil {
+	addr, err := dero.GetWalletAddress()
+	if err != nil {
 		return fiber.NewError(http.StatusInternalServerError, "Failed to fetch Dero wallet address")
 	}
 
@@ -35,7 +35,7 @@ func Home(c *fiber.Ctx) error {
 	// Define data for rendering the template
 	data := HomeData{
 		Title:   exports.APP_NAME,
-		Address: exports.DeroAddress.String(),
+		Address: addr.String(),
 		Items:   items,
 	}
 

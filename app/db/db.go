@@ -242,7 +242,8 @@ func DeleteRecord(bucketName, id string) error {
 			}
 
 			return nil
-		})
+		},
+	)
 }
 
 func NextID(bucketName string) (int, error) {

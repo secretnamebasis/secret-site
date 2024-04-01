@@ -19,10 +19,10 @@ type ItemData struct {
 }
 
 func Item(c *fiber.Ctx) error {
-	if err := dero.GetWalletAddress(); err != nil {
-		return err
+	addr, err := dero.GetWalletAddress()
+	if err != nil {
+		return fiber.NewError(http.StatusInternalServerError, "Failed to fetch Dero wallet address")
 	}
-
 	id := c.Params("id")
 	item, err := controllers.GetItemByID(id)
 	if err != nil {
@@ -31,7 +31,7 @@ func Item(c *fiber.Ctx) error {
 
 	data := ItemData{
 		Title:   exports.APP_NAME,
-		Address: exports.DeroAddress.String(),
+		Address: addr.String(),
 		Item:    item,
 	}
 

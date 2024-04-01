@@ -55,22 +55,19 @@ if ! command_exists "screen"; then
     exit 1
 fi
 
-log_and_echo "info " "secret-site built under ./builds."
+log_and_echo "info" "secret-site built under ./builds."
 
-log "info" "secret-site is testing api"
+log_and_echo "info" "secret-site is testing api"
 
-# Run the test outside the screen session and redirect the output to a temporary file
-go test ./test/api_test.go > test_results.tmp
+test_output=$( go test ./test/api/api_test.go -v -parallel 2)
 
-# Run the test outside the screen session
-test_output=$(go test ./test/api_test.go)
+echo $test_output > test_results.tmp
 
 # Check if the test completed successfully
 if [[ $test_output != *"ok"* ]]; then
     log_and_echo "error" "Test failed. Test output: $test_output"
     exit 1
 fi
-
 
 # Check if the test completed successfully
 if [ $? -ne 0 ]; then

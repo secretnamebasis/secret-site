@@ -11,7 +11,8 @@ import (
 // Home renders the home page
 func About(c *fiber.Ctx) error {
 	// Fetch Dero wallet address
-	if err := dero.GetWalletAddress(); err != nil {
+	addr, err := dero.GetWalletAddress()
+	if err != nil {
 		return fiber.NewError(http.StatusInternalServerError, "Failed to fetch Dero wallet address")
 	}
 
@@ -21,7 +22,7 @@ func About(c *fiber.Ctx) error {
 		Address string
 	}{
 		Title:   exports.APP_NAME,
-		Address: exports.DeroAddress.String(),
+		Address: addr.String(),
 	}
 
 	// Render the template

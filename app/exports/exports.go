@@ -11,6 +11,7 @@ const (
 
 var (
 	Env               string
+	ProjectDir        string
 	DeroAddress       *rpc.Address
 	DeroAddressResult rpc.GetAddress_Result
 )

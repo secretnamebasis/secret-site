@@ -21,20 +21,20 @@ perform_action() {
 check_users() {
     perform_action \
         "GET" \
-        "$ENDPOINT"
+        "$ENDPOINT/users"
 }
 
 retrieve_user() {
     local id="$1"
     perform_action \
         "GET" \
-        "$ENDPOINT/$id"
+        "$ENDPOINT/users/$id"
 }
 
 create_fail() {
     perform_action \
         "POST" \
-        "$ENDPOINT" \
+        "$ENDPOINT/users" \
         '{
             "user":"secret",
             "wallet":"'"$CREATE_ADDRESS_FAIL"'"
@@ -44,7 +44,7 @@ create_fail() {
 create_success() {
     perform_action \
         "POST" \
-        "$ENDPOINT" \
+        "$ENDPOINT/users" \
         '{
             "user":"secret",
             "wallet":"'"$CREATE_ADDRESS_SUCCESS"'"
@@ -55,7 +55,7 @@ update_fail() {
     local id="$1"
     perform_action \
         "PUT" \
-        "$ENDPOINT/$id" \
+        "$ENDPOINT/users/$id" \
         '{
             "user":"secret",
             "wallet":"'"$UPDATE_ADDRESS_FAIL"'"
@@ -66,7 +66,7 @@ update_success() {
     local id="$1"
     perform_action \
         "PUT" \
-        "$ENDPOINT/$id" \
+        "$ENDPOINT/users/$id" \
         '{
             "user":"secret",
             "wallet":"'"$UPDATE_ADDRESS_SUCCESS"'"
@@ -77,7 +77,7 @@ delete_user() {
     local id="$1"
     perform_action \
         "DELETE" \
-        "$ENDPOINT/$id"
+        "$ENDPOINT/users/$id"
 }
 
 # Define actions and expected statuses

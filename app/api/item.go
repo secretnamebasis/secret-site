@@ -70,8 +70,12 @@ func UpdateItem(c *fiber.Ctx) error {
 
 func DeleteItem(c *fiber.Ctx) error {
 	id := c.Params("id")
-
-	err := controllers.DeleteItem(id)
+	// Check if the user exists
+	_, err := controllers.GetItemByID(id)
+	if err != nil {
+		return ErrorResponse(c, fiber.StatusNotFound, "User not found")
+	}
+	err = controllers.DeleteItem(id)
 	if err != nil {
 		return ErrorResponse(c, fiber.StatusInternalServerError, "Error deleting item")
 	}
