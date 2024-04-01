@@ -40,8 +40,18 @@ if ! command_exists "go"; then
     exit 1
 fi
 
-# Build the executable
-go build -o ./builds/ .
+# Get the current UTC date and time
+BUILD_DATE=$(date -u '+%Y-%m-%d_%H-%M-%S')
+
+# Get the current Git commit hash
+GIT_COMMIT=$(git rev-parse --short HEAD)
+
+# Set the name of the executable
+EXECUTABLE_NAME="secret-site_${BUILD_DATE}_${GIT_COMMIT}"
+
+# Build the executable with the dynamic name
+go build -ldflags="-X 'main.BuildDate=${BUILD_DATE}' -X 'main.GitCommit=${GIT_COMMIT}'" -o "./builds/${EXECUTABLE_NAME}" .
+
 
 # Check if the build was successful
 if [ $? -ne 0 ]; then
@@ -59,7 +69,7 @@ log_and_echo "info" "secret-site built under ./builds."
 
 log_and_echo "info" "secret-site is testing api"
 
-test_output=$( go test ./test/api/api_test.go -v -parallel 2)
+test_output=$( go test ./test/api_test.go -v -parallel 2)
 
 echo $test_output > test_results.tmp
 
