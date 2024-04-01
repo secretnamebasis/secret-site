@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -98,7 +99,8 @@ var (
 	}
 
 	// Test cases
-	testCases = []testCase{
+
+	itemTestCases = []testCase{
 		// Item test cases
 		{
 			"CheckItems",
@@ -148,7 +150,9 @@ var (
 			"Retrieve when Item 1 is deleted",
 			retrieveItemFailTest,
 		},
+	}
 
+	userTestCases = []testCase{
 		// User test cases
 		{
 			"CheckUsers",
@@ -308,16 +312,40 @@ func performAction(method, url string, data interface{}) (string, error) {
 
 // Run tests
 func runTests(t *testing.T) {
+	runTestGroupParallel(t, "UserTests", userTestCases)
+	runTestGroupParallel(t, "ItemTests", itemTestCases)
+}
 
+// Run test group in parallel
+func runTestGroupParallel(t *testing.T, groupName string, testCases []testCase) {
 	log.Printf("Environment: %s\n", c.Env)
 
 	// Allow some time for the server to start
 	time.Sleep(delay)
 
-	for _, tc := range testCases {
-		tc := tc // Capture range variable
-		t.Run(tc.name, tc.fn)
-	}
+	// Run test cases in parallel
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+		runTestGroup(t, groupName, testCases)
+	}()
+
+	wg.Wait()
+}
+
+func runTestGroup(t *testing.T, groupName string, testCases []testCase) {
+	t.Run(
+		groupName,
+		func(t *testing.T) {
+			t.Parallel()
+			for _, tc := range testCases {
+				tc := tc // Capture range variable
+				t.Run(tc.name, tc.fn)
+			}
+		},
+	)
 }
 
 // ITEM
@@ -334,7 +362,7 @@ func checkItemsTest(t *testing.T) {
 }
 
 // CREATE
-//
+
 // CREATE FAIL
 func createItemFail() (string, error) {
 	return performAction("POST", endpoint+routeApiItems, failItemCreateData)
@@ -367,7 +395,7 @@ func retrieveItemFailTest(t *testing.T) {
 }
 
 // UPDATE
-//
+
 // UPDATE FAIL
 func updateItemFail() (string, error) {
 	return performAction("PUT", fmt.Sprintf("%s/1", endpoint+routeApiItems), failItemUpdateData)
@@ -389,20 +417,18 @@ func deleteItem() (string, error) {
 	return performAction("DELETE", fmt.Sprintf("%s/1", endpoint+routeApiItems), nil)
 }
 
-// DELETE SUCCESS
-func deleteItemSuccessTest(t *testing.T) {
-	executeTest(t, deleteItem, "success")
-}
-
 // DELETE FAIL
 func deleteItemFailTest(t *testing.T) {
 	executeTest(t, deleteItem, "error")
 }
 
+// DELETE SUCCESS
+func deleteItemSuccessTest(t *testing.T) {
+	executeTest(t, deleteItem, "success")
+}
+
 // USER
 
-// Functions to perform User API CRUD actions
-//
 // Check all users
 func checkUsers() (string, error) {
 	return performAction("GET", endpoint+routeApiUsers, nil)
@@ -412,7 +438,7 @@ func checkUsersTest(t *testing.T) {
 }
 
 // CREATE
-//
+
 // CREATE FAIL
 func createUserFail() (string, error) {
 	return performAction("POST", endpoint+routeApiUsers, failUserCreateData)
@@ -445,7 +471,7 @@ func retrieveUserFailTest(t *testing.T) {
 }
 
 // UPDATE
-//
+
 // UPDATE FAIL
 func updateUserFail() (string, error) {
 	return performAction("PUT", fmt.Sprintf("%s/1", endpoint+routeApiUsers), failUserUpdateData)
@@ -467,12 +493,12 @@ func deleteUser() (string, error) {
 	return performAction("DELETE", fmt.Sprintf("%s/1", endpoint+routeApiUsers), nil)
 }
 
-// DELETE SUCCESS
-func deleteUserSuccessTest(t *testing.T) {
-	executeTest(t, deleteUser, "success")
-}
-
 // DELETE FAIL
 func deleteUserFailTest(t *testing.T) {
 	executeTest(t, deleteUser, "error")
+}
+
+// DELETE SUCCESS
+func deleteUserSuccessTest(t *testing.T) {
+	executeTest(t, deleteUser, "success")
 }

@@ -44,7 +44,7 @@ func defineAPIRoutes(app *fiber.App, mw *middleware.Middleware) {
 	// Apply middleware for API endpoints
 	apiGroup.Use(
 		mw.HelmetMiddleware(),
-		// mw.AuthRequired(),
+		// mw.AuthRequired(), // would be nice to turn this on
 		mw.LogRequests(),
 		mw.RateLimiter(),
 	)
