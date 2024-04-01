@@ -76,6 +76,8 @@ echo $test_output > test_results.tmp
 # Check if the test completed successfully
 if [[ $test_output != *"ok"* ]]; then
     log_and_echo "error" "Test failed. Test output: $test_output"
+    # Remove the temporary file
+    rm test_results.tmp
     exit 1
 fi
 
