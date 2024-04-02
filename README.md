@@ -3,13 +3,15 @@
 This project is aimed at creating a very hardy and robust Go Fiber site that is integrated with DERO
 ## Arch
 The hefitest part of this project lies squarely on `GoFiber`
+The coolest feature included is the integration with `DERO`
 ## Design
 `secret-site` currently supports: 
 - Items { title: , content: }
+    - API encrypts & decrypts content
 - Users { user: , wallet: }
 
 ## Roadmap
-- current `db.go` is a `bbolt` implmentation, an encrypted database would be preferred
+- ~~current `db.go` is a `bbolt` implmentation, an encrypted database would be preferred~~
 - For testing purposes, user authentication is turned off; ideally, that would be on 
 - first-run script would be kind of cool
 
