@@ -181,7 +181,7 @@ var (
 		},
 		{
 			"Update when user is invalid",
-			updateFailTest,
+			updateUserFailTest,
 		},
 		{
 			"Retrieve when user 1 update fails",
@@ -239,6 +239,15 @@ func startServer() *app.App { // start the server
 	return a
 }
 
+// Run tests
+func runTests(t *testing.T) {
+	log.Printf("Environment: %s\n", c.Env)
+	for _, tc := range testCases {
+		tc := tc // Capture range variable
+		t.Run(tc.name, tc.fn)
+	}
+}
+
 func stopServer(t *testing.T, a *app.App) { // stop the server
 	// Stop the server after tests are done
 	if err := a.StopApp(); err != nil {
@@ -256,26 +265,19 @@ func deleteDB() {
 	log.Println("Database deleted successfully")
 }
 
-// TEST
+// EXECUTION
 
 // Define a test execution
-func executeTest(t *testing.T, actionFunc func() (string, error), expectedStatus string) {
-
+func executeTest(t *testing.T, actionFunc func() (string, error), validateFunc func(string) bool) {
 	// Execute the action function
 	responseBody, err := actionFunc()
 	if err != nil {
 		t.Fatalf("Error executing action: %v", err)
 	}
 
-	// Unmarshal the response body into the response struct
-	var resp response
-	if err := json.Unmarshal([]byte(responseBody), &resp); err != nil {
-		t.Fatalf("Error parsing response: %v", err)
-	}
-
-	// Compare the expected status with the actual status
-	if expectedStatus != resp.Status {
-		t.Errorf("Expected status: %s, Actual status: %s", expectedStatus, resp.Status)
+	// Perform custom validation
+	if !validateFunc(responseBody) {
+		t.Errorf("Validation failed for response: %s", responseBody)
 	}
 	// log.Printf("%s", resp)
 	// Sleep for 1 nanosecond
@@ -315,166 +317,345 @@ func performAction(method, url string, data interface{}) (string, error) {
 	return string(body), nil
 }
 
-// Run tests
-func runTests(t *testing.T) {
-	log.Printf("Environment: %s\n", c.Env)
-	for _, tc := range testCases {
-		tc := tc // Capture range variable
-		t.Run(tc.name, tc.fn)
-	}
+// ACTIONS
+func checkItems() (string, error) {
+	return performAction("GET", endpoint+routeApiItems, nil)
+}
+func createItemFail() (string, error) {
+	return performAction("POST", endpoint+routeApiItems, failItemCreateData)
+}
+func createItemSuccess() (string, error) {
+	return performAction("POST", endpoint+routeApiItems, successItemCreateData)
+}
+func retrieveItem() (string, error) {
+	return performAction("GET", fmt.Sprintf("%s/1", endpoint+routeApiItems), nil)
+}
+func updateItemFail() (string, error) {
+	return performAction("PUT", fmt.Sprintf("%s/1", endpoint+routeApiItems), failItemUpdateData)
+}
+func updateItemSuccess() (string, error) {
+	return performAction("PUT", fmt.Sprintf("%s/1", endpoint+routeApiItems), successItemUpdateData)
+}
+func deleteItem() (string, error) {
+	return performAction("DELETE", fmt.Sprintf("%s/1", endpoint+routeApiItems), nil)
+}
+func checkUsers() (string, error) {
+	return performAction("GET", endpoint+routeApiUsers, nil)
+}
+func createUserFail() (string, error) {
+	return performAction("POST", endpoint+routeApiUsers, failUserCreateData)
+}
+func createUserSuccess() (string, error) {
+	return performAction("POST", endpoint+routeApiUsers, successUserCreateData)
+}
+func retrieveUser() (string, error) {
+	return performAction("GET", fmt.Sprintf("%s/1", endpoint+routeApiUsers), nil)
+}
+func updateUserFail() (string, error) {
+	return performAction("PUT", fmt.Sprintf("%s/1", endpoint+routeApiUsers), failUserUpdateData)
+}
+func updateUserSuccess() (string, error) {
+	return performAction("PUT", fmt.Sprintf("%s/1", endpoint+routeApiUsers), successUserUpdateData)
+}
+func deleteUser() (string, error) {
+	return performAction("DELETE", fmt.Sprintf("%s/1", endpoint+routeApiUsers), nil)
 }
 
-// ITEM
-// Functions to perform Item API CRUD actions
-func checkItems() (string, error) {
-	return performAction(
-		"GET",
-		endpoint+routeApiItems,
-		nil,
-	)
-}
+// TESTS
+
 func checkItemsTest(t *testing.T) {
-	executeTest(t, checkItems, "success")
+	// Define the expected validation function
+	validateFunc := func(responseBody string) bool {
+
+		var resp response
+		if err := json.Unmarshal([]byte(responseBody), &resp); err != nil {
+			t.Fatalf("Error parsing response: %v", err)
+			return false
+		}
+
+		if resp.Data == nil {
+			t.Fatalf("Empty response body")
+			return false
+		}
+		// Perform custom validation based on new expectations
+		// For example, checking if the status is "success"
+		return resp.Status == "success"
+	}
+
+	// Execute the test with custom validation
+	executeTest(t, checkItems, validateFunc)
 }
 
 // CREATE
 
 // CREATE FAIL
-func createItemFail() (string, error) {
-	return performAction("POST", endpoint+routeApiItems, failItemCreateData)
-}
 func createItemFailTest(t *testing.T) {
-	executeTest(t, createItemFail, "error")
+	validateFunc := func(responseBody string) bool {
+		var resp response
+		if err := json.Unmarshal([]byte(responseBody), &resp); err != nil {
+			t.Fatalf("Error parsing response: %v", err)
+		}
+
+		// Perform custom validation based on new expectations
+		// For example, checking if the status is "error"
+		return resp.Status == "error"
+	}
+	executeTest(t, createItemFail, validateFunc)
 }
 
 // CREATE SUCCESS
-func createItemSuccess() (string, error) {
-	return performAction("POST", endpoint+routeApiItems, successItemCreateData)
-}
 func createItemSuccessTest(t *testing.T) {
-	executeTest(t, createItemSuccess, "success")
+	validateFunc := func(responseBody string) bool {
+		var resp response
+		if err := json.Unmarshal([]byte(responseBody), &resp); err != nil {
+			t.Fatalf("Error parsing response: %v", err)
+		}
+
+		// Perform custom validation based on new expectations
+		// For example, checking if the status is "success"
+		return resp.Status == "success"
+	}
+	executeTest(t, createItemSuccess, validateFunc)
 }
 
 // RETREIVE
-func retrieveItem() (string, error) {
-	return performAction("GET", fmt.Sprintf("%s/1", endpoint+routeApiItems), nil)
-}
 
-// RETREIVE SUCCESS
+// RETRIEVE SUCCESS
 func retrieveItemSuccessTest(t *testing.T) {
-	executeTest(t, retrieveItem, "success")
+	validateFunc := func(responseBody string) bool {
+		var resp response
+		if err := json.Unmarshal([]byte(responseBody), &resp); err != nil {
+			t.Fatalf("Error parsing response: %v", err)
+		}
+
+		// Perform custom validation based on new expectations
+		// For example, checking if the status is "success"
+		return resp.Status == "success"
+	}
+	executeTest(t, retrieveItem, validateFunc)
 }
 
-// RETREIVE FAIL
+// RETRIEVE FAIL
 func retrieveItemFailTest(t *testing.T) {
-	executeTest(t, retrieveItem, "error")
+	validateFunc := func(responseBody string) bool {
+		var resp response
+		if err := json.Unmarshal([]byte(responseBody), &resp); err != nil {
+			t.Fatalf("Error parsing response: %v", err)
+		}
+
+		// Perform custom validation based on new expectations
+		// For example, checking if the status is "error"
+		return resp.Status == "error"
+	}
+	executeTest(t, retrieveItem, validateFunc)
 }
 
 // UPDATE
 
 // UPDATE FAIL
-func updateItemFail() (string, error) {
-	return performAction("PUT", fmt.Sprintf("%s/1", endpoint+routeApiItems), failItemUpdateData)
-}
 func updateItemFailTest(t *testing.T) {
-	executeTest(t, updateItemFail, "error")
+	validateFunc := func(responseBody string) bool {
+		var resp response
+		if err := json.Unmarshal([]byte(responseBody), &resp); err != nil {
+			t.Fatalf("Error parsing response: %v", err)
+		}
+
+		// Perform custom validation based on new expectations
+		// For example, checking if the status is "error"
+		return resp.Status == "error"
+	}
+	executeTest(t, updateItemFail, validateFunc)
 }
 
 // UPDATE SUCCESS
-func updateItemSuccess() (string, error) {
-	return performAction("PUT", fmt.Sprintf("%s/1", endpoint+routeApiItems), successItemUpdateData)
-}
 func updateItemSuccessTest(t *testing.T) {
-	executeTest(t, updateItemSuccess, "success")
+	validateFunc := func(responseBody string) bool {
+		var resp response
+		if err := json.Unmarshal([]byte(responseBody), &resp); err != nil {
+			t.Fatalf("Error parsing response: %v", err)
+		}
+
+		// Perform custom validation based on new expectations
+		// For example, checking if the status is "success"
+		return resp.Status == "success"
+	}
+	executeTest(t, updateItemSuccess, validateFunc)
 }
 
 // DELETE
-func deleteItem() (string, error) {
-	return performAction("DELETE", fmt.Sprintf("%s/1", endpoint+routeApiItems), nil)
-}
 
 // DELETE FAIL
 func deleteItemFailTest(t *testing.T) {
-	executeTest(t, deleteItem, "error")
+	validateFunc := func(responseBody string) bool {
+		var resp response
+		if err := json.Unmarshal([]byte(responseBody), &resp); err != nil {
+			t.Fatalf("Error parsing response: %v", err)
+		}
+
+		// Perform custom validation based on new expectations
+		// For example, checking if the status is "error"
+		return resp.Status == "error"
+	}
+	executeTest(t, deleteItem, validateFunc)
 }
 
 // DELETE SUCCESS
 func deleteItemSuccessTest(t *testing.T) {
-	executeTest(t, deleteItem, "success")
+	validateFunc := func(responseBody string) bool {
+		var resp response
+		if err := json.Unmarshal([]byte(responseBody), &resp); err != nil {
+			t.Fatalf("Error parsing response: %v", err)
+		}
+
+		// Perform custom validation based on new expectations
+		// For example, checking if the status is "success"
+		return resp.Status == "success"
+	}
+	executeTest(t, deleteItem, validateFunc)
 }
 
 // USER
 
 // Check all users
-func checkUsers() (string, error) {
-	return performAction("GET", endpoint+routeApiUsers, nil)
-}
 func checkUsersTest(t *testing.T) {
-	executeTest(t, checkUsers, "success")
+	validateFunc := func(responseBody string) bool {
+		var resp response
+		if err := json.Unmarshal([]byte(responseBody), &resp); err != nil {
+			t.Fatalf("Error parsing response: %v", err)
+		}
+
+		// Perform custom validation based on new expectations
+		// For example, checking if the status is "success"
+		return resp.Status == "success"
+	}
+	executeTest(t, checkUsers, validateFunc)
 }
 
 // CREATE
 
 // CREATE FAIL
-func createUserFail() (string, error) {
-	return performAction("POST", endpoint+routeApiUsers, failUserCreateData)
-}
 func createUserFailTest(t *testing.T) {
-	executeTest(t, createUserFail, "error")
+	validateFunc := func(responseBody string) bool {
+		var resp response
+		if err := json.Unmarshal([]byte(responseBody), &resp); err != nil {
+			t.Fatalf("Error parsing response: %v", err)
+		}
+
+		// Perform custom validation based on new expectations
+		// For example, checking if the status is "error"
+		return resp.Status == "error"
+	}
+	executeTest(t, createUserFail, validateFunc)
 }
 
 // CREATE SUCCESS
-func createUserSuccess() (string, error) {
-	return performAction("POST", endpoint+routeApiUsers, successUserCreateData)
-}
+
 func createUserSuccessTest(t *testing.T) {
-	executeTest(t, createUserSuccess, "success")
+	validateFunc := func(responseBody string) bool {
+		var resp response
+		if err := json.Unmarshal([]byte(responseBody), &resp); err != nil {
+			t.Fatalf("Error parsing response: %v", err)
+		}
+
+		// Perform custom validation based on new expectations
+		// For example, checking if the status is "success"
+		return resp.Status == "success"
+	}
+	executeTest(t, createUserSuccess, validateFunc)
 }
 
-// RETREIVE
-func retrieveUser() (string, error) {
-	return performAction("GET", fmt.Sprintf("%s/1", endpoint+routeApiUsers), nil)
-}
+// RETRIEVE
 
-// RETREIVE SUCCESS
+// RETRIEVE SUCCESS
 func retrieveUserSuccessTest(t *testing.T) {
-	executeTest(t, retrieveUser, "success")
+	validateFunc := func(responseBody string) bool {
+		var resp response
+		if err := json.Unmarshal([]byte(responseBody), &resp); err != nil {
+			t.Fatalf("Error parsing response: %v", err)
+		}
+
+		// Perform custom validation based on new expectations
+		// For example, checking if the status is "success"
+		return resp.Status == "success"
+	}
+	executeTest(t, retrieveUser, validateFunc)
 }
 
-// RETREIVE FAIL
+// RETRIEVE FAIL
 func retrieveUserFailTest(t *testing.T) {
-	executeTest(t, retrieveUser, "error")
+	validateFunc := func(responseBody string) bool {
+		var resp response
+		if err := json.Unmarshal([]byte(responseBody), &resp); err != nil {
+			t.Fatalf("Error parsing response: %v", err)
+		}
+
+		// Perform custom validation based on new expectations
+		// For example, checking if the status is "error"
+		return resp.Status == "error"
+	}
+	executeTest(t, retrieveUser, validateFunc)
 }
 
 // UPDATE
 
 // UPDATE FAIL
-func updateUserFail() (string, error) {
-	return performAction("PUT", fmt.Sprintf("%s/1", endpoint+routeApiUsers), failUserUpdateData)
-}
-func updateFailTest(t *testing.T) {
-	executeTest(t, updateUserFail, "error")
+func updateUserFailTest(t *testing.T) {
+	validateFunc := func(responseBody string) bool {
+		var resp response
+		if err := json.Unmarshal([]byte(responseBody), &resp); err != nil {
+			t.Fatalf("Error parsing response: %v", err)
+		}
+
+		// Perform custom validation based on new expectations
+		// For example, checking if the status is "error"
+		return resp.Status == "error"
+	}
+	executeTest(t, updateUserFail, validateFunc)
 }
 
 // UPDATE SUCCESS
-func updateUserSuccess() (string, error) {
-	return performAction("PUT", fmt.Sprintf("%s/1", endpoint+routeApiUsers), successUserUpdateData)
-}
 func updateUserSuccessTest(t *testing.T) {
-	executeTest(t, updateUserSuccess, "success")
+	validateFunc := func(responseBody string) bool {
+		var resp response
+		if err := json.Unmarshal([]byte(responseBody), &resp); err != nil {
+			t.Fatalf("Error parsing response: %v", err)
+		}
+
+		// Perform custom validation based on new expectations
+		// For example, checking if the status is "success"
+		return resp.Status == "success"
+	}
+	executeTest(t, updateUserSuccess, validateFunc)
 }
 
 // DELETE
-func deleteUser() (string, error) {
-	return performAction("DELETE", fmt.Sprintf("%s/1", endpoint+routeApiUsers), nil)
-}
 
 // DELETE FAIL
 func deleteUserFailTest(t *testing.T) {
-	executeTest(t, deleteUser, "error")
+	validateFunc := func(responseBody string) bool {
+		var resp response
+		if err := json.Unmarshal([]byte(responseBody), &resp); err != nil {
+			t.Fatalf("Error parsing response: %v", err)
+		}
+
+		// Perform custom validation based on new expectations
+		// For example, checking if the status is "error"
+		return resp.Status == "error"
+	}
+	executeTest(t, deleteUser, validateFunc)
 }
 
 // DELETE SUCCESS
 func deleteUserSuccessTest(t *testing.T) {
-	executeTest(t, deleteUser, "success")
+	validateFunc := func(responseBody string) bool {
+		var resp response
+		if err := json.Unmarshal([]byte(responseBody), &resp); err != nil {
+			t.Fatalf("Error parsing response: %v", err)
+		}
+
+		// Perform custom validation based on new expectations
+		// For example, checking if the status is "success"
+		return resp.Status == "success"
+	}
+	executeTest(t, deleteUser, validateFunc)
 }
