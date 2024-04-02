@@ -11,7 +11,7 @@ import (
 func Draw(app *fiber.App) {
 	// Initialize middleware
 	mw := middleware.New()
-
+	app.Use(mw.LogRequests())
 	// Define views routes
 	defineViewsRoutes(app, mw)
 
@@ -25,7 +25,6 @@ func defineViewsRoutes(app *fiber.App, mw *middleware.Middleware) {
 	viewsGroup := app.Group("/")
 	viewsGroup.Use(
 		mw.HelmetMiddleware(),
-		mw.LogRequests(),
 		mw.RateLimiter(),
 	)
 
@@ -45,7 +44,6 @@ func defineAPIRoutes(app *fiber.App, mw *middleware.Middleware) {
 	apiGroup.Use(
 		mw.HelmetMiddleware(),
 		// mw.AuthRequired(), // would be nice to turn this on
-		mw.LogRequests(),
 		mw.RateLimiter(),
 	)
 

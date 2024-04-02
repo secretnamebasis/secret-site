@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"sync"
 	"testing"
 	"time"
 
@@ -36,7 +35,8 @@ type testCase struct {
 
 // Define response type
 type response struct {
-	Status string `json:"status"`
+	Data   interface{} `json:"data"`
+	Status string      `json:"status"`
 }
 
 // test-conditions
@@ -65,11 +65,11 @@ var (
 	// Success cases
 	successItemCreateData = models.Item{
 		Title:   "title",
-		Content: "success",
+		Content: "clear text",
 	}
 	successItemUpdateData = models.Item{
 		Title:   "squirrel",
-		Content: "update",
+		Content: "plain text",
 	}
 
 	// Fail cases
@@ -99,7 +99,7 @@ var (
 	}
 
 	// Test cases
-
+	testCases     = append(itemTestCases, userTestCases...)
 	itemTestCases = []testCase{
 		// Item test cases
 		{
@@ -121,6 +121,10 @@ var (
 		{
 			"Retrieve when Item 1 is successfully created",
 			retrieveItemSuccessTest,
+		},
+		{
+			"CheckItems",
+			checkItemsTest,
 		},
 		{
 			"Update when Item is not valid",
@@ -272,7 +276,7 @@ func executeTest(t *testing.T, actionFunc func() (string, error), expectedStatus
 	if expectedStatus != resp.Status {
 		t.Errorf("Expected status: %s, Actual status: %s", expectedStatus, resp.Status)
 	}
-
+	// log.Printf("%s", resp)
 	// Sleep for 1 nanosecond
 	time.Sleep(delay)
 }
@@ -312,40 +316,11 @@ func performAction(method, url string, data interface{}) (string, error) {
 
 // Run tests
 func runTests(t *testing.T) {
-	runTestGroupParallel(t, "UserTests", userTestCases)
-	runTestGroupParallel(t, "ItemTests", itemTestCases)
-}
-
-// Run test group in parallel
-func runTestGroupParallel(t *testing.T, groupName string, testCases []testCase) {
 	log.Printf("Environment: %s\n", c.Env)
-
-	// Allow some time for the server to start
-	time.Sleep(delay)
-
-	// Run test cases in parallel
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-
-	go func() {
-		defer wg.Done()
-		runTestGroup(t, groupName, testCases)
-	}()
-
-	wg.Wait()
-}
-
-func runTestGroup(t *testing.T, groupName string, testCases []testCase) {
-	t.Run(
-		groupName,
-		func(t *testing.T) {
-			t.Parallel()
-			for _, tc := range testCases {
-				tc := tc // Capture range variable
-				t.Run(tc.name, tc.fn)
-			}
-		},
-	)
+	for _, tc := range testCases {
+		tc := tc // Capture range variable
+		t.Run(tc.name, tc.fn)
+	}
 }
 
 // ITEM
