@@ -9,6 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/secretnamebasis/secret-site/app/config"
 	"github.com/secretnamebasis/secret-site/app/db"
+	"github.com/secretnamebasis/secret-site/app/exports"
 	"github.com/secretnamebasis/secret-site/app/routes"
 )
 
@@ -19,7 +20,13 @@ type App struct {
 
 // MakeApp creates and initializes a new Fiber application
 func MakeApp(c config.Server) *App {
-	app := fiber.New()
+	app := fiber.New(
+		fiber.Config{
+			AppName:               exports.APP_NAME,
+			CaseSensitive:         true,
+			DisableStartupMessage: true,
+		},
+	)
 
 	// Initialize the database
 	if err := db.InitDB(c.Env); err != nil {
