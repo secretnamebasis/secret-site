@@ -17,8 +17,6 @@ const (
 	bucketUsers = "users"
 )
 
-var u *models.User
-
 // CreateItem creates a new item in the database.
 func CreateItemRecord(item *models.Item) error {
 	return db.CreateRecord(bucketItems, item)
