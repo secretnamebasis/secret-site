@@ -15,13 +15,21 @@ import (
 var SECRET = config.Env("SECRET")
 
 func CreateItem(c *fiber.Ctx) error {
+	// Parse request body into new item
 	var new models.Item
-
-	if err := c.BodyParser(&new); err != nil || new.Title == "" || new.Content == "" {
+	if err := c.BodyParser(&new); err != nil {
 		return ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
 	}
 
+	// Validate the new item
+	if err := new.Validate(); err != nil {
+		return ErrorResponse(c, fiber.StatusBadRequest, "Invalid item: "+err.Error())
+	}
+
+	// Get the next item ID
 	nextID, _ := controllers.NextItemID()
+
+	// Create a new item with the parsed data
 	item := models.Item{
 		ID:        nextID,
 		Title:     new.Title,
@@ -29,19 +37,12 @@ func CreateItem(c *fiber.Ctx) error {
 		CreatedAt: time.Now(),
 	}
 
-	// Encrypt content before storing in the database
-	encryptedContent, err := cryptography.EncryptData([]byte(item.Content), SECRET)
-	if err != nil {
-		return ErrorResponse(c, fiber.StatusInternalServerError, "Error encrypting content")
-	}
-
-	// Encode the encrypted content to Base64
-	item.Content = base64.StdEncoding.EncodeToString(encryptedContent)
-
-	if err := controllers.CreateItemRecord(item); err != nil {
+	// Create the item record
+	if err := controllers.CreateItemRecord(&item); err != nil {
 		return ErrorResponse(c, fiber.StatusInternalServerError, "Error creating item")
 	}
 
+	// Return success response
 	return SuccessResponse(c, item)
 }
 
@@ -56,21 +57,6 @@ func ItemByID(c *fiber.Ctx) error {
 		return ErrorResponse(c, fiber.StatusInternalServerError, "Internal server error")
 	}
 
-	// Decode the Base64 encoded content
-	decodedBytes, err := base64.StdEncoding.DecodeString(item.Content)
-	if err != nil {
-		return ErrorResponse(c, fiber.StatusInternalServerError, "Error decoding content")
-	}
-
-	// Decrypt the content
-	decryptedContent, err := cryptography.DecryptData(decodedBytes, SECRET)
-	if err != nil {
-		return ErrorResponse(c, fiber.StatusInternalServerError, "Error decrypting content")
-	}
-
-	// Set the decrypted content to the item
-	item.Content = string(decryptedContent)
-
 	return SuccessResponse(c, item)
 }
 
@@ -78,21 +64,6 @@ func AllItems(c *fiber.Ctx) error {
 	items, err := controllers.AllItems(c)
 	if err != nil {
 		return ErrorResponse(c, fiber.StatusInternalServerError, "Error retrieving items")
-	}
-
-	// Decrypt the content of each item
-	for _, item := range items {
-		decodedBytes, err := base64.StdEncoding.DecodeString(item.Content)
-		if err != nil {
-			return ErrorResponse(c, fiber.StatusInternalServerError, "Error decoding content")
-		}
-
-		decryptedContent, err := cryptography.DecryptData(decodedBytes, SECRET)
-		if err != nil {
-			return ErrorResponse(c, fiber.StatusInternalServerError, "Error decrypting content")
-		}
-
-		item.Content = string(decryptedContent)
 	}
 
 	return SuccessResponse(c, items)

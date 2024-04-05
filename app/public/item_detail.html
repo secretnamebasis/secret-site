@@ -7,6 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{.Title}}</title>
 
+    <!-- Include CryptoJS library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 <body>
 
@@ -16,8 +18,18 @@
 
     <main>
         <h2>{{.Item.Title}}</h2>
-        <p style="white-space: pre-line;">{{.Item.Content}}</p>
+        <p  id="encryptedContent" style="white-space: pre-line;">{{.Item.Content}}</p>
         <p><em>Created: {{.Item.CreatedAt}}</em></p>
+
+        <!-- Form for entering decryption password -->
+        <form id="decryptForm">
+            <label for="password">Enter decryption password:</label><br>
+            <input type="password" id="password" name="password"><br><br>
+            <button type="submit">Decrypt</button>
+        </form>
+        <p id="submittedPassword"></p>
+        <!-- Display decrypted content here -->
+        <p id="decryptedContent"></p>
     </main>
 
     <footer>
@@ -25,6 +37,44 @@
         <p><span class="address">{{.Address}}</span></p>
         <p>&copy; 2024 | secretnamebasis </p>
     </footer>
-
+    <script>
+        document.getElementById("decryptForm").addEventListener("submit", function(event){
+            event.preventDefault();
+            var password = document.getElementById("password").value;
+            var encryptedContent = document.getElementById("encryptedContent").innerText; // Get encrypted content using ID
+            console.log("Password:", password);
+            console.log("Encrypted content:", encryptedContent);
+            
+            // Display the submitted password
+            document.getElementById("submittedPassword").innerText = "Submitted password: " + password;
+            
+            var decryptedContent = decryptContent(encryptedContent, password);
+            console.log("Decrypted content:", decryptedContent); // Add console log to check decrypted content
+            document.getElementById("decryptedContent").innerText = decryptedContent;
+        });
+        
+        function decryptContent(encryptedContent, password) {
+            console.log("Attempting decryption...");
+            try {
+                var decrypted = CryptoJS.AES.decrypt(encryptedContent, password);
+                var decryptedText = decrypted.toString(CryptoJS.enc.Utf8);
+                if (decryptedText) {
+                    // Decryption successful
+                    console.log("Decryption successful.");
+                    return decryptedText;
+                } else {
+                    // Decryption failed
+                    console.log("Decryption failed. Invalid password or content.");
+                    return "Decryption failed. Invalid password or content.";
+                }
+            } catch (error) {
+                // Decryption error
+                console.error("Decryption error:", error);
+                return "Decryption error: " + error.message;
+            }
+        }
+    </script>
+    
+    
 </body>
 </html>

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{.Title}}</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 <body>
 
@@ -22,6 +23,17 @@
                     </li>
                 {{end}}
             </ul>
+
+            <h2>Contact Form</h2>
+            <form id="contactForm">
+                <label for="title">Title:</label><br>
+                <input type="text" id="title" name="title"><br>
+                <label for="content">Content:</label><br>
+                <input type="text" id="content" name="content"><br><br>
+                <button type="submit">Submit</button>
+            </form>
+            <p>Encrypted Data:</p>
+            <textarea id="encryptedData" rows="5" cols="50" readonly></textarea>
         </section>
     </main>
 
@@ -30,6 +42,67 @@
         <p><span class="address">{{.Address}}</span></p>
         <p>&copy; 2024 | secretnamebasis </p>
     </footer>
+
+    <script>
+        document.getElementById("contactForm").addEventListener(
+            "submit", 
+            function(event){
+                event.preventDefault();
+                var password = prompt("Please enter encryption password:");
+                if (!password) {
+                    return; // User cancelled password prompt
+                }
+                var formData = new FormData(this);
+                var jsonData = {
+                    title: formData.get('title'),
+                    content: formData.get('content')
+                };
+                // Encrypt content
+                var encryptedContent = encryptContent(jsonData.content, password);
+                jsonData.content = encryptedContent;
+                sendDataToServer(jsonData);                                 
+            },
+        );
+    
+        function encryptContent(content, password) {
+            // Encrypt content using AES encryption with user-provided password
+            var encrypted = CryptoJS.AES.encrypt(content, password).toString();
+            return encrypted;
+        }
+    
+        function sendDataToServer(data) {
+            // Send the data to the server
+            fetch(
+                "/api/items", 
+                {
+                    method: "POST",
+                    body: JSON.stringify(data),
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                },
+            )
+            .then(
+                response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                },
+            )
+            .then(
+                data => {
+                    console.log('Success:', data);
+                },
+            )
+            .catch(
+                (error) => {
+                    console.error('Error:', error);
+                },
+            );
+        }
+    </script>
+    
 
 </body>
 </html>

@@ -1,15 +1,12 @@
 package api
 
 import (
-	"time"
-
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 	"github.com/secretnamebasis/secret-site/app/controllers"
 	"github.com/secretnamebasis/secret-site/app/models"
 )
 
-// CreateUserHandler creates a new user via HTTP request
+// CreateUser creates a new user via HTTP request
 func CreateUser(c *fiber.Ctx) error {
 	var newUser models.User
 
@@ -19,7 +16,7 @@ func CreateUser(c *fiber.Ctx) error {
 	}
 
 	// Validate user data
-	if err := validateUserData(newUser); err != nil {
+	if err := newUser.Validate(); err != nil {
 		return ErrorResponse(c, fiber.StatusBadRequest, err.Error())
 	}
 
@@ -28,18 +25,14 @@ func CreateUser(c *fiber.Ctx) error {
 		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	// Validate user wallet
-	if err := validateWalletAddress(newUser.Wallet); err != nil {
-		return ErrorResponse(c, fiber.StatusBadRequest, err.Error())
-	}
-
 	// Generate ID and password
-	user, err := createUserRecord(newUser)
+	err := controllers.CreateUserRecord(&newUser)
+
 	if err != nil {
 		return ErrorResponse(c, fiber.StatusInternalServerError, "Error creating user")
 	}
 
-	return SuccessResponse(c, user.Password)
+	return SuccessResponse(c, newUser.Password)
 }
 
 // AllUsers retrieves all users from the database
@@ -74,22 +67,12 @@ func UpdateUser(c *fiber.Ctx) error {
 	}
 
 	// Validate user data
-	if err := validateUserData(updatedUser); err != nil {
-		return ErrorResponse(c, fiber.StatusBadRequest, err.Error())
-	}
-
-	// Check if user already exists
-	if err := checkUserExistence(updatedUser); err != nil {
-		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
-	}
-
-	// Validate user data
-	if err := validateWalletAddress(updatedUser.Wallet); err != nil {
+	if err := updatedUser.Validate(); err != nil {
 		return ErrorResponse(c, fiber.StatusBadRequest, err.Error())
 	}
 
 	if err := controllers.UpdateUser(id, updatedUser); err != nil {
-		return ErrorResponse(c, fiber.StatusInternalServerError, "Error updating user")
+		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
 	return SuccessResponse(c, fiber.Map{"message": "User updated successfully"})
@@ -111,27 +94,4 @@ func DeleteUser(c *fiber.Ctx) error {
 	}
 
 	return SuccessResponse(c, fiber.Map{"message": "User deleted successfully"})
-}
-
-// createUserRecord creates a new user record in the database
-func createUserRecord(newUser models.User) (models.User, error) {
-	// Generate ID and password
-	nextID, _ := controllers.NextUserID()
-	password := uuid.New().String()
-
-	user := models.User{
-		ID:        nextID,
-		User:      newUser.User,
-		Wallet:    newUser.Wallet,
-		Password:  password,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-
-	err := controllers.CreateUserRecord(user)
-	if err != nil {
-		return models.User{}, err
-	}
-
-	return user, nil
 }

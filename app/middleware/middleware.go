@@ -21,11 +21,43 @@ func New() *Middleware {
 	return &Middleware{}
 }
 
-// LogRequests middleware logs incoming requests
 func (m *Middleware) LogRequests() fiber.Handler {
 	return func(c *fiber.Ctx) error {
+		// Log request details
 		log.Printf("Request: %s %s", c.Method(), c.OriginalURL())
-		return c.Next()
+
+		// Log request headers
+		log.Println("Request Headers:")
+		c.Request().Header.VisitAll(func(key, value []byte) {
+			log.Printf("%s: %s", key, value)
+		})
+
+		// // Log request body if present
+		if len(c.Request().Body()) > 0 {
+			log.Println("Request Body:")
+			log.Println(string(c.Request().Body()))
+		}
+
+		// Proceed to next middleware or route handler
+		if err := c.Next(); err != nil {
+			return err
+		}
+
+		// Log response details
+		log.Printf("Response: %d", c.Response().StatusCode())
+
+		// // Log response headers
+		log.Println("Response Headers:")
+		c.Response().Header.VisitAll(func(key, value []byte) {
+			log.Printf("%s: %s", key, value)
+		})
+
+		// Log response body if present
+		if len(c.Response().Body()) > 0 {
+			log.Printf("Response Body: %s\n", string(c.Response().Body()))
+		}
+
+		return nil
 	}
 }
 
@@ -60,7 +92,7 @@ func (m *Middleware) AuthRequired() fiber.Handler {
 // RateLimiter middleware limits the rate of incoming requests
 func (m *Middleware) RateLimiter() fiber.Handler {
 	return limiter.New(limiter.Config{
-		Max:        100000000000,    // Maximum number of requests allowed in Expiration duration
+		Max:        100,             // Maximum number of requests allowed in Expiration duration
 		Expiration: 1 * time.Minute, // Time duration for which requests are tracked
 		KeyGenerator: func(c *fiber.Ctx) string { // Generate a key for identifying requests
 			return c.IP()
