@@ -42,7 +42,6 @@
         <p><span class="address">{{.Address}}</span></p>
         <p>&copy; 2024 | secretnamebasis </p>
     </footer>
-
     <script>
         document.getElementById("contactForm").addEventListener(
             "submit", 
@@ -55,21 +54,27 @@
                 var formData = new FormData(this);
                 var jsonData = {
                     title: formData.get('title'),
-                    content: formData.get('content')
+                    content: {
+                        description: formData.get('content')
+                    }
                 };
                 // Encrypt content
-                var encryptedContent = encryptContent(jsonData.content, password);
-                jsonData.content = encryptedContent;
+                var encryptedContent = encryptContent(jsonData.content.description, password);
+                jsonData.content.description = encryptedContent;
+            
+                // Populate encrypted data in the textarea
+                document.getElementById("encryptedData").value = encryptedContent;
+            
                 sendDataToServer(jsonData);                                 
             },
         );
-    
+        
         function encryptContent(content, password) {
             // Encrypt content using AES encryption with user-provided password
             var encrypted = CryptoJS.AES.encrypt(content, password).toString();
             return encrypted;
         }
-    
+        
         function sendDataToServer(data) {
             // Send the data to the server
             fetch(
@@ -101,8 +106,8 @@
                 },
             );
         }
+
     </script>
     
-
 </body>
 </html>
