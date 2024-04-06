@@ -13,6 +13,7 @@ import (
 
 	"github.com/secretnamebasis/secret-site/app"
 	"github.com/secretnamebasis/secret-site/app/config"
+	"github.com/secretnamebasis/secret-site/app/exports"
 	"github.com/secretnamebasis/secret-site/app/models"
 )
 
@@ -24,7 +25,6 @@ const ( // Endpoint configuration
 	routeApiUsers = "/users"
 	routeApiItems = "/items"
 	user          = "secret"
-	dbPath        = "./database/"
 )
 
 // Define testCase type
@@ -42,10 +42,6 @@ type response struct {
 // test-conditions
 var (
 	// Configure server settings
-	c = config.Server{
-		Port: 3000,
-		Env:  "testing",
-	}
 
 	delay = 1 * time.Nanosecond
 
@@ -68,7 +64,7 @@ var (
 	}
 	// Success cases
 	successItemCreateData = models.Item{
-		Title: "title",
+		Title: "First Post",
 
 		Content: models.Content{
 			Description: "love you Joyce",
@@ -218,10 +214,19 @@ var (
 	}
 )
 
+func wait() {
+	time.Sleep(1 * time.Millisecond)
+
+}
 func TestApi(t *testing.T) {
+	// config server
+	c := configServer()
 
 	// Start the server and handle shutdown
-	a := startServer()
+	a := startServer(c)
+
+	// Let the server turn on
+	wait()
 
 	// Run tests
 	runTests(t)
@@ -230,13 +235,22 @@ func TestApi(t *testing.T) {
 	stopServer(t, a)
 
 	// Delete the database
-	deleteDB()
+	deleteDB(c)
+}
+func configServer() config.Server {
+	exports.Env = "testing"
+	c := config.Server{
+		Port:         3000,
+		Env:          exports.Env,
+		DatabasePath: "../app/database/" + exports.Env + ".db",
+	}
+	return c
 }
 
 // test-server
-func startServer() *app.App { // start the server
-	// Delete the database before starting the server
-	deleteDB()
+func startServer(c config.Server) *app.App { // start the server
+	// Delete any pre-existsing testing database before starting the server
+	deleteDB(c)
 
 	a := app.MakeApp(c)
 	go func() {
@@ -249,7 +263,7 @@ func startServer() *app.App { // start the server
 
 // Run tests
 func runTests(t *testing.T) {
-	log.Printf("Environment: %s\n", c.Env)
+	log.Printf("Environment: %s\n", exports.Env)
 	for _, tc := range testCases {
 		tc := tc // Capture range variable
 		t.Run(tc.name, tc.fn)
@@ -265,8 +279,8 @@ func stopServer(t *testing.T, a *app.App) { // stop the server
 	}
 }
 
-func deleteDB() {
-	err := os.RemoveAll(dbPath)
+func deleteDB(c config.Server) {
+	err := os.RemoveAll(c.DatabasePath)
 	if err != nil {
 		log.Fatalf("Error deleting database: %s\n", err)
 	}
@@ -416,10 +430,46 @@ func createItemSuccessTest(t *testing.T) {
 		if err := json.Unmarshal([]byte(responseBody), &resp); err != nil {
 			t.Fatalf("Error parsing response: %v", err)
 		}
-		// Perform custom validation based on new expectations
 
-		return resp.Status == "success"
+		// Check if the status is "success"
+		if resp.Status != "success" {
+			t.Errorf("Expected status to be 'success', got '%s'", resp.Status)
+			return false
+		}
+
+		// Check if the data is a map[string]interface{}
+		data, ok := resp.Data.(map[string]interface{})
+		if !ok {
+			t.Errorf("Unexpected type for response data")
+			return false
+		}
+
+		// Perform validations based on the map data
+		id, idOK := data["id"].(float64)
+		title, titleOK := data["title"].(string)
+		description, descOK := data["content"].(map[string]interface{})["description"].(string)
+
+		// Validate ID
+		if !idOK || int(id) != 1 {
+			t.Errorf("Expected ID to be 1, got %v", id)
+			return false
+		}
+
+		// Validate title
+		if !titleOK || title != "First Post" {
+			t.Errorf("Expected title to be 'title', got '%s'", title)
+			return false
+		}
+
+		// Validate description
+		if !descOK || description == "" {
+			t.Errorf("Description cannot be empty")
+			return false
+		}
+
+		return true
 	}
+
 	executeTest(t, createItemSuccess, validateFunc)
 }
 
@@ -433,6 +483,44 @@ func retrieveItemSuccessTest(t *testing.T) {
 			t.Fatalf("Error parsing response: %v", err)
 		}
 
+		// Check if the status is "success"
+		if resp.Status != "success" {
+			t.Errorf("Expected status to be 'success', got '%s'", resp.Status)
+			return false
+		}
+
+		// Check if the data is a map[string]interface{}
+		data, ok := resp.Data.(map[string]interface{})
+		if !ok {
+			t.Errorf("Unexpected type for response data")
+			return false
+		}
+
+		// Perform validations based on the map data
+		id, idOK := data["id"].(float64)
+		title, titleOK := data["title"].(string)
+		description, descOK := data["content"].(map[string]interface{})["description"].(string)
+
+		// Validate ID
+		if !idOK ||
+			int(id) != 1 {
+			t.Errorf("Expected ID to be 1, got %v", id)
+			return false
+		}
+
+		// Validate title
+		if !titleOK ||
+			title != "First Post" {
+			t.Errorf("Expected title to be 'title', got '%s'", title)
+			return false
+		}
+
+		// Validate description
+		if !descOK ||
+			description == "" {
+			t.Errorf("Description cannot be empty")
+			return false
+		}
 		// Perform custom validation based on new expectations
 
 		return resp.Status == "success"
