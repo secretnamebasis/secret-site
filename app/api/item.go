@@ -73,7 +73,7 @@ func UpdateItem(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var updatedItem models.Item
 
-	if err := c.BodyParser(&updatedItem); err != nil || updatedItem.Title == "" || updatedItem.Content == "" {
+	if err := c.BodyParser(&updatedItem); err != nil || updatedItem.Title == "" || updatedItem.Content.Description == "" {
 		return ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
 	}
 
@@ -87,13 +87,13 @@ func UpdateItem(c *fiber.Ctx) error {
 	}
 
 	// Encrypt the new content
-	encryptedContent, err := cryptography.EncryptData([]byte(updatedItem.Content), SECRET)
+	encryptedContent, err := cryptography.EncryptData([]byte(updatedItem.Content.Description), SECRET)
 	if err != nil {
 		return ErrorResponse(c, fiber.StatusInternalServerError, "Error encrypting content")
 	}
 
 	// Update the item with the new encrypted content
-	item.Content = base64.StdEncoding.EncodeToString(encryptedContent)
+	item.Content.Description = base64.StdEncoding.EncodeToString(encryptedContent)
 	if err := controllers.UpdateItem(id, item); err != nil {
 		return ErrorResponse(c, fiber.StatusInternalServerError, "Error updating item")
 	}

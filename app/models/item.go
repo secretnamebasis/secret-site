@@ -9,9 +9,12 @@ import (
 type Item struct {
 	ID        int       `json:"id"`
 	Title     string    `json:"title"`
-	Content   string    `json:"content"`
+	Content   Content   `json:"content"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+}
+type Content struct {
+	Description string `json:"description"`
 }
 
 // Validate method validates the fields of the Item struct
@@ -19,10 +22,11 @@ func (i *Item) Validate() error {
 	if i.Title == "" {
 		return errors.New("title cannot be empty")
 	}
-	if i.Content == "" {
+	if i.Content.Description == "" {
 		return errors.New("content cannot be empty")
 	}
 	// Add more validation rules as needed
+	// Validate Content
 
 	return nil
 }

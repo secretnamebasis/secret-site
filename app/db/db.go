@@ -63,14 +63,14 @@ func CreateRecord(bucketName string, record interface{}) error {
 			case *models.Item: // Ensure we're dealing with a pointer to models.Item
 				id = r.ID
 				// Encrypt content before storing in the database
-				encrypted, err := cryptography.EncryptData([]byte(r.Content), config.Env("SECRET"))
+				encrypted, err := cryptography.EncryptData([]byte(r.Content.Description), config.Env("SECRET"))
 				if err != nil {
 					return err
 				}
 
 				// Encode the encrypted content to Base64
 				encryptedContent = base64.StdEncoding.EncodeToString(encrypted)
-				r.Content = encryptedContent
+				r.Content.Description = encryptedContent
 
 			case *models.User:
 				id = r.ID
@@ -105,7 +105,7 @@ func GetAllRecords(bucketName string, records interface{}, c *fiber.Ctx) error {
 				}
 				// Decrypt the content if the record type is models.Item
 				if item, ok := recordType.(*models.Item); ok {
-					decodedBytes, err := base64.StdEncoding.DecodeString(item.Content)
+					decodedBytes, err := base64.StdEncoding.DecodeString(item.Content.Description)
 					if err != nil {
 						return err
 					}
@@ -113,7 +113,7 @@ func GetAllRecords(bucketName string, records interface{}, c *fiber.Ctx) error {
 					if err != nil {
 						return err
 					}
-					item.Content = string(decryptedContent)
+					item.Content.Description = string(decryptedContent)
 				}
 				sliceValue := reflect.ValueOf(records).Elem()
 				sliceValue.Set(reflect.Append(sliceValue, reflect.ValueOf(recordType).Elem()))
@@ -152,7 +152,7 @@ func GetRecordByID(bucketName, id string, record interface{}) error {
 
 		// Decrypt the content if the record type is models.Item
 		if item, ok := record.(*models.Item); ok {
-			decodedBytes, err := base64.StdEncoding.DecodeString(item.Content)
+			decodedBytes, err := base64.StdEncoding.DecodeString(item.Content.Description)
 			if err != nil {
 				return err
 			}
@@ -160,7 +160,7 @@ func GetRecordByID(bucketName, id string, record interface{}) error {
 			if err != nil {
 				return err
 			}
-			item.Content = string(decryptedContent)
+			item.Content.Description = string(decryptedContent)
 		}
 
 		return nil
@@ -237,7 +237,7 @@ func UpdateRecord(bucketName, id string, updatedRecord interface{}) error {
 			if updatedRecord.Title != "" {
 				existingItem.Title = updatedRecord.Title
 			}
-			if updatedRecord.Content != "" {
+			if updatedRecord.Content.Description != "" {
 				existingItem.Content = updatedRecord.Content
 			}
 			// Preserve the ID and creation timestamp
