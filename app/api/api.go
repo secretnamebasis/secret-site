@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/secretnamebasis/secret-site/app/db"
+	"github.com/secretnamebasis/secret-site/app/database"
 	"github.com/secretnamebasis/secret-site/app/models"
 )
 
@@ -21,7 +21,7 @@ func SuccessResponse(c *fiber.Ctx, data interface{}) error {
 // checkUserExistence checks if a user with the same username or wallet already exists
 func checkUserExistence(user models.User) error {
 	// Check if user already exists with the same username
-	existingUser, err := db.GetUserByUsername(user.User)
+	existingUser, err := database.GetUserByUsername(user.User)
 	if err != nil {
 		return errors.New("error checking user existence")
 	}
@@ -30,7 +30,7 @@ func checkUserExistence(user models.User) error {
 	}
 
 	// Check if user already exists with the same wallet
-	existingUser, err = db.GetUserByWallet(user.Wallet)
+	existingUser, err = database.GetUserByWallet(user.Wallet)
 	if err != nil {
 		return errors.New("error checking user existence")
 	}

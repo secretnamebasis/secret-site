@@ -10,8 +10,9 @@ import (
 
 // Config struct to hold configuration parameters
 type Server struct {
-	Port int
-	Env  string
+	Port         int
+	Env          string
+	DatabasePath string
 }
 
 // Config func to get env value from key

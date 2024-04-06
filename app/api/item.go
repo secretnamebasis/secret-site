@@ -18,7 +18,7 @@ func CreateItem(c *fiber.Ctx) error {
 	// Parse request body into new item
 	var new models.Item
 	if err := c.BodyParser(&new); err != nil {
-		return ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
+		return ErrorResponse(c, fiber.StatusBadRequest, err.Error())
 	}
 
 	// Validate the new item

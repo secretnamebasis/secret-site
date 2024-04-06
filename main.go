@@ -8,16 +8,18 @@ import (
 
 	"github.com/secretnamebasis/secret-site/app"
 	"github.com/secretnamebasis/secret-site/app/config"
+	"github.com/secretnamebasis/secret-site/app/exports"
 )
 
 // Configure server settings
-var c = config.Server{
-	Port: 3000,
-	Env:  "prod",
-}
 
 func main() {
-
+	exports.Env = "prod"
+	var c = config.Server{
+		Port:         3000,
+		Env:          exports.Env,
+		DatabasePath: "./app/database/" + exports.Env + ".db",
+	}
 	// Create Fiber app
 	a := app.MakeApp(c)
 

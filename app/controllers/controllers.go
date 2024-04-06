@@ -6,7 +6,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"github.com/secretnamebasis/secret-site/app/db"
+	"github.com/secretnamebasis/secret-site/app/database"
 	"github.com/secretnamebasis/secret-site/app/integrations/dero"
 	"github.com/secretnamebasis/secret-site/app/models"
 )
@@ -19,7 +19,7 @@ const (
 
 // CreateItem creates a new item in the database.
 func CreateItemRecord(item *models.Item) error {
-	return db.CreateRecord(bucketItems, item)
+	return database.CreateRecord(bucketItems, item)
 }
 
 // CreateUserRecord creates a new user in the database.
@@ -49,7 +49,7 @@ func CreateUserRecord(user *models.User) error {
 	}
 
 	// Store the user record in the database
-	return db.CreateRecord(bucketUsers, newUser)
+	return database.CreateRecord(bucketUsers, newUser)
 }
 
 // isValidWallet checks if the provided wallet address is valid
@@ -62,40 +62,40 @@ func isValidWallet(wallet string) error {
 // AllItems retrieves all items from the database.
 func AllItems(c *fiber.Ctx) ([]models.Item, error) {
 	var items []models.Item
-	err := db.GetAllRecords(bucketItems, &items, c)
+	err := database.GetAllRecords(bucketItems, &items, c)
 	return items, err
 }
 
 // AllUsers retrieves all users from the database.
 func AllUsers(c *fiber.Ctx) ([]models.User, error) {
 	var users []models.User
-	err := db.GetAllRecords(bucketUsers, &users, c)
+	err := database.GetAllRecords(bucketUsers, &users, c)
 	return users, err
 }
 
 // GetUserByID retrieves a user from the database by ID.
 func GetUserByID(id string) (models.User, error) {
 	var user models.User
-	err := db.GetRecordByID(bucketUsers, id, &user)
+	err := database.GetRecordByID(bucketUsers, id, &user)
 	return user, err
 }
 
 // GetItemByID retrieves an item from the database by ID.
 func GetItemByID(id string) (models.Item, error) {
 	var item models.Item
-	err := db.GetRecordByID(bucketItems, id, &item)
+	err := database.GetRecordByID(bucketItems, id, &item)
 	return item, err
 }
 
 // UpdateItem updates an item in the database with the provided ID and updated data.
 func UpdateItem(id string, updatedItem models.Item) error {
-	return db.UpdateRecord(bucketItems, id, &updatedItem)
+	return database.UpdateRecord(bucketItems, id, &updatedItem)
 }
 
 // UpdateUser updates a user in the database with the provided ID and updated data.
 func UpdateUser(id string, updatedUser models.User) error {
 	// Check if user with the provided ID exists
-	existingUser, err := db.GetUserByUsername(updatedUser.User)
+	existingUser, err := database.GetUserByUsername(updatedUser.User)
 	if err != nil {
 		return errors.New("error checking user existence")
 	}
@@ -109,27 +109,27 @@ func UpdateUser(id string, updatedUser models.User) error {
 	}
 
 	// Update the user record in the database
-	return db.UpdateRecord(bucketUsers, id, &updatedUser)
+	return database.UpdateRecord(bucketUsers, id, &updatedUser)
 }
 
 // DeleteItem deletes an item from the database by ID.
 func DeleteItem(id string) error {
-	return db.DeleteRecord(bucketItems, id)
+	return database.DeleteRecord(bucketItems, id)
 }
 
 // DeleteUser deletes a user from the database by ID.
 func DeleteUser(id string) error {
-	return db.DeleteRecord(bucketUsers, id)
+	return database.DeleteRecord(bucketUsers, id)
 }
 
 // NextUserID returns the next available user ID.
 func NextUserID() (int, error) {
-	return db.NextID(bucketUsers)
+	return database.NextID(bucketUsers)
 }
 
 // NextItemID returns the next available item ID.
 func NextItemID() (int, error) {
-	return db.NextID(bucketItems)
+	return database.NextID(bucketItems)
 }
 
 // private functions
@@ -138,7 +138,7 @@ func NextItemID() (int, error) {
 func checkUserExistence(user models.User) error {
 
 	// Check if user already exists with the same username
-	existingUser, err := db.GetUserByUsername(user.User)
+	existingUser, err := database.GetUserByUsername(user.User)
 	if err != nil {
 		return errors.New("error checking user existence")
 	}
@@ -147,7 +147,7 @@ func checkUserExistence(user models.User) error {
 	}
 
 	// Check if user already exists with the same wallet
-	existingUser, err = db.GetUserByWallet(user.Wallet)
+	existingUser, err = database.GetUserByWallet(user.Wallet)
 	if err != nil {
 		return errors.New("error checking user existence")
 	}

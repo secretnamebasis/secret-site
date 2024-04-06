@@ -8,7 +8,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/secretnamebasis/secret-site/app/config"
-	"github.com/secretnamebasis/secret-site/app/db"
+	"github.com/secretnamebasis/secret-site/app/database"
 	"github.com/secretnamebasis/secret-site/app/exports"
 	"github.com/secretnamebasis/secret-site/app/routes"
 )
@@ -29,7 +29,7 @@ func MakeApp(c config.Server) *App {
 	)
 
 	// Initialize the database
-	if err := db.InitDB(c.Env); err != nil {
+	if err := database.InitDB(c); err != nil {
 		log.Fatal(err)
 	}
 

@@ -1,10 +1,9 @@
-package db
+package database
 
 import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"reflect"
 	"strconv"
@@ -19,25 +18,24 @@ import (
 )
 
 var (
-	DB          *bbolt.DB
+	db          *bbolt.DB
 	itemsBucket = []byte("items")
 	usersBucket = []byte("users")
 )
 
-func InitDB(env string) error {
-	var databasePath = "database/" + env + ".db"
+func InitDB(c config.Server) error {
 	var err error
 	if err := os.MkdirAll("database", 0755); err != nil {
 		return err
 	}
 
-	DB, err = bbolt.Open(databasePath, 0600, nil)
+	db, err = bbolt.Open(c.DatabasePath, 0600, nil)
 	if err != nil {
 		return err
 	}
 
 	// Create buckets if they don't exist
-	err = DB.Update(func(tx *bbolt.Tx) error {
+	err = db.Update(func(tx *bbolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists(itemsBucket)
 		if err != nil {
 			return err
@@ -51,7 +49,7 @@ func InitDB(env string) error {
 
 // CreateRecord creates a record in the database for the given item/user after encrypting the content.
 func CreateRecord(bucketName string, record interface{}) error {
-	return DB.Update(
+	return db.Update(
 		func(tx *bbolt.Tx) error {
 			b := tx.Bucket([]byte(bucketName))
 			if b == nil {
@@ -83,7 +81,6 @@ func CreateRecord(bucketName string, record interface{}) error {
 			if err != nil {
 				return err
 			}
-			log.Printf("Record JSON: %s", recordJSON) // Log record JSON
 			return b.Put([]byte(strconv.Itoa(id)), recordJSON)
 		},
 	)
@@ -91,7 +88,7 @@ func CreateRecord(bucketName string, record interface{}) error {
 
 // GetAllRecords retrieves all records from the specified bucket and unmarshals them into the provided slice.
 func GetAllRecords(bucketName string, records interface{}, c *fiber.Ctx) error {
-	return DB.View(func(tx *bbolt.Tx) error {
+	return db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(bucketName))
 		if b == nil {
 			return fmt.Errorf("bucket %q not found", bucketName)
@@ -133,9 +130,91 @@ func GetAllRecords(bucketName string, records interface{}, c *fiber.Ctx) error {
 	})
 }
 
+// UpdateRecord updates a record in the specified bucket with the provided ID and updated data.
+func UpdateRecord(bucketName, id string, updatedRecord interface{}) error {
+	return db.Update(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte(bucketName))
+		if b == nil {
+			return fmt.Errorf("bucket %s not found", bucketName)
+		}
+
+		recordJSON := b.Get([]byte(id))
+		if recordJSON == nil {
+			return fmt.Errorf("record with ID %s not found in bucket %s", id, bucketName)
+		}
+
+		if err := updateRecordFromJSON(recordJSON, updatedRecord); err != nil {
+			return err
+		}
+
+		updatedJSON, err := json.Marshal(updatedRecord)
+		if err != nil {
+			return err
+		}
+
+		return b.Put([]byte(id), updatedJSON)
+	})
+}
+
+// updateRecordFromJSON updates the provided record using data from JSON.
+func updateRecordFromJSON(recordJSON []byte, updatedRecord interface{}) error {
+	switch record := updatedRecord.(type) {
+	case *models.Item:
+		var existingItem models.Item
+		if err := json.Unmarshal(recordJSON, &existingItem); err != nil {
+			return err
+		}
+		updateExistingItem(record, &existingItem)
+	case *models.User:
+		var existingUser models.User
+		if err := json.Unmarshal(recordJSON, &existingUser); err != nil {
+			return err
+		}
+		updateExistingUser(record, &existingUser)
+	default:
+		return fmt.Errorf("unsupported record type")
+	}
+	return nil
+}
+
+// updateExistingItem updates the item record based on existing data.
+func updateExistingItem(updatedItem, existingItem *models.Item) {
+	if updatedItem.Title != "" {
+		existingItem.Title = updatedItem.Title
+	}
+	if updatedItem.Content.Description != "" {
+		existingItem.Content = updatedItem.Content
+	}
+	// Preserve the ID and creation timestamp
+	updatedItem.ID = existingItem.ID
+	updatedItem.CreatedAt = existingItem.CreatedAt
+	updatedItem.UpdatedAt = time.Now()
+}
+
+// updateUserFromExisting updates the user record based on existing data.
+func updateExistingUser(updatedUser, existingUser *models.User) {
+	if updatedUser.User != "" {
+		existingUser.User = updatedUser.User
+	}
+	if updatedUser.Wallet != "" {
+		existingUser.Wallet = updatedUser.Wallet
+	}
+	// Always update the password if provided
+	if updatedUser.Password != "" {
+		existingUser.Password = updatedUser.Password
+	} else {
+		// If password is not provided, preserve the existing password
+		updatedUser.Password = existingUser.Password
+	}
+	// Preserve the ID and creation timestamp
+	updatedUser.ID = existingUser.ID
+	updatedUser.CreatedAt = existingUser.CreatedAt
+	updatedUser.UpdatedAt = time.Now()
+}
+
 // GetRecordByID retrieves a record from the specified bucket by ID and unmarshals it into the provided model.
 func GetRecordByID(bucketName, id string, record interface{}) error {
-	return DB.View(func(tx *bbolt.Tx) error {
+	return db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(bucketName))
 		if b == nil {
 			return fmt.Errorf("bucket %s not found", bucketName)
@@ -180,7 +259,7 @@ func GetUserByWallet(wallet string) (*models.User, error) {
 // getUserByField retrieves a user by a specific field (e.g., username or wallet) from the database
 func GetUserByField(field string, value string) (*models.User, error) {
 	var user models.User
-	err := DB.View(func(tx *bbolt.Tx) error {
+	err := db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("users"))
 		if b == nil {
 			return fmt.Errorf("bucket %q not found ", "users")
@@ -215,73 +294,8 @@ func GetUserByField(field string, value string) (*models.User, error) {
 	return &user, nil
 }
 
-// UpdateRecord updates a record in the specified bucket with the provided ID and updated data.
-func UpdateRecord(bucketName, id string, updatedRecord interface{}) error {
-	return DB.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte(bucketName))
-		if b == nil {
-			return fmt.Errorf("bucket %s not found", bucketName)
-		}
-
-		recordJSON := b.Get([]byte(id))
-		if recordJSON == nil {
-			return fmt.Errorf("record with ID %s not found in bucket %s", id, bucketName)
-		}
-		switch updatedRecord := updatedRecord.(type) {
-		case *models.Item:
-			var existingItem models.Item
-			if err := json.Unmarshal(recordJSON, &existingItem); err != nil {
-				return err
-			}
-			// Update only the non-zero fields
-			if updatedRecord.Title != "" {
-				existingItem.Title = updatedRecord.Title
-			}
-			if updatedRecord.Content.Description != "" {
-				existingItem.Content = updatedRecord.Content
-			}
-			// Preserve the ID and creation timestamp
-			updatedRecord.ID = existingItem.ID
-			updatedRecord.CreatedAt = existingItem.CreatedAt
-			updatedRecord.UpdatedAt = time.Now()
-		case *models.User:
-			var existingUser models.User
-			if err := json.Unmarshal(recordJSON, &existingUser); err != nil {
-				return err
-			}
-			// Update only the non-zero fields
-			if updatedRecord.User != "" {
-				existingUser.User = updatedRecord.User
-			}
-			if updatedRecord.Wallet != "" {
-				existingUser.Wallet = updatedRecord.Wallet
-			}
-			// Always update the password if provided
-			if updatedRecord.Password != "" {
-				existingUser.Password = updatedRecord.Password
-			} else {
-				// If password is not provided, preserve the existing password
-				updatedRecord.Password = existingUser.Password
-			}
-			// Preserve the ID and creation timestamp
-			updatedRecord.ID = existingUser.ID
-			updatedRecord.CreatedAt = existingUser.CreatedAt
-			updatedRecord.UpdatedAt = time.Now()
-		default:
-			return fmt.Errorf("unsupported record type")
-		}
-
-		updatedJSON, err := json.Marshal(updatedRecord)
-		if err != nil {
-			return err
-		}
-
-		return b.Put([]byte(id), updatedJSON)
-	})
-}
-
 func DeleteRecord(bucketName, id string) error {
-	return DB.Update(
+	return db.Update(
 		func(tx *bbolt.Tx) error {
 			b := tx.Bucket([]byte(bucketName))
 			if b == nil {
@@ -299,7 +313,7 @@ func DeleteRecord(bucketName, id string) error {
 
 func NextID(bucketName string) (int, error) {
 	var id int
-	err := DB.Update(func(tx *bbolt.Tx) error {
+	err := db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(bucketName))
 		if b == nil {
 			return fmt.Errorf("bucket %q not found ", bucketName)
