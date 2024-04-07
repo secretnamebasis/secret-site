@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+    <div class="container">
+        <main>
+            <section>
+                <ul>
+                    {{range .Items}}
+                        <h3><a href="/items/{{.ID}}">{{.Title}}</a></h3>
+                    {{end}}
+                </ul>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

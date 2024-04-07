@@ -1,0 +1,75 @@
+/* Header styles */
+header {
+    background-color: #000000; /* Dark background color */
+    color: white; /* Text color */
+    padding: 20px; /* Padding for spacing */
+    text-align: center; /* Center align text */
+    width: 100%; /* Full width */
+    margin: 0; /* Remove default margin */
+    box-sizing: border-box; /* Include padding in the width calculation */
+}
+
+/* Footer styles */
+footer {
+    background-color: #000000; /* Dark background color */
+    color: white; /* Text color */
+    padding: 20px; /* Padding for spacing */
+    text-align: center; /* Center align text */
+    position: fixed; /* Fixed positioning */
+    bottom: 0; /* Align to the bottom of the viewport */
+    width: 100%; /* Full width */
+    left: 0; /* Align to the left edge of the viewport */
+}
+
+.container {
+    display: flex; /* Use flexbox */
+    justify-content: center; /* Center content horizontally */
+    align-items: center; /* Center content vertically */
+    min-height: calc(100vh - 300px); /* Adjusted height to account for header and footer heights */
+    padding: 20px; /* Padding to create space between content and edges */
+    box-sizing: border-box; /* Include padding in the height calculation */
+}
+
+
+/* Body styles */
+body {
+    background-color: black; /* Black background color */
+    color: white; /* White text color */
+    margin: 0; /* Remove default margin */
+    padding: 0; /* Remove default padding */
+}
+
+/* Heading styles */
+h1 {
+    margin: 0; /* Remove default margin for h1 */
+}
+
+/* Navigation styles */
+nav {
+    margin-top: 20px; /* Add margin above navigation links */
+}
+
+/* Navigation link styles */
+nav a,
+a {
+    color: white; /* Link text color */
+    text-decoration: none; /* Remove underline from links */
+    margin: 0 15px; /* Add margin between links */
+    transition: color 0.3s ease; /* Smooth transition for link color */
+}
+
+/* Hover effect for navigation links */
+nav a:hover,
+a:hover {
+    color: #ffd700; /* Change link color on hover */
+}
+
+/* Address styles */
+.address {
+    font-style: italic; /* Italicize address text */
+}
+
+/* Copyright styles */
+.copyright {
+    margin-top: 20px; /* Add margin above copyright text */
+}

@@ -12,6 +12,7 @@ func Draw(app *fiber.App) {
 	// Initialize middleware
 	mw := middleware.New()
 	app.Use(mw.LogRequests())
+
 	// Define views routes
 	defineViewsRoutes(app, mw)
 
@@ -27,10 +28,14 @@ func defineViewsRoutes(app *fiber.App, mw *middleware.Middleware) {
 		mw.HelmetMiddleware(),
 		mw.RateLimiter(),
 	)
+	// Serve static files from the "assets" directory for both root and "/items" routes
+	viewsGroup.Static("/", "./app/assets")
+	viewsGroup.Static("/items", "./app/assets")
 
 	// Define view routes
 	viewsGroup.Get("/", views.Home)
 	viewsGroup.Get("/about", views.About)
+	viewsGroup.Get("/items", views.Items)
 	viewsGroup.Get("/items/:id", views.Item)
 }
 

@@ -1,73 +1,92 @@
-<!-- public/item_detail.html -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{.Title}}</title>
-
-    <!-- Include CryptoJS library -->
+    <title>Item Detail</title>
+    <!-- Include CryptoJS library for encryption -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        /* CSS for container */
+        .container {
+            max-width: 800px; /* Set maximum width for container */
+            margin: 0 auto; /* Center container horizontally */
+            padding: 20px; /* Add padding to container */
+        }
+        /* CSS for title container */
+        .title-container {
+            text-align: center; /* Center align title */
+            margin-bottom: 20px; /* Add margin below title */
+        }
+        /* CSS for title */
+        .title {
+            margin: 0; /* Remove default margin for title */
+        }
+        /* CSS for main content */
+        main {
+            text-align: justify; /* Justify text in main content */
+            line-height: 1.6; /* Set line height for better readability */
+        }
+    </style>
 </head>
 <body>
-
-    <header>
-        <h1>{{.Title}}</h1>
-    </header>
-
-    <main>
-        <h2>{{.Item.Title}}</h2>
-        <p id="encryptedContent" style="white-space: pre-line;">{{.Item.Content.Description}}</p>
-        <p><em>Created: {{.Item.CreatedAt}}</em></p>
-
-        <!-- Form for entering decryption password -->
-        <form id="decryptForm">
-            <label for="password">Enter decryption password:</label><br>
-            <input type="password" id="password" name="password"><br><br>
-            <button type="submit">Decrypt</button>
-        </form>
-        <p id="submittedPassword"></p>
-        <!-- Display decrypted content here -->
-        <p id="decryptedContent"></p>
-    </main>
-
-    <footer>
-        <p>Donations and Private messages: </p>
-        <p><span class="address">{{.Address}}</span></p>
-        <p>&copy; 2024 | secretnamebasis </p>
-    </footer>
-   
+    <div class="container">
+        <main>
+            <!-- Title container -->
+            <div class="title-container">
+                <!-- Display item title -->
+                <h2 class="title">{{.Item.Title}}</h2>
+                <!-- Display item creation date -->
+            </div>
+            <!-- Content container -->
+            <div>
+                <p id="decryptedContent"></p>
+                <!-- Display encrypted content -->
+                <p id="encryptedContent" style="white-space: pre-line;">{{.Item.Content.Description}}</p>
+                <!-- Form for entering decryption password -->
+                <form id="decryptForm">
+                    <label for="password">Enter decryption password:</label><br>
+                    <input type="password" id="password" name="password"><br><br>
+                    <button type="submit">Decrypt</button>
+                </form>
+                <p><em>Created: {{.Item.CreatedAt.Format "2006-01-02 15:04:05"}}</em></p>
+            </div>
+        </main>
+    </div>
+    <!-- JavaScript for decryption -->
     <script>
+        // Add an event listener to the form for decryption
         document.getElementById("decryptForm").addEventListener("submit", function(event){
-            event.preventDefault();
-            var password = document.getElementById("password").value;
-            var encryptedContent = document.getElementById("encryptedContent").innerText; // Get encrypted content using ID
+            event.preventDefault(); // Prevent form submission
             
-            // Display the submitted password
-            document.getElementById("submittedPassword").innerText = "Submitted password: " + password;
+            var password = document.getElementById("password").value; // Get password from input
+            var encryptedContent = document.getElementById("encryptedContent").innerText.trim(); // Get encrypted content using ID
             
+            // Decrypt the content and update the encryptedContent element
             var decryptedContent = decryptContent(encryptedContent, password);
-            document.getElementById("decryptedContent").innerText = decryptedContent;
+            document.getElementById("encryptedContent").style.display = "none"; // Hide encrypted content
+            document.getElementById("decryptForm").style.display = "none"; // Hide encrypted content
+            document.getElementById("decryptedContent").innerText = decryptedContent; // Display decrypted content
+            document.getElementById("decryptedContent").style.display = "block"; // Show decrypted content
         });
-        
+
+        // Function to decrypt content
         function decryptContent(encryptedContent, password) {
             try {
+                // Decrypt the content using CryptoJS
                 var decrypted = CryptoJS.AES.decrypt(encryptedContent, password);
                 var decryptedText = decrypted.toString(CryptoJS.enc.Utf8);
+
+                // Check if decryption was successful
                 if (decryptedText) {
-                    // Decryption successful
-                    return decryptedText;
+                    return decryptedText; // Return decrypted text
                 } else {
-                    // Decryption failed
-                    return "Decryption failed. Invalid password or content.";
+                    return "Decryption failed. Invalid password or content."; // Return error message
                 }
             } catch (error) {
-                // Decryption error
-                return "Decryption error: " + error.message;
+                return "Decryption error: " + error.message; // Return decryption error
             }
         }
     </script>
-    
 </body>
 </html>
