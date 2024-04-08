@@ -26,31 +26,31 @@ func (m *Middleware) LogRequests() fiber.Handler {
 		// Log request details
 		log.Printf("Request: %s %s", c.Method(), c.OriginalURL())
 
-		// // Log request headers
-		// log.Println("Request Headers:")
-		// c.Request().Header.VisitAll(func(key, value []byte) {
-		// 	log.Printf("%s: %s", key, value)
-		// })
+		// Log request headers
+		log.Println("Request Headers:")
+		c.Request().Header.VisitAll(func(key, value []byte) {
+			log.Printf("%s: %s", key, value)
+		})
 
-		// // // Log request body if present
-		// if len(c.Request().Body()) > 0 {
-		// 	log.Println("Request Body:")
-		// 	log.Println(string(c.Request().Body()))
-		// }
+		// // Log request body if present
+		if len(c.Request().Body()) > 0 {
+			log.Println("Request Body:")
+			log.Println(string(c.Request().Body()))
+		}
 
 		// Proceed to next middleware or route handler
 		if err := c.Next(); err != nil {
 			return err
 		}
 
-		// // Log response details
-		// log.Printf("Response: %d", c.Response().StatusCode())
+		// Log response details
+		log.Printf("Response: %d", c.Response().StatusCode())
 
-		// // // Log response headers
-		// log.Println("Response Headers:")
-		// c.Response().Header.VisitAll(func(key, value []byte) {
-		// 	log.Printf("%s: %s", key, value)
-		// })
+		// // Log response headers
+		log.Println("Response Headers:")
+		c.Response().Header.VisitAll(func(key, value []byte) {
+			log.Printf("%s: %s", key, value)
+		})
 
 		// Log response body if present
 		if len(c.Response().Body()) > 0 {

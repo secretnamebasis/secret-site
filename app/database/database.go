@@ -70,6 +70,15 @@ func CreateRecord(bucketName string, record interface{}) error {
 				encryptedContent = base64.StdEncoding.EncodeToString(encrypted)
 				r.Content.Description = encryptedContent
 
+				encrypted, err = cryptography.EncryptData([]byte(r.Content.Image), config.Env("SECRET"))
+				if err != nil {
+					return err
+				}
+
+				// Encode the encrypted content to Base64
+				encryptedContent = base64.StdEncoding.EncodeToString(encrypted)
+				r.Content.Image = encryptedContent
+
 			case *models.User:
 				id = r.ID
 
@@ -111,6 +120,15 @@ func GetAllRecords(bucketName string, records interface{}, c *fiber.Ctx) error {
 						return err
 					}
 					item.Content.Description = string(decryptedContent)
+					decodedBytes, err = base64.StdEncoding.DecodeString(item.Content.Image)
+					if err != nil {
+						return err
+					}
+					decryptedContent, err = cryptography.DecryptData(decodedBytes, config.Env("SECRET"))
+					if err != nil {
+						return err
+					}
+					item.Content.Image = string(decryptedContent)
 				}
 				sliceValue := reflect.ValueOf(records).Elem()
 				sliceValue.Set(reflect.Append(sliceValue, reflect.ValueOf(recordType).Elem()))

@@ -2,6 +2,7 @@ package views
 
 import (
 	"net/http"
+	"sort"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/secretnamebasis/secret-site/app/controllers"
@@ -29,6 +30,13 @@ func Items(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(http.StatusInternalServerError, "Failed to retrieve items")
 	}
+	// Sort by create date, for now
+	sort.Slice(
+		items,
+		func(i, j int) bool {
+			return items[i].CreatedAt.String() < items[j].CreatedAt.String()
+		},
+	)
 
 	// Define data for rendering the template
 	data := ItemsData{

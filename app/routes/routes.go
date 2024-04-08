@@ -22,25 +22,62 @@ func Draw(app *fiber.App) {
 
 // defineViewsRoutes defines routes for views
 func defineViewsRoutes(app *fiber.App, mw *middleware.Middleware) {
+
 	// Create a route group for views
 	viewsGroup := app.Group("/")
+
+	// Apply middleware to the viewsGroup
 	viewsGroup.Use(
 		mw.HelmetMiddleware(),
 		mw.RateLimiter(),
 	)
-	// Serve static files from the "assets" directory for both root and "/items" routes
+
+	// Serve static files from the "assets" directory
 	viewsGroup.Static("/", "./app/assets")
 	viewsGroup.Static("/items", "./app/assets")
 
 	// Define view routes
-	viewsGroup.Get("/", views.Home)
-	viewsGroup.Get("/about", views.About)
-	viewsGroup.Get("/items", views.Items)
-	viewsGroup.Get("/items/:id", views.Item)
+	viewRoutes := []struct {
+		Path   string
+		Handle func(*fiber.Ctx) error
+	}{
+		{
+			Path:   "/",
+			Handle: views.Home,
+		},
+		{
+			Path:   "/about",
+			Handle: views.About,
+		},
+		{
+			Path:   "/items",
+			Handle: views.Items,
+		},
+		{
+			// this route needs authorization
+			Path: "/items/new",
+			// but as we don't have auth on right now
+			// this will only serve as an example
+			// but ideally, you wouldn't want just anyone
+			// having access to creating items with out authorization
+			Handle: views.NewItem,
+		},
+		{
+			Path:   "/items/:id",
+			Handle: views.Item,
+		},
+	}
+
+	// Register view routes
+	for _, route := range viewRoutes {
+		viewsGroup.Get(route.Path, route.Handle)
+	}
+	viewsGroup.Post("/items/submit", views.SubmitItem)
 }
 
-// defineAPIRoutes defines routes for APIs
+// DefineAPIRoutes defines routes for APIs
 func defineAPIRoutes(app *fiber.App, mw *middleware.Middleware) {
+
 	// Create a route group for API endpoints
 	apiGroup := app.Group("/api")
 	apiGroup.Get("/ping", api.Ping)
@@ -53,18 +90,42 @@ func defineAPIRoutes(app *fiber.App, mw *middleware.Middleware) {
 	)
 
 	// Define API routes for items
-	items := apiGroup.Group("/items")
-	items.Get("/", api.AllItems)
-	items.Get("/:id", api.ItemByID)
-	items.Post("/", api.CreateItem)
-	items.Put("/:id", api.UpdateItem)
-	items.Delete("/:id", api.DeleteItem)
+	defineResourceRoutes(
+		apiGroup,
+		"items",
+		api.AllItems,
+		api.ItemByID,
+		api.CreateItem,
+		api.UpdateItem,
+		api.DeleteItem,
+	)
 
 	// Define API routes for users
-	users := apiGroup.Group("/users")
-	users.Get("/", api.AllUsers)
-	users.Get("/:id", api.UserByID)
-	users.Post("/", api.CreateUser)
-	users.Put("/:id", api.UpdateUser)
-	users.Delete("/:id", api.DeleteUser)
+	defineResourceRoutes(
+		apiGroup,
+		"users",
+		api.AllUsers,
+		api.UserByID,
+		api.CreateUser,
+		api.UpdateUser,
+		api.DeleteUser,
+	)
+}
+
+// Define resource routes for CRUD operations
+func defineResourceRoutes(
+	group fiber.Router,
+	resourceName string,
+	getAll,
+	getByID,
+	create,
+	update,
+	delete func(*fiber.Ctx) error,
+) {
+	resource := group.Group("/" + resourceName)
+	resource.Get("/", getAll)
+	resource.Post("/", create)
+	resource.Get("/:id", getByID)
+	resource.Put("/:id", update)
+	resource.Delete("/:id", delete)
 }

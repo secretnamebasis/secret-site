@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/base64"
 	"strings"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/secretnamebasis/secret-site/app/config"
@@ -30,15 +29,15 @@ func CreateItem(c *fiber.Ctx) error {
 	nextID, _ := controllers.NextItemID()
 
 	// Create a new item with the parsed data
-	item := models.Item{
-		ID:        nextID,
-		Title:     new.Title,
-		Content:   new.Content,
-		CreatedAt: time.Now(),
-	}
+	item := models.InitializeItem(
+		nextID,
+		new.Title,
+		new.Content.Description,
+		new.Content.Image,
+	)
 
 	// Create the item record
-	if err := controllers.CreateItemRecord(&item); err != nil {
+	if err := controllers.CreateItemRecord(item); err != nil {
 		return ErrorResponse(c, fiber.StatusInternalServerError, "Error creating item")
 	}
 

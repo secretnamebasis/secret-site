@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New</title>
+</head>
+<body>
+    <div class="container">
+        <main>
+            <section>
+                <h2>New</h2>
+                <form id="newForm" action="/items/submit" method="POST" enctype="multipart/form-data">
+                    <label for="title">Title:</label><br>
+                    <input type="text" id="title" name="title" required><br>
+                    <label for="content">Content:</label><br>
+                    <textarea id="content" name="content.description" rows="5" cols="50" required></textarea><br><br>
+                    <!-- File input field for photo -->
+                    <label for="photo">Photo:</label><br>
+                    <input type="file" id="photo" name="content.image" accept="image/*"><br><br>
+                    <button type="submit">Submit</button>
+                </form>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

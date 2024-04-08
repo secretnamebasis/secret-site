@@ -15,6 +15,21 @@ type Item struct {
 }
 type Content struct {
 	Description string `json:"description"`
+	Image       string `json:"image"`
+}
+
+// NewItem creates and initializes a new Item instance
+func InitializeItem(id int, title, description, image string) *Item {
+	return &Item{
+		ID:    id,
+		Title: title,
+		Content: Content{
+			Description: description,
+			Image:       image,
+		},
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
 }
 
 // Validate method validates the fields of the Item struct
