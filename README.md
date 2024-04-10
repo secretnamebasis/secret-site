@@ -48,12 +48,12 @@ The following models are supported in the `bbolt` database with the accompanying
 ## Install
 
 ### env
-Use the `dot.env.sample` file to create `.env` files for the following directories:
+Use the [`dot.env.sample`](https://github.com/secretnamebasis/secret-site/blob/main/dot.env.sample) file to create `.env` files for the following directories:
 - root directory, `./.env` 
 - test directory, `./test/.env`
 
 ### TLS cert
-This site [assumes TLS certification](https://github.com/secretnamebasis/secret-site/blob/cd559806442bad5553464d6fbee86966fec1aa3e/app/site.go#L41) has been done in advance.
+This site [assumes TLS certification](https://github.com/secretnamebasis/secret-site/blob/cd559806442bad5553464d6fbee86966fec1aa3e/app/site.go#L41).
 
 ### run
 To run the application: 
@@ -71,7 +71,7 @@ Any `env` but `prod` runs app without TLS. Use parse flags to customize your dev
 ```sh
 go run . -env=dev -port=3000 -db=./app/database/
 ```
-or,
+Or:
 ```sh
 bin/dev
 ```
@@ -79,7 +79,7 @@ bin/dev
 ## Testing
 When you `run_integration_test.sh`, you will find a timesstamped builds in `./build/` and logs in `./log/`.
 
-Alternatively, if you would like to just test the API:
+Alternatively, if you would like to test only the API:
 ```sh
 bin/test
 ```
