@@ -29,21 +29,22 @@ The following models are supported in the `bbolt` database with the accompanying
 #### ITEM
 - ~~encrypt & decrypt stores in database~~
     - ~~`:description`~~
-    - ~~`:image` ~~
-- authenticated, `AES` encrypted items
+    - ~~`:image`~~
+- user authenticated, `AES` encrypted items
 
 #### USER
 - authentication
 - signup
-- login
+- login/logout
 
-### FRONTEND
-- `Gnomon` search tools
-- `NFA` minting tools
 
 ### EXTRAS
+#### BACKEND
 - first-run script would be kind of cool
 - websocket connections with DERO wallets would be rad 
+#### FRONTEND
+- [`Gnomon`](https://github.com/civilware/Gnomon) search tools
+- [`NFA`](https://github.com/civilware/artificer-nfa-standard) minting tools
 
 ## Install
 
