@@ -10,18 +10,38 @@ The database is `bbolt`, an in app key/value store.
 The coolest feature included is the integration with `DERO`
 
 ## Design
-`secret-site` currently supportst the following models for its `bbolt` database: 
+`secret-site` is a TLS encrypted website for hosting encrypted content. 
+
+The following models are supported in the `bbolt` database with the accompanying features: 
 - Item: `{ id: , title: , content: :description, :image, :imageURL }`
- - encryption and decryption for item `:description`, `:image`
+    - `AES` encryption/decryption of `:description`, `:image`
 - User `{ user: , wallet: , password: }`
- - model validates wallet addresses with `DERO` network
+    - validates wallet addresses with `DERO` network
 
 ## Roadmap
-- ~~encrypt & decrypt item stored in database~~
-- User authentication
-- User authenticated encrypted stores
+### DOCS
+- API documentation 
+
+### DB
+- routine backups
+    - segmented backups (conserve storage)
+
+#### ITEM
+- ~~encrypt & decrypt stores in database~~
+    - ~~`:description`~~
+    - ~~`:image` ~~
+- authenticated, `AES` encrypted items
+
+#### USER
+- authentication
+- signup
+- login
+
+### FRONTEND
 - `Gnomon` search tools
 - `NFA` minting tools
+
+### EXTRAS
 - first-run script would be kind of cool
 - websocket connections with DERO wallets would be rad 
 
