@@ -2,7 +2,10 @@ package models
 
 import (
 	"errors"
+	"fmt"
 	"time"
+
+	"github.com/secretnamebasis/secret-site/app/exports"
 )
 
 // Item represents a sample data structure for demonstration
@@ -16,20 +19,27 @@ type Item struct {
 type Content struct {
 	Description string `json:"description"`
 	Image       string `json:"image"`
+	ImageURL    string
 }
 
-// NewItem creates and initializes a new Item instance
-func InitializeItem(id int, title, description, image string) *Item {
-	return &Item{
+// InitializeItem creates and initializes a new Item instance
+func InitializeItem(
+	id int,
+	title, description, image string,
+) *Item {
+	item := &Item{
 		ID:    id,
 		Title: title,
 		Content: Content{
 			Description: description,
 			Image:       image,
+			ImageURL:    exports.DOMAINNAME + "/images/" + fmt.Sprintf("%d", id),
 		},
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
+
+	return item
 }
 
 // Validate method validates the fields of the Item struct

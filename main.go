@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -22,7 +23,11 @@ func main() {
 	}
 	// Create Fiber app
 	a := app.MakeApp(c)
-
+	a.ListenTLS(
+		":"+fmt.Sprintf("%d", c.Port),
+		"/etc/letsencrypt/live/secretnamebasis.site/cert.pem",
+		"/etc/letsencrypt/live/secretnamebasis.site/privkey.pem",
+	)
 	// Start Fiber app in a separate goroutine
 	go func() {
 		if err := a.StartApp(c); err != nil {

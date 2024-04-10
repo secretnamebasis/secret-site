@@ -12,9 +12,10 @@ import (
 
 // ItemData defines the data structure for the item detail template
 type ItemData struct {
-	Title   string
-	Address string
-	Item    models.Item
+	Title    string
+	Address  string
+	Item     models.Item
+	ImageUrl string
 }
 
 // Item renders the item detail page
@@ -35,9 +36,10 @@ func Item(c *fiber.Ctx) error {
 
 	// Define data for rendering the template
 	data := ItemData{
-		Title:   exports.APP_NAME,
-		Address: addr.String(),
-		Item:    item,
+		Title:    exports.APP_NAME,
+		Address:  addr.String(),
+		Item:     item,
+		ImageUrl: item.Content.ImageURL,
 	}
 
 	// Render the template using renderTemplate function

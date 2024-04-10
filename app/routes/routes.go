@@ -66,6 +66,10 @@ func defineViewsRoutes(app *fiber.App, mw *middleware.Middleware) {
 			Path:   "/items/:id",
 			Handle: views.Item,
 		},
+		{
+			Path:   "/images/:id",
+			Handle: views.Images,
+		},
 	}
 
 	// Register view routes

@@ -24,14 +24,10 @@ func MakeApp(c config.Server) *App {
 		fiber.Config{
 			AppName:               exports.APP_NAME,
 			CaseSensitive:         true,
-			DisableStartupMessage: true,
+			DisableStartupMessage: false,
 		},
 	)
-	app.ListenTLS(
-		":443",
-		"/etc/letsencrypt/live/secretnamebasis.site/cert.pem",
-		"/etc/letsencrypt/live/secretnamebasis.site/privkey.pem",
-	)
+
 	// Initialize the database
 	if err := database.InitDB(c); err != nil {
 		log.Fatal(err)
