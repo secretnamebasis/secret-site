@@ -47,6 +47,7 @@ The following models are supported in the `bbolt` database with the accompanying
 
 ## Install
 
+
 ### clone
 Clone repo and change directories:
 ```sh
@@ -54,12 +55,21 @@ git clone https://github.com/secretnamebasis/secret-site.git
 cd secret-site
 ```
 
+### DERO wallet
+`secret-site` need a DERO wallet instance:
+- Download the latest `[ENGRAM]`(https://github.com/DEROFDN/Engram/releases/latest/) wallet
+- Restore, or create, wallet file
+- Configure module `Cyberdeck` for wallet `RPC` activation
+- Collect, or modify, user and pass details
+- Paste user & pass values into `.env` file
+
 ### env
 
 Use the [`dot.env.sample`](https://github.com/secretnamebasis/secret-site/blob/main/dot.env.sample) file to create `.env` files:
 
 Duplicate the `.env` parmeters for the following directories:
-### root directory: `./.env` 
+
+#### root directory: `./.env` 
 Copy the template
 ```sh
 cp dot.env.sample .env 
@@ -94,7 +104,7 @@ DERO_WALLET_USER="secret"
 DERO_WALLET_PASS="pass"
 ```
 
-### test directory, `./test/.env`
+#### test directory: `./test/.env`
 Now duplicate the `.env` to your testing environment
 
 ```sh
@@ -103,6 +113,7 @@ cp .env ./test/.env
 
 ### TLS cert
 This site [assumes TLS certification](https://github.com/secretnamebasis/secret-site/blob/cd559806442bad5553464d6fbee86966fec1aa3e/app/site.go#L41).
+
 
 ### run
 To run the application: 
