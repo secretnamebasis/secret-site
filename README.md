@@ -13,16 +13,41 @@ The coolest feature included is the integration with `DERO`
     - Users { user: , wallet: }
 
 ## Roadmap
-- ~~current `db.go` is a `bbolt` implmentation, an encrypted database would be preferred~~
-- User authentication; turned off for the moment
+- ~~encrypt & decrypt content stored in database~~
+- User authentication
 - first-run script would be kind of cool
 - websocket connections with DERO wallets would be rad 
 
 ## Install
+
+### env
 Use the `dot.env.sample` file to create `.env` files for the following directories:
 - root directory, `./.env` 
 - test directory, `./test/.env`
 
-Then `go run .` or `go build . && ./secret-site`
+### TLS cert
+This site assumes TLS certification has been done in advance
+```go
+"/etc/letsencrypt/live/"+config.Domain+"/cert.pem",
+"/etc/letsencrypt/live/"+config.Domain+"/privkey.pem"
+```
+
+### run
+To run the application: 
+```sh
+go run .
+``` 
+or, if you prefer:  
+```sh
+go build . 
+./secret-site
+```
+
+## Dev 
+Use can parse flags to customize your development environment. 
+```sh
+go run . -env=dev -port=3000 -db=./app/database/
+```
+
 ## Testing
-When you `run_integration_test.sh`, you will find a build in `./builds/` and logs in `./logs/`
+When you `run_integration_test.sh`, you will find a timesstamped build in `./builds/` and logs in `./logs/`

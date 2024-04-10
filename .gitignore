@@ -3,3 +3,4 @@
 *.log
 # ignore builds
 secret-site_*
+secret-site

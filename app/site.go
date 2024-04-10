@@ -4,6 +4,10 @@ package app
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/secretnamebasis/secret-site/app/config"
@@ -36,8 +40,8 @@ func (a *App) StartApp(c config.Server) error {
 	case "prod":
 		return a.ListenTLS(
 			":"+fmt.Sprintf("%d", c.Port),
-			"/etc/letsencrypt/live/secretnamebasis.site/cert.pem",
-			"/etc/letsencrypt/live/secretnamebasis.site/privkey.pem",
+			"/etc/letsencrypt/live/"+config.Domain+"/cert.pem",
+			"/etc/letsencrypt/live/"+config.Domain+"/privkey.pem",
 		)
 	case "dev", "testing":
 		return a.Listen(
@@ -51,4 +55,20 @@ func (a *App) StartApp(c config.Server) error {
 // StopApp stops the Fiber application gracefully
 func (a *App) StopApp() error {
 	return a.Shutdown()
+}
+func (a *App) WaitForShutdown() error {
+
+	// Listen for termination signals
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	<-sigChan
+
+	// Shutdown the server gracefully
+	if err := a.StopApp(); err != nil {
+		log.Printf("Error stopping server: %s\n", err)
+	} else {
+		log.Println("Server stopped gracefully :)")
+	}
+
+	return nil
 }

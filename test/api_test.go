@@ -251,18 +251,19 @@ func TestApi(t *testing.T) {
 }
 func configServer() config.Server {
 	exports.Env = "testing"
+	exports.DatabaseDir = "../app/database/"
+	exports.EnvPath = "../../.env." + exports.Env
 	c := config.Server{
 		Port:         3000,
 		Env:          exports.Env,
-		DatabasePath: "../app/database/" + exports.Env + ".db",
+		DatabasePath: exports.DatabaseDir,
+		EnvPath:      exports.EnvPath,
 	}
 	return c
 }
 
 // test-server
 func startServer(c config.Server) *app.App { // start the server
-	// Delete any pre-existsing testing database before starting the server
-	deleteDB(c)
 
 	a := app.MakeApp(c)
 	go func() {
@@ -292,7 +293,7 @@ func stopServer(t *testing.T, a *app.App) { // stop the server
 }
 
 func deleteDB(c config.Server) {
-	err := os.RemoveAll(c.DatabasePath)
+	err := os.Remove(c.DatabasePath + c.Env + ".db")
 	if err != nil {
 		log.Fatalf("Error deleting database: %s\n", err)
 	}

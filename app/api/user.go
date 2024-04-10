@@ -27,7 +27,6 @@ func CreateUser(c *fiber.Ctx) error {
 
 	// Generate ID and password
 	err := controllers.CreateUserRecord(&newUser)
-
 	if err != nil {
 		return ErrorResponse(c, fiber.StatusInternalServerError, "Error creating user")
 	}

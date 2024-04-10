@@ -2,7 +2,7 @@
 
 # Logger function to write messages to a log file
 log() {
-    local log_file="./logs/run_integration_test.log"
+    local log_file="./logs/run_integration_test_$BUILD_DATE.log"
     local status="$1"
     local message="$2"
     touch $log_file
@@ -69,7 +69,7 @@ log_and_echo "info" "secret-site built under ./builds."
 
 log_and_echo "info" "secret-site is testing api"
 
-test_output=$( go test ./test/api_test.go -v -parallel 2)
+test_output=$( go test ./test/api_test.go -v)
 
 echo $test_output > test_results.tmp
 

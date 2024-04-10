@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/secretnamebasis/secret-site/app/exports"
+	"github.com/secretnamebasis/secret-site/app/config"
 )
 
 // Item represents a sample data structure for demonstration
@@ -33,7 +33,7 @@ func InitializeItem(
 		Content: Content{
 			Description: description,
 			Image:       image,
-			ImageURL:    exports.DOMAINNAME + "/images/" + fmt.Sprintf("%d", id),
+			ImageURL:    config.Domainname + "/images/" + fmt.Sprintf("%d", id),
 		},
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),

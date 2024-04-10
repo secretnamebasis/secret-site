@@ -8,10 +8,14 @@ import (
 
 // Ping handles the ping endpoint.
 func Ping(c *fiber.Ctx) error {
-	a, e := dero.GetWalletAddress()
-	s := "success"
 	d := "pong"
-	m := "app: " + exports.APP_NAME + " ; " + "owner: " + a.String()
+
+	a, e := dero.GetWalletAddress()
+
+	m := "app: " + exports.APP_NAME +
+		" :: owner: " + a.String()
+
+	s := "success"
 
 	if e != nil {
 		return c.JSON(e)

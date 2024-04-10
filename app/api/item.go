@@ -11,8 +11,6 @@ import (
 	"github.com/secretnamebasis/secret-site/app/models"
 )
 
-var SECRET = config.Env("SECRET")
-
 func CreateItem(c *fiber.Ctx) error {
 	// Parse request body into new item
 	var new models.Item
@@ -86,7 +84,7 @@ func UpdateItem(c *fiber.Ctx) error {
 	}
 
 	// Encrypt the new content
-	encryptedContent, err := cryptography.EncryptData([]byte(updatedItem.Content.Description), SECRET)
+	encryptedContent, err := cryptography.EncryptData([]byte(updatedItem.Content.Description), config.Env("SECRET"))
 	if err != nil {
 		return ErrorResponse(c, fiber.StatusInternalServerError, "Error encrypting content")
 	}
