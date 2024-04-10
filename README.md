@@ -56,7 +56,7 @@ or,
 bin/dev
 ```
 ## Testing
-When you `run_integration_test.sh`, you will find a timesstamped builds in `./builds/` and logs in `./logs/`.
+When you `run_integration_test.sh`, you will find a timesstamped builds in `./build/` and logs in `./log/`.
 
 Alternatively, if you would like to just test the API:
 ```sh

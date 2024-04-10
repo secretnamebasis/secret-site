@@ -2,7 +2,7 @@
 
 # Logger function to write messages to a log file
 log() {
-    local log_file="./logs/run_integration_test_$BUILD_DATE.log"
+    local log_file="./log/run_integration_test_$BUILD_DATE.log"
     local status="$1"
     local message="$2"
     touch $log_file
@@ -50,7 +50,7 @@ GIT_COMMIT=$(git rev-parse --short HEAD)
 EXECUTABLE_NAME="secret-site_${BUILD_DATE}_${GIT_COMMIT}"
 
 # Build the executable with the dynamic name
-go build -ldflags="-X 'main.BuildDate=${BUILD_DATE}' -X 'main.GitCommit=${GIT_COMMIT}'" -o "./builds/${EXECUTABLE_NAME}" .
+go build -ldflags="-X 'main.BuildDate=${BUILD_DATE}' -X 'main.GitCommit=${GIT_COMMIT}'" -o "./build/${EXECUTABLE_NAME}" .
 
 
 # Check if the build was successful
@@ -65,7 +65,7 @@ if ! command_exists "screen"; then
     exit 1
 fi
 
-log_and_echo "info" "secret-site built under ./builds."
+log_and_echo "info" "secret-site built under ./build."
 
 log_and_echo "info" "secret-site is testing api"
 
@@ -83,7 +83,7 @@ fi
 
 # Check if the test completed successfully
 if [ $? -ne 0 ]; then
-    log_and_echo "error" "secret-site test failed, see logs."
+    log_and_echo "error" "secret-site test failed, see log."
     exit 1
 fi
 
