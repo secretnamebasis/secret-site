@@ -47,10 +47,59 @@ The following models are supported in the `bbolt` database with the accompanying
 
 ## Install
 
+### clone
+Clone repo and change directories:
+```sh
+git clone https://github.com/secretnamebasis/secret-site.git
+cd secret-site
+```
+
 ### env
-Use the [`dot.env.sample`](https://github.com/secretnamebasis/secret-site/blob/main/dot.env.sample) file to create `.env` files for the following directories:
-- root directory, `./.env` 
-- test directory, `./test/.env`
+
+Use the [`dot.env.sample`](https://github.com/secretnamebasis/secret-site/blob/main/dot.env.sample) file to create `.env` files:
+
+Duplicate the `.env` parmeters for the following directories:
+### root directory: `./.env` 
+Copy the template
+```sh
+cp dot.env.sample .env 
+```
+Fill out the `.env` before moving the next step
+```sh
+# P U B L I C
+## APP 
+#
+DOMAIN="example.site"
+
+# P R I V A T E
+## APP
+#
+SECRET="secretWords&Numbers2"
+
+## DERO
+
+### IP
+#
+DERO_NODE_IP="127.0.0.1"
+DERO_WALLET_IP="127.0.0.1"
+
+### PORT
+#
+DERO_NODE_PORT="10102"
+DERO_WALLET_PORT="10103"
+
+### AUTH
+# 
+DERO_WALLET_USER="secret"
+DERO_WALLET_PASS="pass"
+```
+
+### test directory, `./test/.env`
+Now duplicate the `.env` to your testing environment
+
+```sh
+cp .env ./test/.env 
+```
 
 ### TLS cert
 This site [assumes TLS certification](https://github.com/secretnamebasis/secret-site/blob/cd559806442bad5553464d6fbee86966fec1aa3e/app/site.go#L41).
