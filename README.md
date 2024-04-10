@@ -1,8 +1,11 @@
 # SECRET-SITE
 ## Intro
-This project is aimed at creating a very hardy and robust Go Fiber site that is integrated with DERO
+This project is aimed at creating a very hardy and robust [Go Fiber](https://gofiber.io/) site that is integrated with [DERO](https://dero.io)
+
 ## Arch
 The hefitest part of this project lies squarely on `GoFiber`
+
+The database is `bbolt`, an in app key/value store. 
 
 The coolest feature included is the integration with `DERO`
 
@@ -14,7 +17,7 @@ The coolest feature included is the integration with `DERO`
         - model validates wallet addresses with `DERO` network
 
 ## Roadmap
-- ~~encrypt & decrypt content stored in database~~
+- ~~encrypt & decrypt item stored in database~~
 - User authentication
 - User authenticated encrypted stores
 - `Gnomon` search tools
