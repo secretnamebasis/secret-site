@@ -18,15 +18,14 @@ type ItemsData struct {
 	Items   []models.Item
 }
 
-// Home renders the home page
 func Items(c *fiber.Ctx) error {
 	addr, err := dero.GetWalletAddress()
 	if err != nil {
 		return fiber.NewError(http.StatusInternalServerError, "Failed to fetch Dero wallet address")
 	}
-
+	var items []models.Item
 	// Retrieve blog posts
-	items, err := controllers.AllItems(c)
+	items, err = controllers.AllItems()
 	if err != nil {
 		return fiber.NewError(http.StatusInternalServerError, "Failed to retrieve items")
 	}

@@ -13,6 +13,7 @@ import (
 
 	"github.com/secretnamebasis/secret-site/app"
 	"github.com/secretnamebasis/secret-site/app/config"
+	"github.com/secretnamebasis/secret-site/app/database"
 	"github.com/secretnamebasis/secret-site/app/exports"
 	"github.com/secretnamebasis/secret-site/app/models"
 )
@@ -230,6 +231,11 @@ func TestApi(t *testing.T) {
 
 	// Start the server and handle shutdown
 	a := startServer(c)
+
+	// Initialize the database
+	if err := database.InitDB(c); err != nil {
+		log.Fatal(err)
+	}
 
 	// Let the server turn on
 	wait()

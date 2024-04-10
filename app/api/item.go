@@ -60,7 +60,7 @@ func ItemByID(c *fiber.Ctx) error {
 }
 
 func AllItems(c *fiber.Ctx) error {
-	items, err := controllers.AllItems(c)
+	items, err := controllers.AllItems()
 	if err != nil {
 		return ErrorResponse(c, fiber.StatusInternalServerError, "Error retrieving items")
 	}

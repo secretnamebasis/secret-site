@@ -60,16 +60,19 @@ func isValidWallet(wallet string) error {
 }
 
 // AllItems retrieves all items from the database.
-func AllItems(c *fiber.Ctx) ([]models.Item, error) {
+func AllItems() ([]models.Item, error) {
 	var items []models.Item
-	err := database.GetAllRecords(bucketItems, &items, c)
-	return items, err
+	err := database.GetAllRecords(bucketItems, &items)
+	if err != nil {
+		return nil, err // Return nil slice and error
+	}
+	return items, nil // Return retrieved items and nil error
 }
 
 // AllUsers retrieves all users from the database.
 func AllUsers(c *fiber.Ctx) ([]models.User, error) {
 	var users []models.User
-	err := database.GetAllRecords(bucketUsers, &users, c)
+	err := database.GetAllRecords(bucketUsers, &users)
 	return users, err
 }
 

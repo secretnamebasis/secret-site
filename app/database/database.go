@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/secretnamebasis/secret-site/app/config"
 	"github.com/secretnamebasis/secret-site/app/cryptography"
 	"github.com/secretnamebasis/secret-site/app/models"
@@ -96,56 +95,58 @@ func CreateRecord(bucketName string, record interface{}) error {
 }
 
 // GetAllRecords retrieves all records from the specified bucket and unmarshals them into the provided slice.
-func GetAllRecords(bucketName string, records interface{}, c *fiber.Ctx) error {
-	return db.View(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte(bucketName))
-		if b == nil {
-			return fmt.Errorf("bucket %q not found", bucketName)
-		}
+func GetAllRecords(bucketName string, records interface{}) error {
+	return db.View(
+		func(tx *bbolt.Tx) error {
+			b := tx.Bucket([]byte(bucketName))
+			if b == nil {
+				return fmt.Errorf("bucket %q not found", bucketName)
+			}
 
-		// Define a helper function to unmarshal records
-		unmarshalRecord := func(recordType interface{}) error {
-			return b.ForEach(func(k, v []byte) error {
-				if err := json.Unmarshal(v, recordType); err != nil {
-					return err
-				}
-				// Decrypt the content if the record type is models.Item
-				if item, ok := recordType.(*models.Item); ok {
-					decodedBytes, err := base64.StdEncoding.DecodeString(item.Content.Description)
-					if err != nil {
-						return err
-					}
-					decryptedContent, err := cryptography.DecryptData(decodedBytes, config.Env("SECRET"))
-					if err != nil {
-						return err
-					}
-					item.Content.Description = string(decryptedContent)
-					decodedBytes, err = base64.StdEncoding.DecodeString(item.Content.Image)
-					if err != nil {
-						return err
-					}
-					decryptedContent, err = cryptography.DecryptData(decodedBytes, config.Env("SECRET"))
-					if err != nil {
-						return err
-					}
-					item.Content.Image = string(decryptedContent)
-				}
-				sliceValue := reflect.ValueOf(records).Elem()
-				sliceValue.Set(reflect.Append(sliceValue, reflect.ValueOf(recordType).Elem()))
-				return nil
-			})
-		}
+			// Define a helper function to unmarshal records
+			unmarshalRecord := func(recordType interface{}) error {
+				return b.ForEach(
+					func(k, v []byte) error {
+						if err := json.Unmarshal(v, recordType); err != nil {
+							return err
+						}
+						// Decrypt the content if the record type is models.Item
+						if item, ok := recordType.(*models.Item); ok {
+							decodedBytes, err := base64.StdEncoding.DecodeString(item.Content.Description)
+							if err != nil {
+								return err
+							}
+							decryptedContent, err := cryptography.DecryptData(decodedBytes, config.Env("SECRET"))
+							if err != nil {
+								return err
+							}
+							item.Content.Description = string(decryptedContent)
+							decodedBytes, err = base64.StdEncoding.DecodeString(item.Content.Image)
+							if err != nil {
+								return err
+							}
+							decryptedContent, err = cryptography.DecryptData(decodedBytes, config.Env("SECRET"))
+							if err != nil {
+								return err
+							}
+							item.Content.Image = string(decryptedContent)
+						}
+						sliceValue := reflect.ValueOf(records).Elem()
+						sliceValue.Set(reflect.Append(sliceValue, reflect.ValueOf(recordType).Elem()))
+						return nil
+					})
+			}
 
-		// Unmarshal records based on their types
-		switch records.(type) {
-		case *[]models.Item:
-			return unmarshalRecord(&models.Item{})
-		case *[]models.User:
-			return unmarshalRecord(&models.User{})
-		default:
-			return fmt.Errorf("unsupported record type")
-		}
-	})
+			// Unmarshal records based on their types
+			switch records.(type) {
+			case *[]models.Item:
+				return unmarshalRecord(&models.Item{})
+			case *[]models.User:
+				return unmarshalRecord(&models.User{})
+			default:
+				return fmt.Errorf("unsupported record type")
+			}
+		})
 }
 
 // UpdateRecord updates a record in the specified bucket with the provided ID and updated data.
@@ -197,16 +198,31 @@ func updateRecordFromJSON(recordJSON []byte, updatedRecord interface{}) error {
 
 // updateExistingItem updates the item record based on existing data.
 func updateExistingItem(updatedItem, existingItem *models.Item) {
-	if updatedItem.Title != "" {
-		existingItem.Title = updatedItem.Title
+	// Define a map to store the fields to be updated
+	fieldsToUpdate := map[string]bool{
+		"Content.ImageURL":    updatedItem.Content.ImageURL != "",
+		"Content.Image":       updatedItem.Content.Image != "",
+		"Title":               updatedItem.Title != "",
+		"Content.Description": updatedItem.Content.Description != "",
 	}
-	if updatedItem.Content.Description != "" {
-		existingItem.Content = updatedItem.Content
+
+	// Iterate over the fields of the updatedItem and update the corresponding fields in the existingItem
+	updatedItemType := reflect.TypeOf(*updatedItem)
+	updatedItemValue := reflect.ValueOf(*updatedItem)
+	existingItemValue := reflect.ValueOf(existingItem).Elem() // Dereference the pointer to access the struct fields
+
+	for i := 0; i < updatedItemType.NumField(); i++ {
+		field := updatedItemType.Field(i)
+		if fieldsToUpdate[field.Name] {
+			fieldValue := updatedItemValue.Field(i)
+			existingItemValue.FieldByName(field.Name).Set(fieldValue)
+		}
 	}
-	// Preserve the ID and creation timestamp
-	updatedItem.ID = existingItem.ID
-	updatedItem.CreatedAt = existingItem.CreatedAt
-	updatedItem.UpdatedAt = time.Now()
+
+	// Preserve the ID, creation timestamp, and update timestamp
+	existingItem.ID = updatedItem.ID
+	existingItem.CreatedAt = existingItem.CreatedAt
+	existingItem.UpdatedAt = time.Now()
 }
 
 // updateUserFromExisting updates the user record based on existing data.

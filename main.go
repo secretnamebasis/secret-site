@@ -35,12 +35,12 @@ func main() {
 
 	// Start Fiber app in a separate goroutine
 	go func() {
-		if err := a.StartApp(c); err != nil {
-			log.Fatalf("Error starting server: %s\n", err)
-		}
-		// Initialize the database
+		// Initialize the database before you run the app
 		if err := database.InitDB(c); err != nil {
 			log.Fatal(err)
+		}
+		if err := a.StartApp(c); err != nil {
+			log.Fatalf("Error starting server: %s\n", err)
 		}
 	}()
 
