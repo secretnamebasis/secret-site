@@ -11,10 +11,10 @@ The coolest feature included is the integration with `DERO`
 
 ## Design
 `secret-site` currently supportst the following models for its `bbolt` database: 
-    - Item: `{ id: , title: , content: :description, :image, :imageURL }`
-        - encryption and decryption for item `:description`, `:image`
-    - User `{ user: , wallet: , password: }`
-        - model validates wallet addresses with `DERO` network
+- Item: `{ id: , title: , content: :description, :image, :imageURL }`
+ - encryption and decryption for item `:description`, `:image`
+- User `{ user: , wallet: , password: }`
+ - model validates wallet addresses with `DERO` network
 
 ## Roadmap
 - ~~encrypt & decrypt item stored in database~~
