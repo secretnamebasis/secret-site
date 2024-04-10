@@ -51,6 +51,14 @@ Any `env` but `prod` runs app without TLS. Use parse flags to customize your dev
 ```sh
 go run . -env=dev -port=3000 -db=./app/database/
 ```
-
+or,
+```sh
+bin/dev
+```
 ## Testing
-When you `run_integration_test.sh`, you will find a timesstamped builds in `./builds/` and logs in `./logs/`
+When you `run_integration_test.sh`, you will find a timesstamped builds in `./builds/` and logs in `./logs/`.
+
+Alternatively, if you would like to just test the API:
+```sh
+bin/test
+```

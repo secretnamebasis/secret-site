@@ -1,0 +1,1 @@
+go run . -env=dev -port=3000 -db=./app/database/
