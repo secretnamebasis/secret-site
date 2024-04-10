@@ -8,14 +8,17 @@ The coolest feature included is the integration with `DERO`
 
 ## Design
 `secret-site` currently supportst the following models for its `bbolt` database: 
-    - Items { title: , content: :description, :image }
-        - encryption and decryption for item content (description, image)
-    - Users { user: , wallet: }
-        - model validates wallet addresses 
+    - Item: `{ id: , title: , content: :description, :image, :imageURL }`
+        - encryption and decryption for item `:description`, `:image`
+    - User `{ user: , wallet: , password: }`
+        - model validates wallet addresses with `DERO` network
 
 ## Roadmap
 - ~~encrypt & decrypt content stored in database~~
 - User authentication
+- User authenticated encrypted stores
+- `Gnomon` search tools
+- `NFA` minting tools
 - first-run script would be kind of cool
 - websocket connections with DERO wallets would be rad 
 
