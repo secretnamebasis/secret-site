@@ -57,11 +57,11 @@ cd secret-site
 
 ### DERO wallet
 `secret-site` need a DERO wallet instance:
-- Download the latest `[ENGRAM]`(https://github.com/DEROFDN/Engram/releases/latest/) wallet
+- Download the latest [`ENGRAM`](https://github.com/DEROFDN/Engram/releases/latest/) wallet
 - Restore, or create, wallet file
 - Configure module `Cyberdeck` for wallet `RPC` activation
-- Collect, or modify, user and pass details
-- Paste user & pass values into `.env` file
+- Modify &/or collect `user` `pass` details
+- Paste `user` `pass` values into `.env` file
 
 ### env
 
@@ -74,7 +74,7 @@ Copy the template
 ```sh
 cp dot.env.sample .env 
 ```
-Fill out the `.env` before moving the next step
+Fill out the `.env` before moving the next step:
 ```sh
 # P U B L I C
 ## APP 
