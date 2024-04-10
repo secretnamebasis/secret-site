@@ -43,7 +43,7 @@ func (a *App) StartApp(c config.Server) error {
 			"/etc/letsencrypt/live/"+config.Domain+"/cert.pem",
 			"/etc/letsencrypt/live/"+config.Domain+"/privkey.pem",
 		)
-	case "dev", "testing":
+	case "dev", "test":
 		return a.Listen(
 			fmt.Sprintf(":%d", c.Port),
 		)

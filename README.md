@@ -69,13 +69,11 @@ Use the [`dot.env.sample`](https://github.com/secretnamebasis/secret-site/blob/m
 
 Duplicate the `.env` parmeters for the following directories:
 
-#### root directory: `./.env` 
-Copy the template
+#### project directory: `./.env` 
+
+Fill out the `.env` variables, then copy and paste into project directory:
 ```sh
-cp dot.env.sample .env 
-```
-Fill out the `.env` before moving the next step:
-```sh
+cat <<'CONFIG' > ./.env
 # P U B L I C
 ## APP 
 #
@@ -102,10 +100,18 @@ DERO_WALLET_PORT="10103"
 # 
 DERO_WALLET_USER="secret"
 DERO_WALLET_PASS="pass"
+
+CONFIG
+
 ```
 
+Or copy the template and fill out `.env` variables:
+```sh
+cp dot.env.sample .env 
+nano .env
+```
 #### test directory: `./test/.env`
-Now duplicate the `.env` to your testing environment
+Once you have made your `.env` for the project, create `./test/` dependant variables ; our example assumes that, at first launch, both production (`prod`) and testing (`test`) instnaces are the same.
 
 ```sh
 cp .env ./test/.env 

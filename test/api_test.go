@@ -250,7 +250,7 @@ func TestApi(t *testing.T) {
 	deleteDB(c)
 }
 func configServer() config.Server {
-	exports.Env = "testing"
+	exports.Env = "test"
 	exports.DatabaseDir = "../app/database/"
 	exports.EnvPath = "../../.env." + exports.Env
 	c := config.Server{
