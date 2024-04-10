@@ -27,16 +27,15 @@ The following models are supported in the `bbolt` database with the accompanying
     - segmented backups (conserve storage)
 
 #### ITEM
-- ~~encrypt & decrypt stores in database~~
+- ~~`AES` encrypted items~~
     - ~~`:description`~~
     - ~~`:image`~~
-- user authenticated, `AES` encrypted items
+    - user authenticated, `AES` encrypted items
 
 #### USER
 - authentication
 - signup
 - login/logout
-
 
 ### EXTRAS
 #### BACKEND
