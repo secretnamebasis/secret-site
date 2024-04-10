@@ -1,13 +1,13 @@
 # SECRET-SITE
 ## Intro
-This project is aimed at creating a hardy and robust [Go Fiber](https://gofiber.io/) site that is integrated with [DERO](https://dero.io)
+This project is aimed at creating a hardy and robust [Go Fiber](https://gofiber.io/) site that is integrated with [DERO](https://dero.io).
 
 ## Arch
-The hefitest part of this project lies squarely on `GoFiber`
+The hefitest part of this project lies squarely on `GoFiber`.
 
 The database is `bbolt`, an in app key/value store. 
 
-The coolest feature included is the integration with `DERO`
+The coolest feature included is the integration with `DERO`.
 
 ## Design
 `secret-site` is a TLS encrypted website for hosting encrypted content. 
@@ -46,15 +46,12 @@ The following models are supported in the `bbolt` database with the accompanying
 - [`NFA`](https://github.com/civilware/artificer-nfa-standard) minting tools
 
 ## Install
-
-
 ### clone
 Clone repo and change directories:
 ```sh
 git clone https://github.com/secretnamebasis/secret-site.git
 cd secret-site
 ```
-
 ### DERO wallet
 `secret-site` need a DERO wallet instance:
 - Download the latest [`ENGRAM`](https://github.com/DEROFDN/Engram/releases/latest/) wallet
@@ -62,15 +59,11 @@ cd secret-site
 - Configure module `Cyberdeck` for wallet `RPC` activation
 - Modify &/or collect `user` `pass` details
 - Paste `user` `pass` values into `.env` file
-
 ### env
-
 Use the [`dot.env.sample`](https://github.com/secretnamebasis/secret-site/blob/main/dot.env.sample) file to create `.env` files:
 
 Duplicate the `.env` parmeters for the following directories:
-
 #### project directory: `./.env` 
-
 Fill out the `.env` variables, then copy and paste into project directory:
 ```sh
 cat <<'CONFIG' > ./.env
@@ -104,7 +97,6 @@ DERO_WALLET_PASS="pass"
 CONFIG
 
 ```
-
 Or copy the template and fill out `.env` variables:
 ```sh
 cp dot.env.sample .env 
@@ -116,11 +108,8 @@ Once you have made your `.env` for the project, create `./test/` dependant varia
 ```sh
 cp .env ./test/.env 
 ```
-
 ### TLS cert
 This site [assumes TLS certification](https://github.com/secretnamebasis/secret-site/blob/cd559806442bad5553464d6fbee86966fec1aa3e/app/site.go#L41).
-
-
 ### run
 To run the application: 
 ```sh
@@ -131,7 +120,6 @@ or, if you prefer:
 go build . 
 ./secret-site
 ```
-
 ## Dev 
 Any `env` but `prod` runs app without TLS. Use parse flags to customize your development environment. 
 ```sh
@@ -141,7 +129,6 @@ Or:
 ```sh
 bin/dev
 ```
-
 ## Testing
 When you `run_integration_test.sh`, you will find a timesstamped builds in `./build/` and logs in `./log/`.
 
