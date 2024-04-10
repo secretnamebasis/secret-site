@@ -6,11 +6,10 @@
     <title>Item Detail</title>
 </head>
 <body>
-    <div class="container">
         <main>
-            <div class="title-container">
+
                 <h2 class="title">{{.Item.Title}}</h2>
-            </div>
+
             <div>
                 <!-- Check if the item has an image -->
                 {{if ne .Item.Content.Image ""}}
@@ -22,7 +21,7 @@
                 {{end}}
                 <p>{{.Item.Content.Description}}</p>
                 <p><em>Created: {{.Item.CreatedAt.Format "2006-01-02 15:04:05"}}</em></p>
-            </div>
+
         </main>
     </div>
 </body>

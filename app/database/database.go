@@ -249,15 +249,45 @@ func GetRecordByID(bucketName, id string, record interface{}) error {
 
 		// Decrypt the content if the record type is models.Item
 		if item, ok := record.(*models.Item); ok {
-			decodedBytes, err := base64.StdEncoding.DecodeString(item.Content.Description)
+			decodedBytes,
+				err := base64.StdEncoding.DecodeString(
+				item.Content.Description,
+			)
+
 			if err != nil {
 				return err
 			}
-			decryptedContent, err := cryptography.DecryptData(decodedBytes, config.Env("SECRET"))
+
+			decryptedContent,
+				err := cryptography.DecryptData(
+				decodedBytes,
+				config.Env("SECRET"),
+			)
+
 			if err != nil {
 				return err
 			}
+
 			item.Content.Description = string(decryptedContent)
+
+			decodedBytes,
+				err = base64.StdEncoding.DecodeString(
+				item.Content.Image,
+			)
+
+			if err != nil {
+				return err
+			}
+
+			decryptedContent, err = cryptography.DecryptData(
+				decodedBytes,
+				config.Env("SECRET"),
+			)
+
+			if err != nil {
+				return err
+			}
+			item.Content.Image = string(decryptedContent)
 		}
 
 		return nil

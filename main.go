@@ -16,7 +16,7 @@ import (
 func main() {
 	exports.Env = "prod"
 	var c = config.Server{
-		Port:         3000,
+		Port:         443,
 		Env:          exports.Env,
 		DatabasePath: "./app/database/" + exports.Env + ".db",
 	}
