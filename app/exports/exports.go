@@ -12,6 +12,7 @@ const (
 
 var (
 	Env               string
+	Port              int
 	ProjectDir        string
 	DeroAddress       *rpc.Address
 	DeroAddressResult rpc.GetAddress_Result

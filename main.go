@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -9,29 +10,37 @@ import (
 
 	"github.com/secretnamebasis/secret-site/app"
 	"github.com/secretnamebasis/secret-site/app/config"
+	"github.com/secretnamebasis/secret-site/app/database"
 	"github.com/secretnamebasis/secret-site/app/exports"
 )
 
 // Configure server settings
 
 func main() {
-	exports.Env = "prod"
+	// Define flags for setting the environment and port
+	envFlag := flag.String("env", "prod", "environment: dev, prod, test, etc.")
+	portFlag := flag.Int("port", 443, "server port number")
+	flag.Parse()
+
+	// Set the environment and port from the flag values
+	exports.Env = *envFlag
+	exports.Port = *portFlag
 	var c = config.Server{
-		Port:         443,
+		Port:         exports.Port,
 		Env:          exports.Env,
-		DatabasePath: "./app/database/" + exports.Env + ".db",
+		DatabasePath: fmt.Sprintf("./app/database/%s.db", exports.Env),
 	}
 	// Create Fiber app
 	a := app.MakeApp(c)
-	a.ListenTLS(
-		":"+fmt.Sprintf("%d", c.Port),
-		"/etc/letsencrypt/live/secretnamebasis.site/cert.pem",
-		"/etc/letsencrypt/live/secretnamebasis.site/privkey.pem",
-	)
+
 	// Start Fiber app in a separate goroutine
 	go func() {
 		if err := a.StartApp(c); err != nil {
 			log.Fatalf("Error starting server: %s\n", err)
+		}
+		// Initialize the database
+		if err := database.InitDB(c); err != nil {
+			log.Fatal(err)
 		}
 	}()
 

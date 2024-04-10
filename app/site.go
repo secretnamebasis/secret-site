@@ -4,11 +4,9 @@ package app
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/secretnamebasis/secret-site/app/config"
-	"github.com/secretnamebasis/secret-site/app/database"
 	"github.com/secretnamebasis/secret-site/app/exports"
 	"github.com/secretnamebasis/secret-site/app/routes"
 )
@@ -28,20 +26,26 @@ func MakeApp(c config.Server) *App {
 		},
 	)
 
-	// Initialize the database
-	if err := database.InitDB(c); err != nil {
-		log.Fatal(err)
-	}
-
 	routes.Draw(app)
 	return &App{app}
 }
 
 // StartApp starts the Fiber application on the specified port
 func (a *App) StartApp(c config.Server) error {
-	return a.Listen(
-		fmt.Sprintf(":%d", c.Port),
-	)
+	switch exports.Env {
+	case "prod":
+		return a.ListenTLS(
+			":"+fmt.Sprintf("%d", c.Port),
+			"/etc/letsencrypt/live/secretnamebasis.site/cert.pem",
+			"/etc/letsencrypt/live/secretnamebasis.site/privkey.pem",
+		)
+	case "dev", "testing":
+		return a.Listen(
+			fmt.Sprintf(":%d", c.Port),
+		)
+	default:
+		return fmt.Errorf("unsupported environment: %s", exports.Env)
+	}
 }
 
 // StopApp stops the Fiber application gracefully
