@@ -7,10 +7,11 @@ The hefitest part of this project lies squarely on `GoFiber`
 The coolest feature included is the integration with `DERO`
 
 ## Design
-`secret-site` currently supports:
-- bbolt database with encryption and decryption for item content (description, image)
-    - Items { title: , content:, :description, :image }
+`secret-site` currently supportst the following models for its `bbolt` database: 
+    - Items { title: , content: :description, :image }
+        - encryption and decryption for item content (description, image)
     - Users { user: , wallet: }
+        - model validates wallet addresses 
 
 ## Roadmap
 - ~~encrypt & decrypt content stored in database~~
