@@ -1,6 +1,6 @@
 # SECRET-SITE
 ## Intro
-This project is aimed at creating a very hardy and robust [Go Fiber](https://gofiber.io/) site that is integrated with [DERO](https://dero.io)
+This project is aimed at creating a hardy and robust [Go Fiber](https://gofiber.io/) site that is integrated with [DERO](https://dero.io)
 
 ## Arch
 The hefitest part of this project lies squarely on `GoFiber`
