@@ -26,11 +26,7 @@ Use the `dot.env.sample` file to create `.env` files for the following directori
 - test directory, `./test/.env`
 
 ### TLS cert
-This site assumes TLS certification has been done in advance
-```go
-"/etc/letsencrypt/live/"+config.Domain+"/cert.pem",
-"/etc/letsencrypt/live/"+config.Domain+"/privkey.pem"
-```
+This site [assumes TLS certification](https://github.com/secretnamebasis/secret-site/blob/cd559806442bad5553464d6fbee86966fec1aa3e/app/site.go#L41) has been done in advance.
 
 ### run
 To run the application: 
@@ -44,10 +40,10 @@ go build .
 ```
 
 ## Dev 
-Use can parse flags to customize your development environment. 
+Any `env` but `prod` runs app without TLS. Use parse flags to customize your development environment. 
 ```sh
 go run . -env=dev -port=3000 -db=./app/database/
 ```
 
 ## Testing
-When you `run_integration_test.sh`, you will find a timesstamped build in `./builds/` and logs in `./logs/`
+When you `run_integration_test.sh`, you will find a timesstamped builds in `./builds/` and logs in `./logs/`
