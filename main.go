@@ -11,13 +11,22 @@ import (
 func main() {
 
 	c := config.Initialize()
+
+	if c == (config.Server{}) {
+		log.Fatalf("Config is empty")
+	}
+
 	// Create Fiber app
 	a := app.MakeApp(c)
+
+	if a == (&app.App{}) {
+		log.Fatalf("App is empty")
+	}
 
 	// Start Fiber app in a separate goroutine
 	go func() {
 		// Initialize the database before you run the app
-		if err := database.InitDB(c); err != nil {
+		if err := database.Initialize(c); err != nil {
 			log.Fatal(err)
 		}
 		if err := a.StartApp(c); err != nil {

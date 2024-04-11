@@ -22,7 +22,7 @@ var (
 	usersBucket = []byte("users")
 )
 
-func InitDB(c config.Server) error {
+func Initialize(c config.Server) error {
 	var err error
 	// set directory of the database
 	if err := os.MkdirAll(c.DatabasePath, 0755); err != nil {
