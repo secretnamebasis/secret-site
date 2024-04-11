@@ -38,19 +38,23 @@ The following models are supported in the `bbolt` database with the accompanying
 - [`Gnomon`](https://github.com/civilware/Gnomon) search tools
 - [`NFA`](https://github.com/civilware/artificer-nfa-standard) minting tools
 ## Install
+### DERO wallet
+As a pre requisite, `secret-site` needs a DERO wallet instance:
+- CLI:
+    - Download the latest binaries of [`DERO`](https://github.com/deroproject/derohe/releases/latest/)
+    - Launch `dero-wallet-cli` with these suggested flags `--rpc-bind=127.0.0.1:10103 --daemon-address=node.derofoundation.org:11012 --rpc-server --rpc-login="secret:pass"`
+    - Restore, or create, a wallet file
+- GUI: 
+    - Download the latest [`ENGRAM`](https://github.com/DEROFDN/Engram/releases/latest/)
+    - Restore, or create, wallet file
+    - Configure module `Cyberdeck` for wallet `RPC` activation
+    - Modify &/or collect `user` `pass` details
 ### clone
 Clone repo and change directories:
 ```sh
 git clone https://github.com/secretnamebasis/secret-site.git
 cd secret-site
 ```
-### DERO wallet
-`secret-site` need a DERO wallet instance:
-- Download the latest [`ENGRAM`](https://github.com/DEROFDN/Engram/releases/latest/) wallet
-- Restore, or create, wallet file
-- Configure module `Cyberdeck` for wallet `RPC` activation
-- Modify &/or collect `user` `pass` details
-- Paste `user` `pass` values into `.env` file
 ### env
 Default values in [`dot.env.sample`](https://github.com/secretnamebasis/secret-site/blob/main/dot.env.sample) are used to set default values for the `.env` variables prior to running the `config`, which will write `.env` to the project directory `./.` and the `./test/` direcorty. We assume that on first `config`, that insteance of production (`prod`), development (`dev`) and testing (`test`) are the same. 
 ```sh
