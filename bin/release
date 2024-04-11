@@ -16,4 +16,4 @@ EXECUTABLE_NAME="secret-site_${VERSION}_${BUILD_DATE}_${GIT_COMMIT}"
 go build -ldflags="-X 'main.BuildDate=${BUILD_DATE}' -X 'main.GitCommit=${GIT_COMMIT}'" -o "./releases/${EXECUTABLE_NAME}" .
 
 # Send a release of the build to GitHub
-gh release create "v${VERSION}_${BUILD_DATE}_${GIT_COMMIT}" "./releases/${EXECUTABLE_NAME}"
+gh release create "v${VERSION}_${BUILD_DATE}_${GIT_COMMIT}" "./releases/${EXECUTABLE_NAME}" -t ${VERSION}
