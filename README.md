@@ -1,14 +1,12 @@
 # SECRET-SITE
 ## Intro
 This project is aimed at creating a hardy and robust [Go Fiber](https://gofiber.io/) site that is integrated with [DERO](https://dero.io).
-
 ## Arch
 The hefitest part of this project lies squarely on `GoFiber`.
 
 The database is `bbolt`, an in app key/value store. 
 
 The coolest feature included is the integration with `DERO`.
-
 ## Design
 `secret-site` is a TLS encrypted website for hosting encrypted content. 
 
@@ -17,34 +15,28 @@ The following models are supported in the `bbolt` database with the accompanying
     - `AES` encryption/decryption of `:description`, `:image`
 - User `{ user: , wallet: , password: }`
     - validates wallet addresses with `DERO` network
-
 ## Roadmap
 ### DOCS
 - API documentation 
-
 ### DB
 - routine backups
     - segmented backups (conserve storage)
-
 #### ITEM
 - ~~`AES` encrypted items~~
     - ~~`:description`~~
     - ~~`:image`~~
     - user authenticated, `AES` encrypted items
-
 #### USER
 - authentication
 - signup
 - login/logout
-
 ### EXTRAS
 #### BACKEND
-- first-run script would be kind of cool
+- ~~config script~~
 - websocket connections with DERO wallets would be rad 
 #### FRONTEND
 - [`Gnomon`](https://github.com/civilware/Gnomon) search tools
 - [`NFA`](https://github.com/civilware/artificer-nfa-standard) minting tools
-
 ## Install
 ### clone
 Clone repo and change directories:
@@ -60,54 +52,10 @@ cd secret-site
 - Modify &/or collect `user` `pass` details
 - Paste `user` `pass` values into `.env` file
 ### env
-Use the [`dot.env.sample`](https://github.com/secretnamebasis/secret-site/blob/main/dot.env.sample) file to create `.env` files:
-
-Duplicate the `.env` parmeters for the following directories:
-#### project directory: `./.env` 
-Fill out the `.env` variables, then copy and paste into project directory:
+Default values in [`dot.env.sample`](https://github.com/secretnamebasis/secret-site/blob/main/dot.env.sample) are used to set default values for the `.env` variables prior to running the `config`, which will write `.env` to the project directory `./.` and the `./test/` direcorty. We assume that on first `config`, that insteance of production (`prod`), development (`dev`) and testing (`test`) are the same. 
 ```sh
-cat <<'CONFIG' > ./.env
-# P U B L I C
-## APP 
-#
-DOMAIN="example.site"
-
-# P R I V A T E
-## APP
-#
-SECRET="secretWords&Numbers2"
-
-## DERO
-
-### IP
-#
-DERO_NODE_IP="127.0.0.1"
-DERO_WALLET_IP="127.0.0.1"
-
-### PORT
-#
-DERO_NODE_PORT="10102"
-DERO_WALLET_PORT="10103"
-
-### AUTH
-# 
-DERO_WALLET_USER="secret"
-DERO_WALLET_PASS="pass"
-
-CONFIG
-
-```
-Or copy the template and fill out `.env` variables:
-```sh
-cp dot.env.sample .env 
-nano .env
-```
-#### test directory: `./test/.env`
-Once you have made your `.env` for the project, create `./test/` dependant variables ; our example assumes that, at first launch, both production (`prod`) and testing (`test`) instnaces are the same.
-
-```sh
-cp .env ./test/.env 
-```
+bin/config
+```  
 ### TLS cert
 This site [assumes TLS certification](https://github.com/secretnamebasis/secret-site/blob/cd559806442bad5553464d6fbee86966fec1aa3e/app/site.go#L41).
 ### run

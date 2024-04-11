@@ -1,0 +1,71 @@
+#!/bin/bash
+
+# Define the default values from dot.env.sample
+source dot.env.sample
+
+# Define prompt messages
+prompts=(
+    "DOMAIN"
+    "DEV_ADDRESS"
+    "SECRET"
+    "DERO_NODE_IP"
+    "DERO_WALLET_IP"
+    "DERO_NODE_PORT"
+    "DERO_WALLET_PORT"
+    "DERO_WALLET_USER"
+    "DERO_WALLET_PASS"
+)
+
+# Array to store user inputs
+inputs=()
+
+# Prompt for input and store the values
+for prompt in "${prompts[@]}"; do
+    # Check if the value exists in .env, if not, prompt the user
+    value="${!prompt}"
+    if [ -z "$value" ]; then
+        read -p "Enter $prompt: " input
+        inputs+=("$input")
+    else
+        read -p "Enter $prompt [$value]: " input
+        # If the user doesn't provide any input, use the default value
+        if [ -z "$input" ]; then
+            input="$value"
+        fi
+        inputs+=("$input")
+    fi
+done
+
+# Write the configurations to the .env file in the current directory
+cat <<CONFIG > ./.env
+# P U B L I C
+## APP 
+#
+DOMAIN="${inputs[0]}"
+
+# P R I V A T E
+## APP
+#
+DEV_ADDRESS="${inputs[1]}"
+SECRET="${inputs[2]}"
+
+## DERO
+
+### IP
+#
+DERO_NODE_IP="${inputs[3]}"
+DERO_WALLET_IP="${inputs[4]}"
+
+### PORT
+#
+DERO_NODE_PORT="${inputs[5]}"
+DERO_WALLET_PORT="${inputs[6]}"
+
+### AUTH
+# 
+DERO_WALLET_USER="${inputs[7]}"
+DERO_WALLET_PASS="${inputs[8]}"
+CONFIG
+
+# Copy the .env file to the ./test/ directory
+cp ./.env ./test/.env
