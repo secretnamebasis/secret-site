@@ -1,0 +1,16 @@
+./run_integration_test.sh
+
+# Get the current UTC date and time
+BUILD_DATE=$(date -u '+%Y-%m-%d_%H-%M-%S')
+
+# Get the current Git commit hash
+GIT_COMMIT=$(git rev-parse --short HEAD)
+
+# Set the name of the executable
+EXECUTABLE_NAME="secret-site_${BUILD_DATE}_${GIT_COMMIT}"
+
+# Build the executable with the dynamic name
+go build -ldflags="-X 'main.BuildDate=${BUILD_DATE}' -X 'main.GitCommit=${GIT_COMMIT}'" -o "./releases/${EXECUTABLE_NAME}" .
+
+# Send a release of the build to github
+ gh release create ${BUILD_DATE}_${GIT_COMMIT} ./releases/${EXECUTABLE_NAME}
