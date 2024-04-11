@@ -11,7 +11,6 @@ import (
 
 	"github.com/secretnamebasis/secret-site/app/config"
 	"github.com/secretnamebasis/secret-site/app/cryptography"
-	"github.com/secretnamebasis/secret-site/app/exports"
 	"github.com/secretnamebasis/secret-site/app/models"
 
 	"go.etcd.io/bbolt"
@@ -62,7 +61,7 @@ func CreateRecord(bucketName string, record interface{}) error {
 			case *models.Item: // Ensure we're dealing with a pointer to models.Item
 				id = r.ID
 				// Encrypt content before storing in the database
-				encrypted, err := cryptography.EncryptData([]byte(r.Content.Description), config.Env(exports.EnvPath))
+				encrypted, err := cryptography.EncryptData([]byte(r.Content.Description), config.Env(config.EnvPath))
 				if err != nil {
 					return err
 				}
@@ -71,7 +70,7 @@ func CreateRecord(bucketName string, record interface{}) error {
 				encryptedContent = base64.StdEncoding.EncodeToString(encrypted)
 				r.Content.Description = encryptedContent
 
-				encrypted, err = cryptography.EncryptData([]byte(r.Content.Image), config.Env(exports.EnvPath))
+				encrypted, err = cryptography.EncryptData([]byte(r.Content.Image), config.Env(config.EnvPath))
 				if err != nil {
 					return err
 				}
@@ -118,7 +117,7 @@ func GetAllRecords(bucketName string, records interface{}) error {
 							if err != nil {
 								return err
 							}
-							decryptedContent, err := cryptography.DecryptData(decodedBytes, config.Env(exports.EnvPath))
+							decryptedContent, err := cryptography.DecryptData(decodedBytes, config.Env(config.EnvPath))
 							if err != nil {
 								return err
 							}
@@ -127,7 +126,7 @@ func GetAllRecords(bucketName string, records interface{}) error {
 							if err != nil {
 								return err
 							}
-							decryptedContent, err = cryptography.DecryptData(decodedBytes, config.Env(exports.EnvPath))
+							decryptedContent, err = cryptography.DecryptData(decodedBytes, config.Env(config.EnvPath))
 							if err != nil {
 								return err
 							}
@@ -279,7 +278,7 @@ func GetRecordByID(bucketName, id string, record interface{}) error {
 			decryptedContent,
 				err := cryptography.DecryptData(
 				decodedBytes,
-				config.Env(exports.EnvPath),
+				config.Env(config.EnvPath),
 			)
 
 			if err != nil {
@@ -299,7 +298,7 @@ func GetRecordByID(bucketName, id string, record interface{}) error {
 
 			decryptedContent, err = cryptography.DecryptData(
 				decodedBytes,
-				config.Env(exports.EnvPath),
+				config.Env(config.EnvPath),
 			)
 
 			if err != nil {

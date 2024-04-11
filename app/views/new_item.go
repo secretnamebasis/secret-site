@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/secretnamebasis/secret-site/app/config"
 	"github.com/secretnamebasis/secret-site/app/controllers"
-	"github.com/secretnamebasis/secret-site/app/exports"
 	"github.com/secretnamebasis/secret-site/app/integrations/dero"
 	"github.com/secretnamebasis/secret-site/app/models"
 )
@@ -27,7 +27,7 @@ func NewItem(c *fiber.Ctx) error {
 		Title   string
 		Address string
 	}{
-		Title:   exports.APP_NAME,
+		Title:   config.APP_NAME,
 		Address: addr.String(),
 	}
 

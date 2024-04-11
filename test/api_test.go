@@ -14,7 +14,6 @@ import (
 	"github.com/secretnamebasis/secret-site/app"
 	"github.com/secretnamebasis/secret-site/app/config"
 	"github.com/secretnamebasis/secret-site/app/database"
-	"github.com/secretnamebasis/secret-site/app/exports"
 	"github.com/secretnamebasis/secret-site/app/models"
 )
 
@@ -250,14 +249,14 @@ func TestApi(t *testing.T) {
 	deleteDB(c)
 }
 func configServer() config.Server {
-	exports.Env = "test"
-	exports.DatabaseDir = "../app/database/"
-	exports.EnvPath = "../../.env." + exports.Env
+	config.Environment = "test"
+	config.DatabaseDir = "../app/database/"
+	config.EnvPath = "../../.env." + config.Environment
 	c := config.Server{
 		Port:         3000,
-		Env:          exports.Env,
-		DatabasePath: exports.DatabaseDir,
-		EnvPath:      exports.EnvPath,
+		Env:          config.Environment,
+		DatabasePath: config.DatabaseDir,
+		EnvPath:      config.EnvPath,
 	}
 	return c
 }
@@ -276,7 +275,7 @@ func startServer(c config.Server) *app.App { // start the server
 
 // Run tests
 func runTests(t *testing.T) {
-	log.Printf("Environment: %s\n", exports.Env)
+	log.Printf("Environment: %s\n", config.Environment)
 	for _, tc := range testCases {
 		tc := tc // Capture range variable
 		t.Run(tc.name, tc.fn)

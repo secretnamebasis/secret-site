@@ -4,7 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/secretnamebasis/secret-site/app/exports"
+	"github.com/secretnamebasis/secret-site/app/config"
+
 	"github.com/secretnamebasis/secret-site/app/integrations/dero"
 )
 
@@ -21,7 +22,7 @@ func About(c *fiber.Ctx) error {
 		Title   string
 		Address string
 	}{
-		Title:   exports.APP_NAME,
+		Title:   config.APP_NAME,
 		Address: addr.String(),
 	}
 

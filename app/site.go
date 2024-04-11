@@ -11,7 +11,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/secretnamebasis/secret-site/app/config"
-	"github.com/secretnamebasis/secret-site/app/exports"
 	"github.com/secretnamebasis/secret-site/app/routes"
 )
 
@@ -24,7 +23,7 @@ type App struct {
 func MakeApp(c config.Server) *App {
 	app := fiber.New(
 		fiber.Config{
-			AppName:               exports.APP_NAME,
+			AppName:               config.APP_NAME,
 			CaseSensitive:         true,
 			DisableStartupMessage: false,
 		},
@@ -36,7 +35,7 @@ func MakeApp(c config.Server) *App {
 
 // StartApp starts the Fiber application on the specified port
 func (a *App) StartApp(c config.Server) error {
-	switch exports.Env {
+	switch config.Environment {
 	case "prod":
 		return a.ListenTLS(
 			":"+fmt.Sprintf("%d", c.Port),
@@ -48,7 +47,7 @@ func (a *App) StartApp(c config.Server) error {
 			fmt.Sprintf(":%d", c.Port),
 		)
 	default:
-		return fmt.Errorf("unsupported environment: %s", exports.Env)
+		return fmt.Errorf("unsupported environment: %s", config.Env)
 	}
 }
 

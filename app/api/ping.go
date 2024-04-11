@@ -2,7 +2,8 @@ package api
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/secretnamebasis/secret-site/app/exports"
+	"github.com/secretnamebasis/secret-site/app/config"
+
 	"github.com/secretnamebasis/secret-site/app/integrations/dero"
 )
 
@@ -12,7 +13,7 @@ func Ping(c *fiber.Ctx) error {
 
 	a, e := dero.GetWalletAddress()
 
-	m := "app: " + exports.APP_NAME +
+	m := "app: " + config.APP_NAME +
 		" :: owner: " + a.String()
 
 	s := "success"

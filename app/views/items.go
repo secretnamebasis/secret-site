@@ -5,8 +5,9 @@ import (
 	"sort"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/secretnamebasis/secret-site/app/config"
 	"github.com/secretnamebasis/secret-site/app/controllers"
-	"github.com/secretnamebasis/secret-site/app/exports"
+
 	"github.com/secretnamebasis/secret-site/app/integrations/dero"
 	"github.com/secretnamebasis/secret-site/app/models"
 )
@@ -39,7 +40,7 @@ func Items(c *fiber.Ctx) error {
 
 	// Define data for rendering the template
 	data := ItemsData{
-		Title:   exports.APP_NAME,
+		Title:   config.APP_NAME,
 		Address: addr.String(),
 		Items:   items,
 	}

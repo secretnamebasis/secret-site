@@ -5,7 +5,6 @@ import (
 
 	"github.com/deroproject/derohe/rpc"
 	"github.com/secretnamebasis/secret-site/app/config"
-	"github.com/secretnamebasis/secret-site/app/exports"
 	"github.com/ybbus/jsonrpc"
 )
 
@@ -50,11 +49,11 @@ func CallRPCWalletWithoutParams(endpoint string, object interface{}, method stri
 // GetWalletAddress fetches the DERO wallet address.
 func GetWalletAddress() (*rpc.Address, error) {
 	// params := map[string]interface{}{}
-	err := CallRPCWalletWithoutParams(walletEndpoint, &exports.DeroAddressResult, "GetAddress")
+	err := CallRPCWalletWithoutParams(walletEndpoint, &config.DeroAddressResult, "GetAddress")
 	if err != nil {
 		return nil, err
 	}
-	address, err := rpc.NewAddress(exports.DeroAddressResult.Address)
+	address, err := rpc.NewAddress(config.DeroAddressResult.Address)
 	return address, err
 }
 

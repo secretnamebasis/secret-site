@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/deroproject/derohe/rpc"
 	"github.com/joho/godotenv"
-	"github.com/secretnamebasis/secret-site/app/exports"
 )
 
 // Config struct to hold configuration parameters
@@ -24,11 +24,25 @@ var (
 	Domainname = "https://" + Domain
 )
 
+const ()
+
+var (
+	Environment       string
+	Port              int
+	ProjectDir        = "./"
+	EnvPath           = ProjectDir + ".env"
+	DatabaseDir       string
+	DeroAddress       *rpc.Address
+	DeroAddressResult rpc.GetAddress_Result
+	DEV_ADDRESS       = Env("DEV_ADDRESS")
+	APP_NAME          = Env("DOMAIN")
+)
+
 // Config func to get env value from key
 func Env(key string) string {
 
 	// Load .env file
-	err := godotenv.Load(exports.EnvPath)
+	err := godotenv.Load(EnvPath)
 	if err != nil {
 		fmt.Println("Error loading .env file:", err)
 		return ""
@@ -64,15 +78,15 @@ func Initialize() Server {
 	flag.Parse()
 
 	// load exports
-	exports.Env = *envFlag
-	exports.Port = *portFlag
-	exports.DatabaseDir = *dbFlag
+	Environment = *envFlag
+	Port = *portFlag
+	DatabaseDir = *dbFlag
 
 	var c = Server{
-		Port:         exports.Port,
-		Env:          exports.Env,
-		DatabasePath: exports.DatabaseDir,
-		EnvPath:      exports.EnvPath,
+		Port:         Port,
+		Env:          Environment,
+		DatabasePath: DatabaseDir,
+		EnvPath:      EnvPath,
 	}
 	return c
 }
