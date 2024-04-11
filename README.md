@@ -49,20 +49,20 @@ As a pre requisite, `secret-site` needs a DERO wallet instance:
     - Restore, or create, wallet file
     - Configure module `Cyberdeck` for wallet `RPC` activation
     - Modify &/or collect `user` `pass` details
-### clone
+### Clone
 Clone repo and change directories:
 ```sh
 git clone https://github.com/secretnamebasis/secret-site.git
 cd secret-site
 ```
-### env
+### `.env`
 Default values in [`dot.env.sample`](https://github.com/secretnamebasis/secret-site/blob/main/dot.env.sample) are used to set default values for the `.env` variables prior to running the `config`, which will write `.env` to the project directory `./.` and the `./test/` direcorty. We assume that on first `config`, that insteance of production (`prod`), development (`dev`) and testing (`test`) are the same. 
 ```sh
 bin/config
 ```  
 ### TLS cert
 This site [assumes TLS certification](https://github.com/secretnamebasis/secret-site/blob/cd559806442bad5553464d6fbee86966fec1aa3e/app/site.go#L41).
-### run
+### Run
 To run the application: 
 ```sh
 go run .
@@ -81,7 +81,7 @@ Or:
 ```sh
 bin/dev
 ```
-## Testing
+## Test
 When you `run_integration_test.sh`, you will find times-stamped builds in `./build/` and logs in `./log/`.
 
 Alternatively, if you would like to test only the API:
