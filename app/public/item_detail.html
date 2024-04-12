@@ -11,8 +11,8 @@
         <div>
             <!-- Check if the item has an image URL -->
             {{if ne .Item.Content.ImageURL ""}}
-                <!-- Render the image using the URL -->
-                <img src="{{.ImageUrl}}" alt="Item Image">
+                <!-- Render the image using the base64 image data -->
+                <img src="data:image/jpeg;base64,{{.Image}}" alt="Item Image">
             {{else}}
                 <!-- Placeholder or alternative content when there's no image -->
                 <!-- You can add alternative content here -->

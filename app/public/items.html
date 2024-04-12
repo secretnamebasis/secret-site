@@ -14,8 +14,7 @@
                                 <div class="square">
                                     <a href="/items/{{.ID}}">
                                         <!-- Render the image using base64-encoded data -->
-                                        <img src="{{.Content.ImageURL}}" alt="{{.Title}} Image">
-                                    </a>
+                                        <img src="data:image/png;base64,{{.Content.Image}}" alt="{{.Title}} Image">                                    </a>
                                 </div>
                             {{else}}
                                 <!-- Placeholder or alternative content when there's no image -->

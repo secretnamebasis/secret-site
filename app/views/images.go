@@ -2,6 +2,7 @@ package views
 
 import (
 	"encoding/base64"
+	"net/http"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/secretnamebasis/secret-site/app/controllers"
@@ -23,8 +24,11 @@ func Images(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).SendString("Failed to decode image data")
 	}
 
+	// Detect the content type of the image data
+	contentType := http.DetectContentType(imageData)
+
 	// Set the appropriate content type header
-	c.Set(fiber.HeaderContentType, "image/png")
+	c.Set(fiber.HeaderContentType, contentType)
 
 	// Send the image data in the response
 	return c.Send(imageData)

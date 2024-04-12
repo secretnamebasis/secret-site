@@ -4,9 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/secretnamebasis/secret-site/app/config"
 	"github.com/secretnamebasis/secret-site/app/controllers"
-
+	"github.com/secretnamebasis/secret-site/app/exports"
 	"github.com/secretnamebasis/secret-site/app/integrations/dero"
 	"github.com/secretnamebasis/secret-site/app/models"
 )
@@ -17,6 +16,7 @@ type ItemData struct {
 	Address  string
 	Item     models.Item
 	ImageUrl string
+	Image    string
 }
 
 // Item renders the item detail page
@@ -37,10 +37,11 @@ func Item(c *fiber.Ctx) error {
 
 	// Define data for rendering the template
 	data := ItemData{
-		Title:    config.APP_NAME,
+		Title:    exports.APP_NAME,
 		Address:  addr.String(),
 		Item:     item,
 		ImageUrl: item.Content.ImageURL,
+		Image:    item.Content.Image,
 	}
 
 	// Render the template using renderTemplate function
