@@ -1096,23 +1096,23 @@ var // DATA
 	//
 	// Fail cases
 	// we don't store empty content
-	failItemCreateData = models.JSONItemData{
+	failItemCreateData = models.JSON_Item_Order{
 		Title:       "title",
 		Description: "",
 	}
 	// we don't store empty titles
-	failItemUpdateData = models.JSONItemData{
+	failItemUpdateData = models.JSON_Item_Order{
 		Title:       "",
 		Description: "Data",
 	}
 
 	// Success cases
-	successItemCreateData = models.JSONItemData{
+	successItemCreateData = models.JSON_Item_Order{
 		Title:       "First Post",
 		Description: "love you Joyce",
 		Image:       img,
 	}
-	successItemUpdateData = models.JSONItemData{
+	successItemUpdateData = models.JSON_Item_Order{
 		Title:       "squirrel",
 		Description: "Some words to drive you nuts",
 		Image:       "",

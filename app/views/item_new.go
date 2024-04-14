@@ -92,7 +92,7 @@ func SubmitItem(c *fiber.Ctx) error {
 		// Encode image bytes as base64
 		imageBase64 = base64.StdEncoding.EncodeToString(imageBytes)
 	}
-	var item models.JSONItemData
+	var item models.JSON_Item_Order
 
 	item.Title = form.Value["title"][0]
 	// Convert ItemData into bytes

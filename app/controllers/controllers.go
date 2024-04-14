@@ -16,7 +16,7 @@ const (
 )
 
 // CreateItemRecord creates a new item in the database.
-func CreateItemRecord(call *models.JSONItemData) (models.Item, error) {
+func CreateItemRecord(call *models.JSON_Item_Order) (models.Item, error) {
 	if err := checkItemExistence(call); err != nil {
 		return models.Item{}, err
 	}
@@ -25,7 +25,7 @@ func CreateItemRecord(call *models.JSONItemData) (models.Item, error) {
 		return models.Item{}, err
 	}
 
-	// Marshal the JSONItemData into bytes
+	// Marshal the JSON_Item_Order into bytes
 	bytes, err := json.Marshal(models.ItemData{
 		Description: call.Description,
 		Image:       call.Image,
@@ -132,7 +132,7 @@ func GetItemByID(id string) (models.Item, error) {
 }
 
 // UpdateItem updates an item in the database with the provided ID and updated data.
-func UpdateItem(id string, updatedItem models.JSONItemData) error {
+func UpdateItem(id string, updatedItem models.JSON_Item_Order) error {
 	return database.UpdateRecord(bucketItems, id, &updatedItem)
 }
 
@@ -178,7 +178,7 @@ func NextItemID() (int, error) {
 
 // private functions
 // checkItemExistence checks if a user with the same title or data already exists
-func checkItemExistence(item *models.JSONItemData) error {
+func checkItemExistence(item *models.JSON_Item_Order) error {
 
 	// Check if user already exists with the same username
 	existingItem, err := database.GetItemByTitle(item.Title)

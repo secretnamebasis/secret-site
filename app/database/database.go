@@ -156,7 +156,7 @@ func UpdateRecord(bucketName, id string, updatedRecord interface{}) error {
 		}
 
 		switch updatedRecord := updatedRecord.(type) {
-		case *models.JSONItemData:
+		case *models.JSON_Item_Order:
 			var existingItem models.Item
 			if err := json.Unmarshal(recordJSON, &existingItem); err != nil {
 				return err
@@ -233,7 +233,7 @@ func checkError(err error) error {
 // updateRecordFromJSON updates the provided record using data from JSON.
 func updateRecordFromJSON(recordJSON []byte, updatedRecord interface{}) error {
 	switch record := updatedRecord.(type) {
-	case *models.JSONItemData:
+	case *models.JSON_Item_Order:
 		var existingItem models.Item
 		if err := json.Unmarshal(recordJSON, &existingItem); err != nil {
 			return err

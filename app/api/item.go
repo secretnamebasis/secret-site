@@ -13,7 +13,7 @@ import (
 )
 
 func CreateItem(c *fiber.Ctx) error {
-	var call models.JSONItemData
+	var call models.JSON_Item_Order
 	form, _ := c.MultipartForm()
 	// if err != nil {
 	// 	return err
@@ -98,7 +98,7 @@ func AllItems(c *fiber.Ctx) error {
 
 func UpdateItem(c *fiber.Ctx) error {
 	id := c.Params("id")
-	var updatedItem models.JSONItemData
+	var updatedItem models.JSON_Item_Order
 
 	if err := c.BodyParser(&updatedItem); err != nil {
 		return ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
