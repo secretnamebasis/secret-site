@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/secretnamebasis/secret-site/app/api"
 	"github.com/secretnamebasis/secret-site/app/config"
-	"github.com/secretnamebasis/secret-site/app/controllers"
 	"github.com/secretnamebasis/secret-site/app/integrations/dero"
 	"github.com/secretnamebasis/secret-site/app/models"
 )
@@ -32,8 +32,8 @@ func NewItem(c *fiber.Ctx) error {
 	}
 
 	// Render the template
-	if err := renderTemplate(c, "app/public/new_item.html", data); err != nil {
-		return fiber.NewError(http.StatusInternalServerError, "Internal Server Error")
+	if err := renderTemplate(c, "app/public/item_new.html", data); err != nil {
+		return fiber.NewError(http.StatusInternalServerError, err.Error())
 	}
 
 	// Set the Content-Type header
@@ -44,23 +44,18 @@ func NewItem(c *fiber.Ctx) error {
 
 // CreateItem handles the form submission for creating a new item
 func SubmitItem(c *fiber.Ctx) error {
-	i, err := controllers.NextItemID()
-	if err != nil {
-		return err
-	}
+
 	// Parse form data
 	form, err := c.MultipartForm()
 	if err != nil {
 		return err
 	}
 	// Extract form values
-	title := form.Value["title"][0]
-	description := form.Value["content.description"][0]
 
 	// Check if an image file was uploaded
 	var imageBase64 string
 	imageBase64 = ""
-	if file, ok := form.File["content.image"]; ok && len(file) > 0 {
+	if file, ok := form.File["itemdata.image"]; ok && len(file) > 0 {
 		// Check MIME type of the uploaded file
 		imageFile, err := file[0].Open()
 		if err != nil {
@@ -97,15 +92,14 @@ func SubmitItem(c *fiber.Ctx) error {
 		// Encode image bytes as base64
 		imageBase64 = base64.StdEncoding.EncodeToString(imageBytes)
 	}
+	var item models.JSONItemData
 
-	item := models.InitializeItem(
-		i,
-		title,
-		description,
-		imageBase64,
-	)
+	item.Title = form.Value["title"][0]
+	// Convert ItemData into bytes
+	item.Description = form.Value["description"][0]
+	item.Image = imageBase64
 
-	controllers.CreateItemRecord(item)
+	api.CreateItem(c)
 
 	// Redirect to /items upon successful form submission
 	return c.Redirect("/items")

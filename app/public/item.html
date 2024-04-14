@@ -7,20 +7,18 @@
 </head>
 <body>
     <main>
-        <h2 class="title">{{.Item.Title}}</h2>
+        <h2 class="title">{{.Title}}</h2>
         <div>
             <!-- Check if the item has an image URL -->
-            {{if ne .Item.Content.ImageURL ""}}
+            {{if ne .ImageUrl ""}}
                 <!-- Render the image using the base64 image data -->
                 <img src="data:image/jpeg;base64,{{.Image}}" alt="Item Image">
             {{else}}
                 <!-- Placeholder or alternative content when there's no image -->
                 <!-- You can add alternative content here -->
             {{end}}
-            <p>
-                {{.Item.Content.ImageURL}}
-            </p>
-            <p>{{.Item.Content.Description}}</p>
+            <p>{{.ImageUrl}}</p>
+            <p>{{.Description}}</p>
             <p><em>Created: {{.Item.CreatedAt.Format "2006-01-02 15:04:05"}}</em></p>
         </div>
     </main>

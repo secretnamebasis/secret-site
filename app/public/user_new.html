@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New</title>
+</head>
+<body>
+    <div class="container">
+        <main>
+            <section>
+                <h2>Register</h2>
+                <form id="newForm" action="/users/submit" method="POST" enctype="multipart/form-data">
+                    <label for="name">Name:</label><br>
+                    <input type="text" id="name" name="name" required><br><br>
+
+                    <label for="wallet">DERO Wallet:</label><br>
+                    <input type="text" id="wallet" name="wallet" minlength="66" maxlength="66" required><br><br>
+
+                    <label for="password">Password:</label><br>
+                    <input type="password" id="password" name="password" required><br><br>
+
+                    <!-- File input field for photo -->
+                    <!-- Store photos of users? -->
+                    <!-- <label for="photo">Photo:</label><br>
+                    <input type="file" id="photo" name="content.image" accept="image/*"><br><br> -->
+                    
+                    <button type="submit">Register</button>
+                </form>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

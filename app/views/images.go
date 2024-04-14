@@ -1,7 +1,7 @@
 package views
 
 import (
-	"encoding/base64"
+	"encoding/json"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
@@ -19,7 +19,7 @@ func Images(c *fiber.Ctx) error {
 	}
 
 	// Decode the base64-encoded image data
-	imageData, err := base64.StdEncoding.DecodeString(item.Content.Image)
+	imageData, err := json.Marshal(item.Data)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).SendString("Failed to decode image data")
 	}

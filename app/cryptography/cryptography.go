@@ -4,10 +4,32 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
 )
+
+const HashLength = 32
+
+type Hash [HashLength]byte
+
+var ZEROHASH Hash
+
+func HashString(uniqueData string) string {
+
+	// Hash the unique data using SHA-256
+	hasher := sha256.New()
+	hasher.Write([]byte(uniqueData))
+	hash := hasher.Sum(nil)
+
+	// Truncate the hash to 32 bytes
+	truncatedHash := hash[:32]
+
+	// Convert the truncated hash to a hexadecimal string
+	return hex.EncodeToString(truncatedHash)
+}
 
 // Encrypt data using AES encryption with a password
 func EncryptData(data []byte, password string) ([]byte, error) {

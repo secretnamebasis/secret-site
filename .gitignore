@@ -4,3 +4,4 @@
 # ignore build
 secret-site_*
 secret-site
+*.txt

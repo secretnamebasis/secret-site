@@ -1,51 +1,53 @@
 package views
 
 import (
+	"fmt"
 	"net/http"
 	"sort"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/secretnamebasis/secret-site/app/config"
 	"github.com/secretnamebasis/secret-site/app/controllers"
+
 	"github.com/secretnamebasis/secret-site/app/integrations/dero"
 	"github.com/secretnamebasis/secret-site/app/models"
 )
 
 // HomeData defines the data structure for the home page template
-type ItemsData struct {
+type UsersData struct {
 	Title   string
 	Address string
-	Items   []models.Item
+	Users   []models.User
 }
 
-func Items(c *fiber.Ctx) error {
+func Users(c *fiber.Ctx) error {
 	addr, err := dero.GetWalletAddress()
 	if err != nil {
 		return fiber.NewError(http.StatusInternalServerError, "Failed to fetch Dero wallet address")
 	}
-	var items []models.Item
+
 	// Retrieve blog posts
-	items, err = controllers.AllItems()
+	users, err := controllers.AllUsers()
 	if err != nil {
 		return fiber.NewError(http.StatusInternalServerError, "Failed to retrieve items")
 	}
 	// Sort by create date, for now
 	sort.Slice(
-		items,
+		users,
 		func(i, j int) bool {
-			return items[i].CreatedAt.String() < items[j].CreatedAt.String()
+			return users[i].Name < users[j].Name
 		},
 	)
 
 	// Define data for rendering the template
-	data := ItemsData{
+	data := UsersData{
 		Title:   config.APP_NAME,
 		Address: addr.String(),
-		Items:   items,
+		Users:   users,
 	}
-
+	fmt.Printf("users: %+v", users)
 	// Render the template
-	if err := renderTemplate(c, "app/public/items.html", data); err != nil {
+	if err := renderTemplate(c, "app/public/users.html", data); err != nil {
 		return fiber.NewError(http.StatusInternalServerError, "Internal Server Error")
 	}
 
