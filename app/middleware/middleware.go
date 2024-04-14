@@ -3,14 +3,18 @@
 package middleware
 
 import (
+	"encoding/base64"
+	"errors"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/basicauth"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
-	"github.com/secretnamebasis/secret-site/app/controllers"
+	"github.com/secretnamebasis/secret-site/app/api"
+	"github.com/secretnamebasis/secret-site/app/database"
 )
 
 // Middleware provides a collection of middleware handlers
@@ -27,10 +31,10 @@ func (m *Middleware) LogRequests() fiber.Handler {
 		log.Printf("Request: %s %s", c.Method(), c.OriginalURL())
 
 		// Log request headers
-		log.Println("Request Headers:")
-		c.Request().Header.VisitAll(func(key, value []byte) {
-			log.Printf("%s: %s", key, value)
-		})
+		// log.Println("Request Headers:")
+		// c.Request().Header.VisitAll(func(key, value []byte) {
+		// 	log.Printf("%s: %s", key, value)
+		// })
 
 		// // Log request body if present
 		if len(c.Request().Body()) > 0 {
@@ -47,10 +51,10 @@ func (m *Middleware) LogRequests() fiber.Handler {
 		log.Printf("Response: %d", c.Response().StatusCode())
 
 		// // Log response headers
-		log.Println("Response Headers:")
-		c.Response().Header.VisitAll(func(key, value []byte) {
-			log.Printf("%s: %s", key, value)
-		})
+		// log.Println("Response Headers:")
+		// c.Response().Header.VisitAll(func(key, value []byte) {
+		// 	log.Printf("%s: %s", key, value)
+		// })
 
 		// Log response body if present
 		if len(c.Response().Body()) > 0 {
@@ -61,32 +65,70 @@ func (m *Middleware) LogRequests() fiber.Handler {
 	}
 }
 
-// AuthRequired middleware authenticates incoming requests
-func (m *Middleware) AuthRequired() fiber.Handler {
+// AuthRequired middleware authenticates incoming requests and checks for required roles
+func (m *Middleware) AuthRequired(roles ...string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		users, err := controllers.AllUsers(c)
+		// Get the Authorization header from the request
+		username, _, err := getCredentials(c)
 		if err != nil {
-			log.Println("Error fetching users:", err)
-			return c.Status(fiber.StatusInternalServerError).SendString("Internal Server Error")
+			// Error getting credentials
+			return c.Status(fiber.StatusUnauthorized).SendString("Unauthorized")
 		}
 
-		userMap := make(map[string]string)
-		for _, user := range users {
-			userMap[user.User] = user.Password
+		_, err = database.GetUserByUsername(username)
+		if err != nil {
+			// Error extracting credentials, return unauthorized
+			return api.ErrorResponse(c, fiber.StatusInternalServerError, "Unauthorized: we don't know you")
 		}
 
-		cfg := basicauth.Config{
-			Users: userMap,
-		}
+		// if user == nil {
+		// 	// User not found in the database, return unauthorized
+		// 	return api.ErrorResponse(c, fiber.StatusInternalServerError, "Unauthorized: you don't exist")
+		// }
 
-		authMiddleware := basicauth.New(cfg)
-		if authMiddleware == nil {
-			log.Println("Error creating basic auth middleware")
-			return c.Status(fiber.StatusInternalServerError).SendString("Internal Server Error")
-		}
+		// Check if the user has any of the required roles
+		// if !hasRole(user.Role, roles) {
+		// 	return api.ErrorResponse(c, fiber.StatusInternalServerError, "Forbidden")
+		// }
 
-		return authMiddleware(c)
+		// Proceed to the next middleware or route handler
+		return c.Next()
 	}
+}
+func getCredentials(c *fiber.Ctx) (username, password string, err error) {
+	// Get the Authorization header from the request
+	authHeader := c.Get("Authorization")
+	if authHeader == "" {
+		// No Authorization header found
+		return "", "", errors.New("no Authorization header found")
+	}
+
+	// Extract the username and password from the Authorization header
+	decodedCredentials, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(authHeader, "Basic "))
+	if err != nil {
+		// Error decoding credentials
+		return "", "", fmt.Errorf("error decoding credentials: %v", err)
+	}
+
+	credentials := strings.SplitN(string(decodedCredentials), ":", 2)
+	if len(credentials) != 2 {
+		// Invalid credentials format
+		return "", "", errors.New("invalid credentials format")
+	}
+
+	return credentials[0], credentials[1], nil
+}
+
+// hasRole checks if the user has any of the required roles
+func hasRole(userRoles []string, requiredRoles []string) bool {
+	for _, role := range requiredRoles {
+		for _, userRole := range userRoles {
+			if role == userRole {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // RateLimiter middleware limits the rate of incoming requests

@@ -3,10 +3,13 @@ package dero
 import (
 	"encoding/base64"
 
+	"github.com/deroproject/derohe/cryptography/crypto"
 	"github.com/deroproject/derohe/rpc"
 	"github.com/secretnamebasis/secret-site/app/config"
 	"github.com/ybbus/jsonrpc"
 )
+
+const DERO_SCID_STRING = "0000000000000000000000000000000000000000000000000000000000000000"
 
 var (
 	nodeEndpoint        = "http://" + config.Env("DERO_NODE_IP") + ":" + config.Env("DERO_NODE_PORT") + "/json_rpc"
@@ -57,37 +60,48 @@ func GetWalletAddress() (*rpc.Address, error) {
 	return address, err
 }
 
-// GetEncryptedBalanceResponse represents the JSON-RPC response for encrypted balance.
-type GetEncryptedBalanceResponse struct {
-	JSONRPC string `json:"jsonrpc"`
-	ID      string `json:"id"`
-	Result  struct {
-		SCID         string `json:"scid"`
-		Data         string `json:"data"`
-		Registration int    `json:"registration"`
-		Bits         int    `json:"bits"`
-		Height       int    `json:"height"`
-		TopoHeight   int    `json:"topoheight"`
-		BlockHash    string `json:"blockhash"`
-		TreeHash     string `json:"treehash"`
-		DHeight      int    `json:"dheight"`
-		DTopoHeight  int    `json:"dtopoheight"`
-		DTreeHash    string `json:"dtreehash"`
-		Status       string `json:"status"`
-	} `json:"result"`
-}
-
 // GetEncryptedBalance fetches the encrypted balance for the given address.
-func GetEncryptedBalance(address string) (*GetEncryptedBalanceResponse, error) {
+func GetEncryptedBalance(address string) (*rpc.GetEncryptedBalance_Result, error) {
 
 	params := map[string]interface{}{
 		"address":    address,
 		"topoheight": -1,
 	}
-	var response GetEncryptedBalanceResponse
+	var response rpc.GetEncryptedBalance_Result
 	err := CallRPCNode(nodeEndpoint, &response, "DERO.GetEncryptedBalance", params)
 	if err != nil {
 		return nil, err
 	}
 	return &response, nil
+}
+func Comment(comment, destionation string) (rpc.Transfer_Result, error) {
+	// grab up the General Journal
+	endpoint := config.Env("DERO_NODE_IP")
+	// and a pencil
+	object := rpc.Transfer_Result{}
+	// from the chart of accounts
+	// turn to the leaf called "transfer"
+	method := "transfer"
+	transfer := rpc.Transfer{
+		//
+		SCID:        crypto.ZEROHASH,
+		Destination: destionation,
+		Amount:      1, // we want them to keep one,
+		Payload_RPC: rpc.Arguments{
+			// the first thing we want to do is establish
+			// the habit of getting passwords by wallet.
+			rpc.Argument{
+				Name:     rpc.RPC_COMMENT,
+				DataType: rpc.DataString,
+				Value:    comment,
+			},
+		},
+	}
+	params := rpc.Transfer_Params{
+		Transfers: []rpc.Transfer{
+			transfer,
+		},
+	}
+
+	return object, CallRPCWalletWithParams(endpoint, &object, method, params)
 }

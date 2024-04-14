@@ -10,33 +10,32 @@ import (
 
 // Item represents a sample data structure for demonstration
 type Item struct {
-	ID        int       `json:"id"`
-	Title     string    `json:"title"`
-	Content   Content   `json:"content"`
+	ID    int    `json:"id"`
+	Title string `json:"title"`
+	// ItemData
+	Data      []byte    `json:"data"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+	ImageURL  string    `json:"image_url"`
 }
-type Content struct {
+type ItemData struct {
 	Description string `json:"description"`
 	Image       string `json:"image"`
-	ImageURL    string
 }
 
 // InitializeItem creates and initializes a new Item instance
-func InitializeItem(
-	id int,
-	title, description, image string,
-) *Item {
+func (i *Item) Initialize() *Item {
+	timestamp := time.Now()
+	i.ImageURL = config.Domainname + "/images/" + fmt.Sprintf("%d", i.ID)
+	i.CreatedAt = timestamp
+	i.UpdatedAt = timestamp
 	item := &Item{
-		ID:    id,
-		Title: title,
-		Content: Content{
-			Description: description,
-			Image:       image,
-			ImageURL:    config.Domainname + "/images/" + fmt.Sprintf("%d", id),
-		},
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		ID:        i.ID,
+		Title:     i.Title,
+		Data:      []byte{},
+		ImageURL:  i.ImageURL,
+		CreatedAt: i.CreatedAt,
+		UpdatedAt: i.UpdatedAt,
 	}
 
 	return item
@@ -44,14 +43,9 @@ func InitializeItem(
 
 // Validate method validates the fields of the Item struct
 func (i *Item) Validate() error {
-	if i.Title == "" {
-		return errors.New("title cannot be empty")
+	if i.Data == nil || i.ID == 0 || i.CreatedAt == (time.Time{}) || i.UpdatedAt == (time.Time{}) {
+		return errors.New("cannot be empty")
 	}
-	if i.Content.Description == "" {
-		return errors.New("content cannot be empty")
-	}
-	// Add more validation rules as needed
-	// Validate Content
 
 	return nil
 }

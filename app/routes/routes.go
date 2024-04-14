@@ -70,12 +70,22 @@ func defineViewsRoutes(app *fiber.App, mw *middleware.Middleware) {
 			Path:   "/images/:id",
 			Handle: views.Images,
 		},
+		{
+			Path:   "/users/",
+			Handle: views.Users,
+		},
+		{
+			Path:   "/users/new",
+			Handle: views.NewUser,
+		},
 	}
 
 	// Register view routes
 	for _, route := range viewRoutes {
 		viewsGroup.Get(route.Path, route.Handle)
 	}
+	// Actions
+	viewsGroup.Post("users/submit", views.SubmitUser)
 	viewsGroup.Post("/items/submit", views.SubmitItem)
 }
 
@@ -84,15 +94,19 @@ func defineAPIRoutes(app *fiber.App, mw *middleware.Middleware) {
 
 	// Create a route group for API endpoints
 	apiGroup := app.Group("/api")
-	apiGroup.Get("/ping", api.Ping)
 
 	// Apply middleware for API endpoints
 	apiGroup.Use(
 		mw.HelmetMiddleware(),
-		// mw.AuthRequired(), // would be nice to turn this on
+		// would be nice to turn this on
 		mw.RateLimiter(),
 	)
 
+	apiGroup.Get("/ping", api.Ping)
+
+	// here there be monsters
+	roles := []string{"user"}
+	apiGroup.Use(mw.AuthRequired(roles[0]))
 	// Define API routes for items
 	defineResourceRoutes(
 		apiGroup,

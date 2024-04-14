@@ -2,41 +2,71 @@ package api
 
 import (
 	"encoding/base64"
+	"errors"
+	"io"
+	"net/http"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/secretnamebasis/secret-site/app/config"
 	"github.com/secretnamebasis/secret-site/app/controllers"
-	"github.com/secretnamebasis/secret-site/app/cryptography"
 	"github.com/secretnamebasis/secret-site/app/models"
 )
 
 func CreateItem(c *fiber.Ctx) error {
+	var call models.JSON_Item_Order
+	form, _ := c.MultipartForm()
+	// if err != nil {
+	// 	return err
+	// }
+	if form != nil {
+
+		var imageBase64 string
+		imageBase64 = ""
+		if file, ok := form.File["itemdata.image"]; ok && len(file) > 0 {
+			imageFile, err := file[0].Open()
+			if err != nil {
+				return err
+			}
+			defer imageFile.Close()
+
+			buffer := make([]byte, 512)
+			_, err = imageFile.Read(buffer)
+			if err != nil {
+				return err
+			}
+
+			_, err = imageFile.Seek(0, io.SeekStart)
+			if err != nil {
+				return err
+			}
+
+			mimeType := http.DetectContentType(buffer)
+			if !strings.HasPrefix(mimeType, "image/") {
+				return errors.New("invalid file format, please upload an image")
+			}
+
+			imageBytes, err := io.ReadAll(imageFile)
+			if err != nil {
+				return err
+			}
+
+			imageBase64 = base64.StdEncoding.EncodeToString(imageBytes)
+		}
+
+		call.Title = form.Value["title"][0]
+		call.Description = form.Value["description"][0]
+		call.Image = imageBase64
+
+	}
 	// Parse request body into new item
-	var new models.Item
-	if err := c.BodyParser(&new); err != nil {
+	if err := c.BodyParser(&call); err != nil {
 		return ErrorResponse(c, fiber.StatusBadRequest, err.Error())
 	}
 
-	// Validate the new item
-	if err := new.Validate(); err != nil {
-		return ErrorResponse(c, fiber.StatusBadRequest, "Invalid item: "+err.Error())
-	}
-
-	// Get the next item ID
-	nextID, _ := controllers.NextItemID()
-
-	// Create a new item with the parsed data
-	item := models.InitializeItem(
-		nextID,
-		new.Title,
-		new.Content.Description,
-		new.Content.Image,
-	)
-
 	// Create the item record
-	if err := controllers.CreateItemRecord(item); err != nil {
-		return ErrorResponse(c, fiber.StatusInternalServerError, "Error creating item")
+	item, err := controllers.CreateItemRecord(&call)
+	if err != nil {
+		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
 	// Return success response
@@ -51,7 +81,7 @@ func ItemByID(c *fiber.Ctx) error {
 		if strings.Contains(err.Error(), "not found") {
 			return ErrorResponse(c, fiber.StatusNotFound, err.Error())
 		}
-		return ErrorResponse(c, fiber.StatusInternalServerError, "Internal server error")
+		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
 	return SuccessResponse(c, item)
@@ -68,12 +98,14 @@ func AllItems(c *fiber.Ctx) error {
 
 func UpdateItem(c *fiber.Ctx) error {
 	id := c.Params("id")
-	var updatedItem models.Item
+	var updatedItem models.JSON_Item_Order
 
-	if err := c.BodyParser(&updatedItem); err != nil || updatedItem.Title == "" || updatedItem.Content.Description == "" {
+	if err := c.BodyParser(&updatedItem); err != nil {
 		return ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
 	}
-
+	if err := updatedItem.Validate(); err != nil {
+		return ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
+	}
 	// Check if the item exists
 	item, err := controllers.GetItemByID(id)
 	if err != nil {
@@ -83,19 +115,11 @@ func UpdateItem(c *fiber.Ctx) error {
 		return ErrorResponse(c, fiber.StatusInternalServerError, "Error checking item")
 	}
 
-	// Encrypt the new content
-	encryptedContent, err := cryptography.EncryptData([]byte(updatedItem.Content.Description), config.Env("SECRET"))
-	if err != nil {
-		return ErrorResponse(c, fiber.StatusInternalServerError, "Error encrypting content")
+	if err := controllers.UpdateItem(id, updatedItem); err != nil {
+		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	// Update the item with the new encrypted content
-	item.Content.Description = base64.StdEncoding.EncodeToString(encryptedContent)
-	if err := controllers.UpdateItem(id, item); err != nil {
-		return ErrorResponse(c, fiber.StatusInternalServerError, "Error updating item")
-	}
-
-	return SuccessResponse(c, item)
+	return SuccessResponse(c, &item)
 }
 
 func DeleteItem(c *fiber.Ctx) error {

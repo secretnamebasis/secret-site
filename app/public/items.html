@@ -9,17 +9,6 @@
                         <div class="item">
                             <h3><a href="/items/{{.ID}}">{{.Title}}</a></h3>
                             <!-- Check if the item has an image -->
-                            {{if .Content.ImageURL}}
-                                <!-- Wrap the image inside an anchor tag -->
-                                <div class="square">
-                                    <a href="/items/{{.ID}}">
-                                        <!-- Render the image using base64-encoded data -->
-                                        <img src="data:image/png;base64,{{.Content.Image}}" alt="{{.Title}} Image">                                    </a>
-                                </div>
-                            {{else}}
-                                <!-- Placeholder or alternative content when there's no image -->
-                                <!-- <p>No image available</p> -->
-                            {{end}}
                         </div>
                     {{end}}
                 </ul>
