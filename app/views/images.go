@@ -1,11 +1,13 @@
 package views
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/secretnamebasis/secret-site/app/controllers"
+	"github.com/secretnamebasis/secret-site/app/models"
 )
 
 func Images(c *fiber.Ctx) error {
@@ -18,18 +20,23 @@ func Images(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).SendString("Image not found")
 	}
 
-	// Decode the base64-encoded image data
-	imageData, err := json.Marshal(item.Data)
+	var itemData models.ItemData
+	if err := json.Unmarshal(item.Data, &itemData); err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"message": err.Error(), "status": "error"})
+	}
+
+	encoded, err := base64.StdEncoding.DecodeString(itemData.Image)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString("Failed to decode image data")
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"message": err.Error(), "status": "error"})
+
 	}
 
 	// Detect the content type of the image data
-	contentType := http.DetectContentType(imageData)
+	contentType := http.DetectContentType([]byte(encoded))
 
 	// Set the appropriate content type header
 	c.Set(fiber.HeaderContentType, contentType)
 
 	// Send the image data in the response
-	return c.Send(imageData)
+	return c.Send([]byte(encoded))
 }

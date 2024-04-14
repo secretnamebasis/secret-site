@@ -16,7 +16,7 @@ type Item struct {
 	Data      []byte    `json:"data"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
-	ImageURL  string
+	ImageURL  string    `json:"image_url"`
 }
 type ItemData struct {
 	Description string `json:"description"`
@@ -25,14 +25,17 @@ type ItemData struct {
 
 // InitializeItem creates and initializes a new Item instance
 func (i *Item) Initialize() *Item {
-
+	timestamp := time.Now()
+	i.ImageURL = config.Domainname + "/images/" + fmt.Sprintf("%d", i.ID)
+	i.CreatedAt = timestamp
+	i.UpdatedAt = timestamp
 	item := &Item{
 		ID:        i.ID,
 		Title:     i.Title,
 		Data:      []byte{},
-		ImageURL:  config.Domainname + "/images/" + fmt.Sprintf("%d", i.ID),
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		ImageURL:  i.ImageURL,
+		CreatedAt: i.CreatedAt,
+		UpdatedAt: i.UpdatedAt,
 	}
 
 	return item
@@ -40,7 +43,7 @@ func (i *Item) Initialize() *Item {
 
 // Validate method validates the fields of the Item struct
 func (i *Item) Validate() error {
-	if i.Data == nil || i.ID == 0 {
+	if i.Data == nil || i.ID == 0 || i.CreatedAt == (time.Time{}) || i.UpdatedAt == (time.Time{}) {
 		return errors.New("cannot be empty")
 	}
 

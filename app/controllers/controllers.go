@@ -41,16 +41,15 @@ func CreateItemRecord(call *models.JSONItemData) (models.Item, error) {
 
 	// Create a new item
 	var item models.Item
-	item.Initialize()
-	item.Title = call.Title
-	item.Data = bytes
-
 	// Get the next item ID
 	id, err := NextItemID()
 	if err != nil {
 		return models.Item{}, err
 	}
 	item.ID = id
+	item.Title = call.Title
+	item.Data = bytes
+	item.Initialize()
 
 	// Validate the item
 	if err := item.Validate(); err != nil {

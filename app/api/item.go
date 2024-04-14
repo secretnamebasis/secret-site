@@ -13,10 +13,11 @@ import (
 )
 
 func CreateItem(c *fiber.Ctx) error {
-	form, err := c.MultipartForm()
-	if err != nil {
-		return err
-	}
+	var call models.JSONItemData
+	form, _ := c.MultipartForm()
+	// if err != nil {
+	// 	return err
+	// }
 	if form != nil {
 
 		var imageBase64 string
@@ -52,14 +53,12 @@ func CreateItem(c *fiber.Ctx) error {
 			imageBase64 = base64.StdEncoding.EncodeToString(imageBytes)
 		}
 
-		var item models.JSONItemData
-		item.Title = form.Value["title"][0]
-		item.Description = form.Value["description"][0]
-		item.Image = imageBase64
+		call.Title = form.Value["title"][0]
+		call.Description = form.Value["description"][0]
+		call.Image = imageBase64
 
 	}
 	// Parse request body into new item
-	var call models.JSONItemData
 	if err := c.BodyParser(&call); err != nil {
 		return ErrorResponse(c, fiber.StatusBadRequest, err.Error())
 	}

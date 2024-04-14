@@ -77,6 +77,7 @@ const // Endpoint configuration
 
 func // CONFIG
 configServer() config.Server {
+	config.Domainname = "127.0.0.1"
 	config.Environment = "test"
 	config.DatabaseDir = "../app/database/"
 	config.EnvPath = "./.env"
@@ -547,12 +548,34 @@ func createItemTestSuccess(t *testing.T) {
 			return false
 		}
 
+		// Validate created
+		created, createdOK := result["created_at"].(string)
+		if !createdOK || created == "" {
+			t.Errorf("Expected created to be '%s' but got '%s'", time.Now(), created)
+			return false
+		}
+
+		// Validate updated
+		updated, updatedOK := result["updated_at"].(string)
+		if !updatedOK || updated == "" {
+			t.Errorf("Expected updated to be '%s' but got '%s'", time.Now(), updated)
+			return false
+		}
+
+		// Validate created
+		url, urlOK := result["image_url"].(string)
+		if !urlOK || url == "" {
+			t.Errorf("Expected title to be `"+config.Domainname+"'images/1` got '%s'", url)
+			return false
+		}
+
 		// Validate data
 		encodedData, dataOK := result["data"].(string)
 		if !dataOK {
 			t.Errorf("Expected 'data' field to be present")
 			return false
 		}
+
 		fmt.Printf("ENCODED DATA: %s\n", encodedData)
 		// Decode base64-encoded data
 		decodedData, err := base64.StdEncoding.DecodeString(encodedData)
