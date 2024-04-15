@@ -13,7 +13,7 @@ import (
 )
 
 func CreateItem(c *fiber.Ctx) error {
-	var call models.JSON_Item_Order
+	var order models.JSON_Item_Order
 	form, _ := c.MultipartForm()
 	// if err != nil {
 	// 	return err
@@ -53,18 +53,18 @@ func CreateItem(c *fiber.Ctx) error {
 			imageBase64 = base64.StdEncoding.EncodeToString(imageBytes)
 		}
 
-		call.Title = form.Value["title"][0]
-		call.Description = form.Value["description"][0]
-		call.Image = imageBase64
+		order.Title = form.Value["title"][0]
+		order.Description = form.Value["description"][0]
+		order.Image = imageBase64
 
 	}
 	// Parse request body into new item
-	if err := c.BodyParser(&call); err != nil {
+	if err := c.BodyParser(&order); err != nil {
 		return ErrorResponse(c, fiber.StatusBadRequest, err.Error())
 	}
 
 	// Create the item record
-	item, err := controllers.CreateItemRecord(&call)
+	item, err := controllers.CreateItemRecord(&order)
 	if err != nil {
 		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
