@@ -110,6 +110,16 @@ func AllItems() ([]models.Item, error) {
 	return items, nil // Return retrieved items and nil error
 }
 
+// AllItems retrieves all items from the database.
+func AllItemTitles() ([]models.Item, error) {
+	var items []models.Item
+	err := database.GetAllItemTitles(bucketItems, &items)
+	if err != nil {
+		return nil, err // Return nil slice and error
+	}
+	return items, nil // Return retrieved items and nil error
+}
+
 // AllUsers retrieves all users from the database.
 func AllUsers() ([]models.User, error) {
 	var users []models.User

@@ -25,7 +25,7 @@ func Items(c *fiber.Ctx) error {
 	}
 	var items []models.Item
 	// Retrieve blog posts
-	items, err = controllers.AllItems()
+	items, err = controllers.AllItemTitles()
 	if err != nil {
 		return fiber.NewError(http.StatusInternalServerError, "Failed to retrieve items")
 	}

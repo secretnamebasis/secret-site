@@ -142,6 +142,48 @@ func GetAllRecords(bucketName string, records interface{}) error {
 		})
 }
 
+// GetAllRecords retrieves all records from the specified bucket and unmarshals them into the provided slice.
+func GetAllItemTitles(bucketName string, records interface{}) error {
+	return db.View(
+		func(tx *bbolt.Tx) error {
+			b := tx.Bucket([]byte(bucketName))
+			if b == nil {
+				return fmt.Errorf("bucket %q not found", bucketName)
+			}
+
+			// Define a helper function to unmarshal records
+			unmarshalRecord := func(recordType interface{}) error {
+				return b.ForEach(
+					func(k, v []byte) error {
+						// Create a new instance of the record type
+						newRecord := reflect.New(reflect.TypeOf(recordType).Elem()).Interface()
+
+						// Unmarshal the JSON data into the new record
+						if err := json.Unmarshal(v, newRecord); err != nil {
+							return err
+						}
+
+						// Append the record to the slice
+						sliceValue := reflect.ValueOf(records).Elem()
+						sliceValue.Set(reflect.Append(sliceValue, reflect.ValueOf(newRecord).Elem()))
+
+						return nil
+					},
+				)
+			}
+
+			// Unmarshal records based on their types
+			switch records.(type) {
+			case *[]models.Item:
+				return unmarshalRecord(&models.Item{})
+			case *[]models.User:
+				return unmarshalRecord(&models.User{})
+			default:
+				return fmt.Errorf("unsupported record type")
+			}
+		})
+}
+
 // UpdateRecord updates a record in the specified bucket with the provided ID and updated data.
 func UpdateRecord(bucketName, id string, updatedRecord interface{}) error {
 	return db.Update(func(tx *bbolt.Tx) error {
