@@ -60,8 +60,9 @@ func CreateRecord(bucketName string, record interface{}) error {
 			switch r := record.(type) {
 			case *models.Item: // Ensure we're dealing with a pointer to models.Item
 				id = r.ID
-				// Encrypt content before storing in the database
-				encryptedBytes, err := cryptography.EncryptData(
+				// Encrypt bytes before storing in the database
+				encryptedBytes,
+					err := cryptography.EncryptData(
 					r.Data, // we want to lock these bitches down!
 					config.Env( // and to do it we are going into our env
 						"SECRET", // and we are going to refer to our secret
@@ -280,10 +281,9 @@ func updateRecordFromJSON(recordJSON []byte, updatedRecord interface{}) error {
 		if err := json.Unmarshal(recordJSON, &existingItem); err != nil {
 			return err
 		}
-		fmt.Printf("EXISTING BYTES: %s\n", existingItem.Data)
 
 		decryptedData, err := cryptography.DecryptData(existingItem.Data, config.Env("SECRET"))
-		fmt.Printf("DECRYPTED BYTES: %s\n", decryptedData)
+
 		if err != nil {
 			return err
 		}
@@ -294,8 +294,6 @@ func updateRecordFromJSON(recordJSON []byte, updatedRecord interface{}) error {
 		if err := json.Unmarshal(decryptedData, &existingItemData); err != nil {
 			return err
 		}
-		fmt.Printf("Unmarshalled Data: %+v\n", existingItemData)
-		fmt.Printf("Record: %s\n", record)
 
 		// Define a map to store the fields to be updated
 		fieldsToUpdate := map[string]bool{
@@ -312,13 +310,11 @@ func updateRecordFromJSON(recordJSON []byte, updatedRecord interface{}) error {
 		}
 
 		updatedBytes, err := json.Marshal(existingItemData)
-		fmt.Printf("UPDATED BYTES: %s\n", updatedBytes)
 		if err != nil {
 			return err
 		}
 
 		encryptedBytes, err := cryptography.EncryptData(updatedBytes, config.Env("SECRET"))
-		fmt.Printf("Encrypted BYTES: %s\n", encryptedBytes)
 		if err != nil {
 			return err
 		}
@@ -379,15 +375,12 @@ func GetRecordByID(bucketName, id string, record interface{}) error {
 
 			// Decrypt the content if the record type is models.Item
 			if item, ok := record.(*models.Item); ok {
-				fmt.Printf("DATA: %s\n", item.Data)
-				// Marshal item's Data field to JSON
 
 				// Encrypt JSON bytes
 				decryptedBytes, err := cryptography.DecryptData(item.Data, config.Env("SECRET"))
 				if err != nil {
 					return err
 				}
-				fmt.Printf("DECRYPTED DATA: %s\n", decryptedBytes)
 
 				item.Data = decryptedBytes
 			}

@@ -16,20 +16,47 @@ const (
 )
 
 // CreateItemRecord creates a new item in the database.
-func CreateItemRecord(call *models.JSON_Item_Order) (models.Item, error) {
-	if err := checkItemExistence(call); err != nil {
+func CreateItemRecord(order *models.JSON_Item_Order) (models.Item, error) {
+	// Let's create an item
+	var item models.Item
+
+	// Validate the order data
+	if err := order.Validate(); err != nil {
 		return models.Item{}, err
 	}
-	// Validate the input data
-	if err := call.Validate(); err != nil {
+	item.Title = order.Title
+	// we are going to check by title...
+	// no duplicate titles allowed
+	if err := checkItemExistence(item.Title); err != nil {
 		return models.Item{}, err
 	}
 
+	// Get the next item ID
+	id, err := NextItemID()
+	if err != nil {
+		return models.Item{}, err
+	}
+	item.ID = id
+
 	// Marshal the JSON_Item_Order into bytes
-	bytes, err := json.Marshal(models.ItemData{
-		Description: call.Description,
-		Image:       call.Image,
-	})
+	// this is a really important concept:
+	// we are going to be doing and seeing this kind
+	// of operation a lot, we are going to be
+	// marshalling data into bytes into some kind
+	// of model so we are taking an order and we
+	// are effectively building the ItemData that
+	// will be stored as bytes.
+
+	// and our validation already checks to see if
+	// these fields are empty
+	bytes, err := json.Marshal(
+		models.ItemData{
+			Description: order.Description,
+			Image:       order.Image,
+		},
+	)
+	// this should not be a problem...
+	// but if it is...
 	if err != nil {
 		return models.Item{}, err
 	}
@@ -39,16 +66,9 @@ func CreateItemRecord(call *models.JSON_Item_Order) (models.Item, error) {
 		return models.Item{}, errors.New("marshaled bytes are nil")
 	}
 
-	// Create a new item
-	var item models.Item
-	// Get the next item ID
-	id, err := NextItemID()
-	if err != nil {
-		return models.Item{}, err
-	}
-	item.ID = id
-	item.Title = call.Title
+	// strap those bytes to our item
 	item.Data = bytes
+
 	item.Initialize()
 
 	// Validate the item
@@ -188,10 +208,10 @@ func NextItemID() (int, error) {
 
 // private functions
 // checkItemExistence checks if a user with the same title or data already exists
-func checkItemExistence(item *models.JSON_Item_Order) error {
+func checkItemExistence(title string) error {
 
 	// Check if user already exists with the same username
-	existingItem, err := database.GetItemByTitle(item.Title)
+	existingItem, err := database.GetItemByTitle(title)
 	if err != nil {
 		return errors.New("error checking item existence")
 	}

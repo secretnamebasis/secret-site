@@ -8,7 +8,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"log"
+
+	"golang.org/x/crypto/pbkdf2"
 )
 
 const HashLength = 32
@@ -17,6 +18,7 @@ type Hash [HashLength]byte
 
 var ZEROHASH Hash
 
+// HashString calculates the SHA-256 hash of the input string and returns it as a hexadecimal string.
 func HashString(uniqueData string) string {
 
 	// Hash the unique data using SHA-256
@@ -25,61 +27,51 @@ func HashString(uniqueData string) string {
 	hash := hasher.Sum(nil)
 
 	// Truncate the hash to 32 bytes
-	truncatedHash := hash[:32]
+	truncatedHash := hash[:HashLength]
 
 	// Convert the truncated hash to a hexadecimal string
 	return hex.EncodeToString(truncatedHash)
 }
 
-// Encrypt data using AES encryption with a password
+// EncryptData encrypts the input data using AES encryption with the provided password.
 func EncryptData(data []byte, password string) ([]byte, error) {
-	// Generate a key from the password
-	key := []byte(password)
+	// Derive the key from the password
+	key := deriveKey(password)
 
-	// Pad the key if its length is not valid
-	paddedKey := make([]byte, 32)
-	copy(paddedKey, key)
-
-	block, err := aes.NewCipher(paddedKey)
+	// Create a new AES cipher block
+	block, err := aes.NewCipher(key)
 	if err != nil {
-		log.Printf("Error creating cipher block: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("error creating cipher block: %v", err)
 	}
 
-	ciphertext := make([]byte, aes.BlockSize+len(data))
-	iv := ciphertext[:aes.BlockSize]
+	// Generate a random IV
+	iv := make([]byte, aes.BlockSize)
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-		log.Printf("Error generating IV: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("error generating IV: %v", err)
 	}
 
 	// Encrypt the data
+	ciphertext := make([]byte, aes.BlockSize+len(data))
+	copy(ciphertext[:aes.BlockSize], iv)
 	stream := cipher.NewCFBEncrypter(block, iv)
 	stream.XORKeyStream(ciphertext[aes.BlockSize:], data)
-
-	// Prepend the IV to the ciphertext
-	ciphertext = append(iv, ciphertext[aes.BlockSize:]...)
 
 	return ciphertext, nil
 }
 
-// Decrypt data using AES decryption with a password
+// DecryptData decrypts the input ciphertext using AES decryption with the provided password.
 func DecryptData(ciphertext []byte, password string) ([]byte, error) {
-	// Generate a key from the password
-	key := []byte(password)
+	// Derive the key from the password
+	key := deriveKey(password)
 
-	// Pad the key if its length is not valid
-	paddedKey := make([]byte, 32)
-	copy(paddedKey, key)
-
-	block, err := aes.NewCipher(paddedKey)
+	// Create a new AES cipher block
+	block, err := aes.NewCipher(key)
 	if err != nil {
-		log.Printf("Error creating cipher block: %v", err)
 		return nil, fmt.Errorf("error creating cipher block: %v", err)
 	}
 
+	// Check if the ciphertext is shorter than the block size
 	if len(ciphertext) < aes.BlockSize {
-		log.Printf("Ciphertext too short")
 		return nil, fmt.Errorf("ciphertext too short")
 	}
 
@@ -93,4 +85,21 @@ func DecryptData(ciphertext []byte, password string) ([]byte, error) {
 	stream.XORKeyStream(plaintext, ciphertext)
 
 	return plaintext, nil
+}
+
+// deriveKey derives a key of length HashLength from the password using PBKDF2.
+func deriveKey(password string) []byte {
+
+	salt := make([]byte, 16) // take a pinch of salt...
+
+	iterations := 4096 // set a "timer"
+
+	// apply salt
+	return pbkdf2.Key( // cook and serve as directed
+		[]byte(password), // mince password to byte
+		salt,             // mix in some salt
+		iterations,       // cook until the timer rings
+		HashLength,       // serve on a bun
+		sha256.New,       // with a bed of hash
+	)
 }
