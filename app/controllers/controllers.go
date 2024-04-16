@@ -117,7 +117,7 @@ func CreateUserRecord(user *models.User) error {
 // isValidWallet checks if the provided wallet address is valid
 func isValidWallet(wallet string) error {
 	// Attempt to fetch the balance of the wallet address
-	_, err := dero.GetEncryptedBalance(config.NodeEndPoint, wallet)
+	_, err := dero.GetEncryptedBalance(config.NodeEndpoint, wallet)
 	return err
 }
 

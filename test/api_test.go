@@ -9,7 +9,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
 	"testing"
 	"time"
 
@@ -131,7 +130,7 @@ func TestAPI(t *testing.T) {
 
 	// Config server
 	cfg := config.Initialize()
-	pause(3)
+	pause(4)
 
 	// Check if config is empty
 	checkConfig(cfg)
@@ -200,19 +199,6 @@ func startServer(t *testing.T, c config.Server) *app.App { // start the server
 		}
 	}()
 	return a
-}
-
-func launchSimulator() error {
-	dir := "../vendors/derohe/cmd/simulator"
-	cmd := exec.Command("go", "run", ".", "--http-address=0.0.0.0:8081")
-	cmd.Dir = dir
-	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("error starting command: %v", err)
-	}
-	if err := cmd.Wait(); err != nil {
-		return fmt.Errorf("error waiting for command: %v", err)
-	}
-	return nil
 }
 
 func runTests(t *testing.T, c config.Server) { // run tests

@@ -18,7 +18,7 @@ type Server struct {
 	Environment    string
 	DatabasePath   string
 	EnvPath        string
-	NodeEndPoint   string
+	NodeEndpoint   string
 	WalletEndpoint string
 }
 
@@ -32,7 +32,7 @@ var (
 const ()
 
 var (
-	NodeEndPoint      string
+	NodeEndpoint      string
 	WalletEndpoint    string
 	Environment       string
 	Port              int
@@ -91,13 +91,13 @@ func Initialize() Server {
 
 	switch Environment {
 	case "prod":
-		NodeEndPoint = "http://" + Env("DERO_NODE_IP") + ":" + Env("DERO_NODE_PORT") + "/json_rpc"
+		NodeEndpoint = "http://" + Env("DERO_NODE_IP") + ":" + Env("DERO_NODE_PORT") + "/json_rpc"
 		WalletEndpoint = "http://" + Env("DERO_WALLET_IP") + ":" + Env("DERO_WALLET_PORT") + "/json_rpc"
 		// In production environments, we presuppose DERO mainnet
 	case "test":
 		Port = 3000
 		Domainname = "127.0.0.1"
-		NodeEndPoint = "http://" + Env("DERO_SIMULATOR_NODE_IP") + ":" + Env("DERO_SIMULATOR_NODE_PORT") + "/json_rpc"
+		NodeEndpoint = "http://" + Env("DERO_SIMULATOR_NODE_IP") + ":" + Env("DERO_SIMULATOR_NODE_PORT") + "/json_rpc"
 		WalletEndpoint = "http://" + Env("DERO_SIMULATOR_WALLET_IP") + ":" + Env("DERO_SIMULATOR_WALLET_PORT") + "/json_rpc"
 		DatabaseDir = "../app/database/"
 		Environment = "test"
@@ -113,7 +113,7 @@ func Initialize() Server {
 		EnvPath = "./.env." + Environment
 		Port = 3000
 		Domainname = "127.0.0.1"
-		NodeEndPoint = "http://" + Env("DERO_SIMULATOR_NODE_IP") + ":" + Env("DERO_SIMULATOR_NODE_PORT") + "/json_rpc"
+		NodeEndpoint = "http://" + Env("DERO_SIMULATOR_NODE_IP") + ":" + Env("DERO_SIMULATOR_NODE_PORT") + "/json_rpc"
 		WalletEndpoint = "http://" + Env("DERO_SIMULATOR_WALLET_IP") + ":" + Env("DERO_SIMULATOR_WALLET0_PORT") + "/json_rpc"
 		// Launch the simulator in the background
 		go func() {
@@ -123,7 +123,7 @@ func Initialize() Server {
 			}
 		}()
 
-		time.Sleep(3 * time.Second)
+		time.Sleep(4 * time.Second)
 	}
 
 	c := Server{
@@ -131,7 +131,7 @@ func Initialize() Server {
 		Environment:  Environment,
 		DatabasePath: DatabaseDir,
 		EnvPath:      EnvPath,
-		NodeEndPoint: NodeEndPoint,
+		NodeEndpoint: NodeEndpoint,
 	}
 
 	return c
