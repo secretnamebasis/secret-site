@@ -56,7 +56,7 @@ git clone https://github.com/secretnamebasis/secret-site.git
 cd secret-site
 ```
 ### `.env`
-Default values in [`dot.env.sample`](https://github.com/secretnamebasis/secret-site/blob/main/dot.env.sample) are used to set default values for the `.env` variables prior to running the `config`, which will write `.env` to the project directory `./.` for `.env.dev` and `.env.test`. We assume that on first `config`, that insteance of production (`prod`), development (`dev`) and testing (`test`) are the same. 
+Default values in [`dot.env.sample`](https://github.com/secretnamebasis/secret-site/blob/main/dot.env.sample) are used to set default values for the `.env` variables prior to running the `config`, which will write `env` files to the project directory `./` for `.`, `.env.dev` and `.env.test`. We assume that on first `config`, that insteance of production (`prod`), development (`dev`) and testing (`test`) are the same. 
 ```sh
 bin/config
 ```  
