@@ -28,7 +28,7 @@ func Initialize(c config.Server) error {
 		return err
 	}
 
-	db, err = bbolt.Open(c.DatabasePath+c.Env+".db", 0600, nil)
+	db, err = bbolt.Open(c.DatabasePath+c.Environment+".db", 0600, nil)
 	if err != nil {
 		return err
 	}

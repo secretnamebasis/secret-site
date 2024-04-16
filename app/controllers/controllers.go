@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/secretnamebasis/secret-site/app/config"
 	"github.com/secretnamebasis/secret-site/app/database"
 	"github.com/secretnamebasis/secret-site/app/integrations/dero"
 	"github.com/secretnamebasis/secret-site/app/models"
@@ -116,7 +117,7 @@ func CreateUserRecord(user *models.User) error {
 // isValidWallet checks if the provided wallet address is valid
 func isValidWallet(wallet string) error {
 	// Attempt to fetch the balance of the wallet address
-	_, err := dero.GetEncryptedBalance(wallet)
+	_, err := dero.GetEncryptedBalance(config.NodeEndpoint, wallet)
 	return err
 }
 

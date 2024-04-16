@@ -8,6 +8,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
+	"github.com/secretnamebasis/secret-site/app/config"
 	"github.com/secretnamebasis/secret-site/app/integrations/dero"
 )
 
@@ -47,7 +48,7 @@ func getCredentials(c *fiber.Ctx) (username, password string, err error) {
 // hasValidWallet checks if the provided wallet address is valid
 func hasValidWallet(wallet string) error {
 	// Attempt to fetch the balance of the wallet address
-	_, err := dero.GetEncryptedBalance(wallet)
+	_, err := dero.GetEncryptedBalance(config.NodeEndpoint, wallet)
 	if err != nil {
 		log.Errorf("reg: %s", err)
 	}

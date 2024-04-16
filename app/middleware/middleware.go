@@ -31,16 +31,16 @@ func (m *Middleware) LogRequests() fiber.Handler {
 		log.Printf("Request: %s %s", c.Method(), c.OriginalURL())
 
 		// Log request headers
-		log.Println("Request Headers:")
-		c.Request().Header.VisitAll(func(key, value []byte) {
-			log.Printf("%s: %s", key, value)
-		})
+		// log.Println("Request Headers:")
+		// c.Request().Header.VisitAll(func(key, value []byte) {
+		// 	log.Printf("%s: %s", key, value)
+		// })
 
 		// Log request body if present
 		// this adds overhead to the processing of the server by 2x
-		// if len(c.Request().Body()) > 0 {
-		// 	log.Println("Request Body: " + string(c.Request().Body()))
-		// }
+		if len(c.Request().Body()) > 0 {
+			log.Println("Request Body: " + string(c.Request().Body()))
+		}
 
 		// Proceed to next middleware or route handler
 		if err := c.Next(); err != nil {

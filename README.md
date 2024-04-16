@@ -11,7 +11,7 @@ The coolest feature included is the integration with `DERO`.
 `secret-site` is a TLS encrypted website for hosting encrypted content. 
 
 The following models are supported in the `bbolt` database with the accompanying features: 
-- Item: `{ id: , title: , content: :description, :image, :imageURL }`
+- Item: `{ id: , title: , data: :description, :image, imageURL: }`
     - `AES` encryption/decryption of `:description`, `:image`
 - User `{ user: , wallet: , password: }`
     - validates wallet addresses with `DERO` network
@@ -39,7 +39,7 @@ The following models are supported in the `bbolt` database with the accompanying
 - [`NFA`](https://github.com/civilware/artificer-nfa-standard) minting tools
 ## Install
 ### DERO wallet
-As a pre requisite, `secret-site` needs a DERO wallet instance:
+As a pre requisite, running `secret-site` in production environments requires a DERO wallet instance:
 - CLI:
     - Download the latest binaries of [`DERO`](https://github.com/deroproject/derohe/releases/latest/)
     - Launch `dero-wallet-cli` with these suggested flags `--rpc-bind=127.0.0.1:10103 --daemon-address=node.derofoundation.org:11012 --rpc-server --rpc-login="secret:pass"`
@@ -56,7 +56,7 @@ git clone https://github.com/secretnamebasis/secret-site.git
 cd secret-site
 ```
 ### `.env`
-Default values in [`dot.env.sample`](https://github.com/secretnamebasis/secret-site/blob/main/dot.env.sample) are used to set default values for the `.env` variables prior to running the `config`, which will write `.env` to the project directory `./.` and the `./test/` direcorty. We assume that on first `config`, that insteance of production (`prod`), development (`dev`) and testing (`test`) are the same. 
+Default values in [`dot.env.sample`](https://github.com/secretnamebasis/secret-site/blob/main/dot.env.sample) are used to set default values for the `.env` variables prior to running the `config`, which will write `env` files to the project directory `./` for `.`, `.env.dev` and `.env.test`. We assume that on first `config`, that insteance of production (`prod`), development (`dev`) and testing (`test`) are the same. 
 ```sh
 bin/config
 ```  
@@ -72,7 +72,10 @@ or, if you prefer:
 go build . 
 ./secret-site
 ```
-## Dev 
+## Development/Testing
+The `DERO` `simulator` runs in the background for all developemnt and testing environments
+
+### `dev`
 Any `env` but `prod` runs app without TLS. Use parse flags to customize your development environment. 
 ```sh
 go run . -env=dev -port=3000 -db=./app/database/
@@ -81,7 +84,7 @@ Or:
 ```sh
 bin/dev
 ```
-## Test
+### `test`
 When you `run_integration_test.sh`, you will find times-stamped builds in `./build/` and logs in `./log/`.
 
 Alternatively, if you would like to test only the API:
