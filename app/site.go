@@ -25,7 +25,7 @@ func MakeApp(c config.Server) *App {
 		fiber.Config{
 			AppName:               config.APP_NAME,
 			CaseSensitive:         true,
-			DisableStartupMessage: false,
+			DisableStartupMessage: true,
 		},
 	)
 
@@ -47,7 +47,7 @@ func (a *App) StartApp(c config.Server) error {
 			fmt.Sprintf(":%d", c.Port),
 		)
 	default:
-		return fmt.Errorf("unsupported environment: %s", config.Env)
+		return fmt.Errorf("unsupported environment: %s", config.Environment)
 	}
 }
 

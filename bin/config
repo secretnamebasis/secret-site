@@ -55,11 +55,16 @@ SECRET="${inputs[2]}"
 #
 DERO_NODE_IP="${inputs[3]}"
 DERO_WALLET_IP="${inputs[4]}"
+DERO_SIMULATOR_NODE_IP="127.0.0.1"
+DERO_SIMULATOR_WALLET_IP="127.0.0.1"
 
 ### PORT
 #
 DERO_NODE_PORT="${inputs[5]}"
 DERO_WALLET_PORT="${inputs[6]}"
+DERO_SIMULATOR_NODE_PORT="127.0.0.1"
+DERO_SIMULATOR_WALLET0_PORT="20000"
+DERO_SIMULATOR_WALLET1_PORT="30000"
 
 ### AUTH
 # 
@@ -67,5 +72,9 @@ DERO_WALLET_USER="${inputs[7]}"
 DERO_WALLET_PASS="${inputs[8]}"
 CONFIG
 
+# Copy the .env file for development
+cp ./.env ./.env.dev
+
 # Copy the .env file to the ./test/ directory
 cp ./.env ./test/.env
+

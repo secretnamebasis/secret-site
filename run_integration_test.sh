@@ -40,6 +40,28 @@ if ! command_exists "go"; then
     exit 1
 fi
 
+log_and_echo "info" "secret-site is testing api"
+
+test_output=$(go test ./test/api_test.go  -env="test" -v -failfast)
+
+echo $test_output > test_results.tmp
+
+# Check if the test completed successfully
+if [[ $test_output != *"ok"* ]]; then
+    log_and_echo "error" "Test failed. Test output: $test_output"
+    # Remove the temporary file
+    rm test_results.tmp
+    exit 1
+fi
+
+# Check if the test completed successfully
+if [ $? -ne 0 ]; then
+    log_and_echo "error" "secret-site test failed, see log."
+    exit 1
+fi
+
+log_and_echo "info" "test completed successfully."
+
 # Get the current UTC date and time
 BUILD_DATE=$(date -u '+%Y-%m-%d_%H-%M-%S')
 
@@ -67,27 +89,6 @@ fi
 
 log_and_echo "info" "secret-site built under ./build."
 
-log_and_echo "info" "secret-site is testing api"
-
-test_output=$( go test ./test/api_test.go -v)
-
-echo $test_output > test_results.tmp
-
-# Check if the test completed successfully
-if [[ $test_output != *"ok"* ]]; then
-    log_and_echo "error" "Test failed. Test output: $test_output"
-    # Remove the temporary file
-    rm test_results.tmp
-    exit 1
-fi
-
-# Check if the test completed successfully
-if [ $? -ne 0 ]; then
-    log_and_echo "error" "secret-site test failed, see log."
-    exit 1
-fi
-
-log_and_echo "info" "test completed successfully."
 
 # Remove the temporary file
 rm test_results.tmp

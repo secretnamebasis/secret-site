@@ -11,7 +11,7 @@ import (
 func Ping(c *fiber.Ctx) error {
 	d := "pong"
 
-	a, e := dero.GetWalletAddress()
+	a, e := dero.GetWalletAddress(config.WalletEndpoint)
 
 	m := "app: " + config.APP_NAME +
 		" :: owner: " + a.String()

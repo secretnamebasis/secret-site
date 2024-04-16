@@ -23,7 +23,7 @@ type ItemData struct {
 
 // Item renders the item detail page
 func Item(c *fiber.Ctx) error {
-	addr, err := dero.GetWalletAddress()
+	addr, err := dero.GetWalletAddress(config.WalletEndpoint)
 	if err != nil {
 		return fiber.NewError(http.StatusInternalServerError, "Failed to fetch Dero wallet address")
 	}

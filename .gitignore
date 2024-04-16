@@ -1,7 +1,8 @@
-*.env
+*.env*
 *.db
 *.log
 # ignore build
 secret-site_*
 secret-site
 *.txt
+

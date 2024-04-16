@@ -1,17 +1,24 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/secretnamebasis/secret-site/app"
 	"github.com/secretnamebasis/secret-site/app/config"
 	"github.com/secretnamebasis/secret-site/app/database"
+	"github.com/secretnamebasis/secret-site/app/integrations/dero"
 )
 
 func main() {
 
 	c := config.Initialize()
 
+	addr, err := dero.GetWalletAddress(config.WalletEndpoint)
+	if err != nil {
+		log.Fatalf("Wallet is not loaded")
+	}
+	fmt.Printf("WELCOME: %s\n", addr.String())
 	if c == (config.Server{}) {
 		log.Fatalf("Config is empty")
 	}

@@ -12,8 +12,6 @@ import (
 const DERO_SCID_STRING = "0000000000000000000000000000000000000000000000000000000000000000"
 
 var (
-	nodeEndpoint        = "http://" + config.Env("DERO_NODE_IP") + ":" + config.Env("DERO_NODE_PORT") + "/json_rpc"
-	walletEndpoint      = "http://" + config.Env("DERO_WALLET_IP") + ":" + config.Env("DERO_WALLET_PORT") + "/json_rpc"
 	endpointAuth        = config.Env("DERO_WALLET_USER") + ":" + config.Env("DERO_WALLET_PASS")
 	encodedEndpointAuth = base64.StdEncoding.EncodeToString([]byte(endpointAuth))
 )
@@ -50,9 +48,9 @@ func CallRPCWalletWithoutParams(endpoint string, object interface{}, method stri
 }
 
 // GetWalletAddress fetches the DERO wallet address.
-func GetWalletAddress() (*rpc.Address, error) {
+func GetWalletAddress(endpoint string) (*rpc.Address, error) {
 	// params := map[string]interface{}{}
-	err := CallRPCWalletWithoutParams(walletEndpoint, &config.DeroAddressResult, "GetAddress")
+	err := CallRPCWalletWithoutParams(endpoint, &config.DeroAddressResult, "GetAddress")
 	if err != nil {
 		return nil, err
 	}
@@ -61,22 +59,21 @@ func GetWalletAddress() (*rpc.Address, error) {
 }
 
 // GetEncryptedBalance fetches the encrypted balance for the given address.
-func GetEncryptedBalance(address string) (*rpc.GetEncryptedBalance_Result, error) {
+func GetEncryptedBalance(endpoint, address string) (*rpc.GetEncryptedBalance_Result, error) {
 
 	params := map[string]interface{}{
 		"address":    address,
 		"topoheight": -1,
 	}
 	var response rpc.GetEncryptedBalance_Result
-	err := CallRPCNode(nodeEndpoint, &response, "DERO.GetEncryptedBalance", params)
+	err := CallRPCNode(endpoint, &response, "DERO.GetEncryptedBalance", params)
 	if err != nil {
 		return nil, err
 	}
 	return &response, nil
 }
-func Comment(comment, destionation string) (rpc.Transfer_Result, error) {
-	// grab up the General Journal
-	endpoint := config.Env("DERO_NODE_IP")
+func Comment(endpoint, comment, destionation string) (rpc.Transfer_Result, error) {
+
 	// and a pencil
 	object := rpc.Transfer_Result{}
 	// from the chart of accounts
