@@ -41,6 +41,7 @@ The following models are supported in the `bbolt` database with the accompanying
 As a pre requisite, running `secret-site` in production environments requires a DERO wallet instance:
 - CLI:
     - Download the latest binaries of [`DERO`](https://github.com/deroproject/derohe/releases/latest/)
+    - Restore, or create, a wallet file
     - Launch `dero-wallet-cli` with these suggested flags ; supposing of course that `derod` runs locally:
 ```sh
 --rpc-bind=127.0.0.1:10103 \
@@ -48,7 +49,6 @@ As a pre requisite, running `secret-site` in production environments requires a 
 --rpc-server \
 --rpc-login="secret:pass"
 ```
-    - Restore, or create, a wallet file
 - GUI: 
     - Download the latest [`ENGRAM`](https://github.com/DEROFDN/Engram/releases/latest/)
     - Restore, or create, wallet file
