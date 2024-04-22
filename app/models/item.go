@@ -10,13 +10,13 @@ import (
 
 // Item represents a sample data structure for demonstration
 type Item struct {
-	ID    int    `json:"id"`
-	Title string `json:"title"`
-	// ItemData
-	Data      []byte    `json:"data"`
+	ID        int       `json:"id"`
+	Title     string    `json:"title"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	ImageURL  string    `json:"image_url"`
+	// ItemData
+	Data []byte `json:"data"`
 }
 type ItemData struct {
 	Description string `json:"description"`

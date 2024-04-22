@@ -25,6 +25,7 @@ func New() *Middleware {
 	return &Middleware{}
 }
 
+// instead of toggling these on and off, let's set up a "log-level"
 func (m *Middleware) LogRequests() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		// Log request details

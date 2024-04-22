@@ -102,3 +102,8 @@ func Comment(endpoint, comment, destionation string) (rpc.Transfer_Result, error
 
 	return object, CallRPCWalletWithParams(endpoint, &object, method, params)
 }
+
+func CreateAsset(endpoint, destination string) (rpc.Transfer_Result, error) {
+	var txid rpc.Transfer_Result
+	return txid, nil
+}

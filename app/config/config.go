@@ -98,7 +98,7 @@ func Initialize() Server {
 		Port = 3000
 		Domainname = "127.0.0.1"
 		NodeEndpoint = "http://" + Env("DERO_SIMULATOR_NODE_IP") + ":" + Env("DERO_SIMULATOR_NODE_PORT") + "/json_rpc"
-		WalletEndpoint = "http://" + Env("DERO_SIMULATOR_WALLET_IP") + ":" + Env("DERO_SIMULATOR_WALLET_PORT") + "/json_rpc"
+		WalletEndpoint = "http://" + Env("DERO_SIMULATOR_WALLET_IP") + ":" + Env("DERO_SIMULATOR_WALLET0_PORT") + "/json_rpc"
 		DatabaseDir = "../app/database/"
 		Environment = "test"
 		EnvPath = "../.env." + Environment

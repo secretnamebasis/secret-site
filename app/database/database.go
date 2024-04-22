@@ -54,36 +54,20 @@ func CreateRecord(bucketName string, record interface{}) error {
 			if b == nil {
 				return fmt.Errorf("bucket %q not found ", bucketName)
 			}
-			// just so it doesn't get lost in the shuffle
-			var id int
 
-			switch r := record.(type) {
-			case *models.Item: // Ensure we're dealing with a pointer to models.Item
-				id = r.ID
-				// Encrypt bytes before storing in the database
-				encryptedBytes,
-					err := cryptography.EncryptData(
-					r.Data, // we want to lock these bitches down!
-					config.Env( // and to do it we are going into our env
-						"SECRET", // and we are going to refer to our secret
-					), // shouldn't ever change unless we are changing our encryption scheme
-				)
-				// and it better work.
-				if err != nil {
-					return err
-				}
-				r.Data = encryptedBytes
-			case *models.User:
-				id = r.ID
-
-			default:
-				return fmt.Errorf("unsupported record type")
+			value := reflect.ValueOf(record)
+			id := value.Elem().FieldByName("ID")
+			if !id.IsValid() {
+				return fmt.Errorf("record does not have ID field")
 			}
+
+			i := int(id.Int())
+
 			recordJSON, err := json.Marshal(record)
 			if err != nil {
 				return err
 			}
-			return b.Put([]byte(strconv.Itoa(id)), recordJSON)
+			return b.Put([]byte(strconv.Itoa(i)), recordJSON)
 		},
 	)
 }
@@ -343,7 +327,7 @@ func updateExistingUser(updatedUser, existingUser *models.User) {
 		existingUser.Wallet = updatedUser.Wallet
 	}
 	// Always update the password if provided
-	if updatedUser.Password != "" {
+	if updatedUser.Password != nil {
 		existingUser.Password = updatedUser.Password
 	} else {
 		// If password is not provided, preserve the existing password

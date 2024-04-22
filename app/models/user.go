@@ -17,7 +17,7 @@ type User struct {
 	// Wallet stores the DERO wallet address of the user.
 	Wallet string `json:"wallet"`
 	// Password stores the hashed password of the user.
-	Password string `json:"password"`
+	Password []byte `json:"password"`
 	// Role represents the roles assigned to the user.
 	Role []string `json:"roles"`
 	// LastSignIn stores the timestamp of the user's last sign-in.
@@ -38,8 +38,8 @@ func (u *User) Initialize() *User {
 		Wallet:    u.Wallet,
 		Password:  u.Password,
 		Role:      []string{"user"},
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedAt: u.CreatedAt,
+		UpdatedAt: u.UpdatedAt,
 	}
 }
 
@@ -56,7 +56,7 @@ func (u *User) Validate() error {
 	}
 
 	// when creating a user... they don't have a password on file yet
-	if u.Password == "" {
+	if u.Password == nil {
 		return errors.New("password cannot be empty")
 	}
 	// Add more validation rules as needed
@@ -77,7 +77,8 @@ func hasValidWallet(wallet string) error {
 func (u *User) isEmpty() error {
 	if u.Name == "" ||
 		u.Wallet == "" ||
-		u.ID == 0 {
+		u.ID == 0 ||
+		u.Password == nil {
 		return errors.New("user and wallet fields are required")
 	}
 	return nil

@@ -7,9 +7,6 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/log"
-	"github.com/secretnamebasis/secret-site/app/config"
-	"github.com/secretnamebasis/secret-site/app/integrations/dero"
 )
 
 // ErrorResponse is a common function to generate error responses
@@ -43,14 +40,4 @@ func getCredentials(c *fiber.Ctx) (username, password string, err error) {
 	}
 
 	return credentials[0], credentials[1], nil
-}
-
-// hasValidWallet checks if the provided wallet address is valid
-func hasValidWallet(wallet string) error {
-	// Attempt to fetch the balance of the wallet address
-	_, err := dero.GetEncryptedBalance(config.NodeEndpoint, wallet)
-	if err != nil {
-		log.Errorf("reg: %s", err)
-	}
-	return err
 }

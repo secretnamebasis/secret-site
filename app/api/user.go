@@ -1,78 +1,62 @@
 package api
 
 import (
-	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/secretnamebasis/secret-site/app/controllers"
-	"github.com/secretnamebasis/secret-site/app/cryptography"
 	"github.com/secretnamebasis/secret-site/app/models"
 )
 
 // CreateUser creates a new user via HTTP request
 func CreateUser(c *fiber.Ctx) error {
-	var user models.User
+	var order models.JSON_User_Order
 
 	// Parse form data or request body based on content type
-	if err := parseUserData(c, &user); err != nil {
+	if err := parseUserData(c, &order); err != nil {
 		return ErrorResponse(c, fiber.StatusBadRequest, err.Error())
 	}
 
-	// Generate a unique password if the user provided a wallet
-	if user.Wallet != "" {
-		if err := hasValidWallet(user.Wallet); err != nil {
-			return ErrorResponse(c, fiber.StatusBadRequest, err.Error())
-		}
-		user.Password = generateUniquePassword(user.Wallet)
+	if order.Wallet == "" {
+		return ErrorResponse(c, fiber.StatusBadRequest, "No Wallet Found")
 	}
 
 	// Create user record in the database
-	if err := controllers.CreateUserRecord(&user); err != nil {
+	if err := controllers.CreateUserRecord(&order); err != nil {
 		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	return SuccessResponse(c, user)
+	return SuccessResponse(c, order)
 }
 
 // parseUserData parses form data or request body to populate the user object
-func parseUserData(c *fiber.Ctx, user *models.User) error {
+func parseUserData(c *fiber.Ctx, order *models.JSON_User_Order) error {
 	// Parse form data if available
 	if form, err := c.MultipartForm(); err == nil {
 		if form != nil {
-			user.Name = form.Value["name"][0]
-			user.Wallet = form.Value["wallet"][0]
-			user.Password = form.Value["password"][0]
-			user.Initialize()
+			order.Name = form.Value["name"][0]
+			order.Wallet = form.Value["wallet"][0]
+			order.Password = form.Value["password"][0]
 		}
 	} else {
 		// Parse request body
-		if err := c.BodyParser(user); err != nil {
+		if err := c.BodyParser(order); err != nil {
 			return err
 		}
 
 		// Assign default values for missing fields
 		username, password, _ := getCredentials(c)
-		if user.Name == "" {
-			user.Name = username
+		if order.Name == "" {
+			order.Name = username
 		}
-		if user.Password == "" {
-			user.Password = password
+		if order.Password == "" {
+			order.Password = password
 		}
-		if user.Wallet == "" {
-			user.Wallet = c.Params("wallet")
+		if order.Wallet == "" {
+			order.Wallet = c.Params("wallet")
 		}
 	}
 	return nil
-}
-
-// generateUniquePassword generates a unique password based on wallet and current timestamp
-func generateUniquePassword(wallet string) string {
-	// Concatenate wallet and current timestamp
-	uniqueData := fmt.Sprintf("%s:%d", wallet, time.Now().UnixNano())
-	// Hash the unique data to generate password
-	return cryptography.HashString(uniqueData)
 }
 
 // AllUsers retrieves all users from the database
@@ -107,21 +91,20 @@ func UpdateUser(c *fiber.Ctx) error {
 	}
 
 	id := c.Params("id")
-
+	intID, err := strconv.Atoi(id)
+	if err != nil {
+		return ErrorResponse(c, fiber.StatusNotFound, err.Error())
+	}
 	// Parse request body
 	if err := c.BodyParser(&updatedUser); err != nil {
 		return ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
 	}
-	intID, err := strconv.Atoi(id)
-	if err != nil {
-		return ErrorResponse(c, fiber.StatusBadRequest, err.Error())
-	}
 
-	updatedUser.ID = int(intID)
+	updatedUser.ID = intID
 
 	// creds matter
 	if password != "" {
-		updatedUser.Password = password
+		updatedUser.Password = []byte(password)
 	}
 
 	if name != "" {

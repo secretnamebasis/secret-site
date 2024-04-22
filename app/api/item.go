@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"strings"
 
@@ -12,6 +13,69 @@ import (
 	"github.com/secretnamebasis/secret-site/app/models"
 )
 
+func processItemOrderForm(form *multipart.Form, order *models.JSON_Item_Order) error {
+	var imageBase64 string
+	imageBase64 = ""
+	if file, ok := form.File["itemdata.image"]; ok && len(file) > 0 {
+		imageFile, err := file[0].Open()
+		if err != nil {
+			return err
+		}
+		defer imageFile.Close()
+
+		buffer := make([]byte, 512)
+		_, err = imageFile.Read(buffer)
+		if err != nil {
+			return err
+		}
+
+		_, err = imageFile.Seek(0, io.SeekStart)
+		if err != nil {
+			return err
+		}
+
+		mimeType := http.DetectContentType(buffer)
+		if !strings.HasPrefix(mimeType, "image/") {
+			return errors.New("invalid file format, please upload an image")
+		}
+
+		imageBytes, err := io.ReadAll(imageFile)
+		if err != nil {
+			return err
+		}
+
+		imageBase64 = base64.StdEncoding.EncodeToString(imageBytes)
+	}
+
+	order.Title = form.Value["title"][0]
+	order.Description = form.Value["description"][0]
+	order.Image = imageBase64
+	order.User.Wallet = form.Value["wallet"][0]
+	order.User.Name = form.Value["name"][0]
+	order.User.Password = form.Value["password"][0]
+	return nil
+}
+func processItemOrderCredentials(c *fiber.Ctx, order *models.JSON_Item_Order) error {
+
+	name, pass, err := getCredentials(c)
+	if err != nil {
+		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
+	}
+	if order.User.Name == "" {
+		order.User.Name = name
+	}
+	if order.User.Password == "" {
+		order.User.Password = pass
+	}
+	if order.User.Wallet == "" {
+		user, err := controllers.GetUserByName(order.User.Name)
+		if err != nil {
+			return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
+		}
+		order.User.Wallet = user.Wallet
+	}
+	return nil
+}
 func CreateItem(c *fiber.Ctx) error {
 	var order models.JSON_Item_Order
 	form, _ := c.MultipartForm()
@@ -19,48 +83,16 @@ func CreateItem(c *fiber.Ctx) error {
 	// 	return err
 	// }
 	if form != nil {
-
-		var imageBase64 string
-		imageBase64 = ""
-		if file, ok := form.File["itemdata.image"]; ok && len(file) > 0 {
-			imageFile, err := file[0].Open()
-			if err != nil {
-				return err
-			}
-			defer imageFile.Close()
-
-			buffer := make([]byte, 512)
-			_, err = imageFile.Read(buffer)
-			if err != nil {
-				return err
-			}
-
-			_, err = imageFile.Seek(0, io.SeekStart)
-			if err != nil {
-				return err
-			}
-
-			mimeType := http.DetectContentType(buffer)
-			if !strings.HasPrefix(mimeType, "image/") {
-				return errors.New("invalid file format, please upload an image")
-			}
-
-			imageBytes, err := io.ReadAll(imageFile)
-			if err != nil {
-				return err
-			}
-
-			imageBase64 = base64.StdEncoding.EncodeToString(imageBytes)
-		}
-
-		order.Title = form.Value["title"][0]
-		order.Description = form.Value["description"][0]
-		order.Image = imageBase64
-
+		processItemOrderForm(form, &order)
 	}
+
 	// Parse request body into new item
 	if err := c.BodyParser(&order); err != nil {
 		return ErrorResponse(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	if err := processItemOrderCredentials(c, &order); err != nil {
+		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
 	// Create the item record
@@ -102,6 +134,9 @@ func UpdateItem(c *fiber.Ctx) error {
 
 	if err := c.BodyParser(&updatedItem); err != nil {
 		return ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
+	}
+	if err := processItemOrderCredentials(c, &updatedItem); err != nil {
+		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 	if err := updatedItem.Validate(); err != nil {
 		return ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")

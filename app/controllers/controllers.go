@@ -3,8 +3,10 @@ package controllers
 import (
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/secretnamebasis/secret-site/app/config"
+	"github.com/secretnamebasis/secret-site/app/cryptography"
 	"github.com/secretnamebasis/secret-site/app/database"
 	"github.com/secretnamebasis/secret-site/app/integrations/dero"
 	"github.com/secretnamebasis/secret-site/app/models"
@@ -18,6 +20,7 @@ const (
 
 // CreateItemRecord creates a new item in the database.
 func CreateItemRecord(order *models.JSON_Item_Order) (models.Item, error) {
+	order.Validate()
 	// Let's create an item
 	var item models.Item
 
@@ -69,7 +72,19 @@ func CreateItemRecord(order *models.JSON_Item_Order) (models.Item, error) {
 
 	// strap those bytes to our item
 	item.Data = bytes
-
+	// Encrypt bytes before storing in the database
+	encryptedBytes,
+		err := cryptography.EncryptData(
+		item.Data, // we want to lock these bitches down!
+		config.Env( // and to do it we are going into our env
+			"SECRET", // and we are going to refer to our secret
+		), // shouldn't ever change unless we are changing our encryption scheme
+	)
+	// and it better work.
+	if err != nil {
+		return models.Item{}, err
+	}
+	item.Data = encryptedBytes
 	item.Initialize()
 
 	// Validate the item
@@ -87,21 +102,46 @@ func CreateItemRecord(order *models.JSON_Item_Order) (models.Item, error) {
 }
 
 // CreateUserRecord creates a new user in the database.
-func CreateUserRecord(user *models.User) error {
+func CreateUserRecord(order *models.JSON_User_Order) error {
+
+	// validate the wallet before moving forward
+	if err := isValidWallet(order.Wallet); err != nil {
+		return err
+	}
 
 	// we can't validate for existence in the model because of
 	// a restriction on import cycle:
 	// models <- database <- models
 	// Controller check if user already exists with the same username or wallet
-	if err := checkUserExistence(*user); err != nil {
+	if err := checkUserExistence(*order); err != nil {
 		return err
 	}
 
+	var user models.User
+
+	timestamp := time.Now()
+	// Get the next item ID
 	id, err := NextUserID()
 	if err != nil {
 		return err
 	}
 	user.ID = id
+	user.Name = order.Name
+	user.Wallet = order.Wallet
+	user.CreatedAt = timestamp
+	user.UpdatedAt = timestamp
+	// we store passwords as encrypted bytes for now
+	// it would be better to hash their pass
+	// and then compare the encrypted hash we have on file
+	// against the pasword that they give us as hash
+	encryptedPassword, err := cryptography.EncryptData(
+		[]byte(order.Password),
+		config.Env("SECRET"),
+	)
+	if err != nil {
+		return err
+	}
+	user.Password = encryptedPassword
 
 	// Validate wallet address
 	if err := user.Validate(); err != nil {
@@ -111,7 +151,7 @@ func CreateUserRecord(user *models.User) error {
 	user.Initialize()
 
 	// Store the user record in the database
-	return database.CreateRecord(bucketUsers, user)
+	return database.CreateRecord(bucketUsers, &user)
 }
 
 // isValidWallet checks if the provided wallet address is valid
@@ -153,6 +193,17 @@ func GetUserByID(id string) (models.User, error) {
 	var user models.User
 	err := database.GetRecordByID(bucketUsers, id, &user)
 	return user, err
+}
+
+func GetUserByName(name string) (models.User, error) {
+	existingUser, err := database.GetUserByUsername(name)
+	if err != nil {
+		return *existingUser, errors.New("error checking user existence")
+	}
+	if existingUser != nil {
+		return *existingUser, nil
+	}
+	return models.User{}, err
 }
 
 // GetItemByID retrieves an item from the database by ID.
@@ -225,10 +276,10 @@ func checkItemExistence(title string) error {
 }
 
 // checkUserExistence checks if a user with the same username or wallet already exists
-func checkUserExistence(user models.User) error {
+func checkUserExistence(order models.JSON_User_Order) error {
 
 	// Check if user already exists with the same username
-	existingUser, err := database.GetUserByUsername(user.Name)
+	existingUser, err := database.GetUserByUsername(order.Name)
 	if err != nil {
 		return errors.New("error checking user existence")
 	}
@@ -238,7 +289,7 @@ func checkUserExistence(user models.User) error {
 	}
 
 	// Check if user already exists with the same wallet
-	existingUser, err = database.GetUserByWallet(user.Wallet)
+	existingUser, err = database.GetUserByWallet(order.Wallet)
 	if err != nil {
 		return errors.New("error checking user existence")
 	}
