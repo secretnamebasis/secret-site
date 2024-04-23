@@ -11,12 +11,22 @@ import (
 
 // ErrorResponse is a common function to generate error responses
 func ErrorResponse(c *fiber.Ctx, status int, message string) error {
-	return c.Status(status).JSON(fiber.Map{"message": message, "status": "error"})
+	return c.Status(status).JSON(
+		fiber.Map{
+			"message": message,
+			"status":  "error",
+		},
+	)
 }
 
 // SuccessResponse is a common function to generate success responses
 func SuccessResponse(c *fiber.Ctx, data interface{}) error {
-	return c.JSON(fiber.Map{"result": data, "status": "success"})
+	return c.JSON(
+		fiber.Map{
+			"result": data,
+			"status": "success",
+		},
+	)
 }
 func getCredentials(c *fiber.Ctx) (username, password string, err error) {
 	// Get the Authorization header from the request
@@ -27,7 +37,13 @@ func getCredentials(c *fiber.Ctx) (username, password string, err error) {
 	}
 
 	// Extract the username and password from the Authorization header
-	decodedCredentials, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(authHeader, "Basic "))
+	decodedCredentials, err := base64.StdEncoding.DecodeString(
+		strings.TrimPrefix(
+			authHeader,
+			"Basic ",
+		),
+	)
+
 	if err != nil {
 		// Error decoding credentials
 		return "", "", fmt.Errorf("error decoding credentials: %v", err)

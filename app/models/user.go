@@ -4,7 +4,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/gofiber/fiber/v2/log"
 	"github.com/secretnamebasis/secret-site/app/config"
 	"github.com/secretnamebasis/secret-site/app/integrations/dero"
 )
@@ -68,9 +67,9 @@ func hasValidWallet(wallet string) error {
 	// Attempt to fetch the balance of the wallet address
 	_, err := dero.GetEncryptedBalance(config.NodeEndpoint, wallet)
 	if err != nil {
-		log.Errorf("reg: %s", err)
+		return err
 	}
-	return err
+	return nil
 }
 
 // validateUserData checks if the provided user data is valid

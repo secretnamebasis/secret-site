@@ -23,7 +23,7 @@ func Home(c *fiber.Ctx) error {
 
 	// Define data for rendering the template
 	data := HomeData{
-		Title:   config.APP_NAME,
+		Title:   config.Domain,
 		Address: addr.String(),
 	}
 

@@ -47,12 +47,12 @@ func processItemOrderForm(form *multipart.Form, order *models.JSON_Item_Order) e
 		imageBase64 = base64.StdEncoding.EncodeToString(imageBytes)
 	}
 
+	order.User.Name = form.Value["name"][0]
+	order.User.Password = form.Value["password"][0]
+	order.User.Wallet = form.Value["wallet"][0]
 	order.Title = form.Value["title"][0]
 	order.Description = form.Value["description"][0]
 	order.Image = imageBase64
-	order.User.Wallet = form.Value["wallet"][0]
-	order.User.Name = form.Value["name"][0]
-	order.User.Password = form.Value["password"][0]
 	return nil
 }
 func processItemOrderCredentials(c *fiber.Ctx, order *models.JSON_Item_Order) error {
@@ -83,14 +83,16 @@ func CreateItem(c *fiber.Ctx) error {
 	// 	return err
 	// }
 	if form != nil {
-		processItemOrderForm(form, &order)
-	}
+		if err := processItemOrderForm(form, &order); err != nil {
+			return ErrorResponse(c, fiber.StatusBadRequest, err.Error())
+		}
+	} else {
+		// Parse request body into new item
+		if err := c.BodyParser(&order); err != nil {
+			return ErrorResponse(c, fiber.StatusBadRequest, err.Error())
+		}
 
-	// Parse request body into new item
-	if err := c.BodyParser(&order); err != nil {
-		return ErrorResponse(c, fiber.StatusBadRequest, err.Error())
 	}
-
 	if err := processItemOrderCredentials(c, &order); err != nil {
 		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}

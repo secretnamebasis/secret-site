@@ -22,7 +22,7 @@ func About(c *fiber.Ctx) error {
 		Title   string
 		Address string
 	}{
-		Title:   config.APP_NAME,
+		Title:   config.Domain,
 		Address: addr.String(),
 	}
 

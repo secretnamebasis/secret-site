@@ -23,7 +23,7 @@ type App struct {
 func MakeApp(c config.Server) *App {
 	app := fiber.New(
 		fiber.Config{
-			AppName:               config.APP_NAME,
+			AppName:               config.Domain,
 			CaseSensitive:         true,
 			DisableStartupMessage: true,
 		},

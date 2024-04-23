@@ -11,40 +11,63 @@ import (
 
 const DERO_SCID_STRING = "0000000000000000000000000000000000000000000000000000000000000000"
 
-var (
-	endpointAuth        = config.Env("DERO_WALLET_USER") + ":" + config.Env("DERO_WALLET_PASS")
-	encodedEndpointAuth = base64.StdEncoding.EncodeToString([]byte(endpointAuth))
-)
+var ()
 
 // CallRPCNode is a generic function to make JSON-RPC calls to the DERO node.
 func CallRPCNode(endpoint string, object interface{}, method string, params interface{}) error {
 	rpcClient := jsonrpc.NewClient(endpoint)
-	err := rpcClient.CallFor(&object, method, params)
-	return err
+	return rpcClient.CallFor(&object, method, params)
 }
 
 // CallRPCWallet is a generic function to make JSON-RPC calls to the DERO wallet.
 func CallRPCWalletWithParams(endpoint string, object interface{}, method string, params interface{}) error {
+	endpointAuth := config.Env(
+		config.EnvPath,
+		"DERO_WALLET_USER",
+	) +
+		":" +
+		config.Env(
+			config.EnvPath,
+			"DERO_WALLET_PASS",
+		)
+	encodedEndpointAuth := base64.StdEncoding.EncodeToString([]byte(endpointAuth))
 	opts := &jsonrpc.RPCClientOpts{
 		CustomHeaders: map[string]string{
 			"Authorization": "Basic " + encodedEndpointAuth,
 		},
 	}
 	rpcClient := jsonrpc.NewClientWithOpts(endpoint, opts)
-	err := rpcClient.CallFor(&object, method, params)
-	return err
+
+	return rpcClient.CallFor(
+		&object,
+		method,
+		params,
+	)
 }
 
 // CallRPCWallet is a generic function to make JSON-RPC calls to the DERO wallet.
 func CallRPCWalletWithoutParams(endpoint string, object interface{}, method string) error {
+	endpointAuth := config.Env(
+		config.EnvPath,
+		"DERO_WALLET_USER",
+	) +
+		":" +
+		config.Env(
+			config.EnvPath,
+			"DERO_WALLET_PASS",
+		)
+	encodedEndpointAuth := base64.StdEncoding.EncodeToString([]byte(endpointAuth))
 	opts := &jsonrpc.RPCClientOpts{
 		CustomHeaders: map[string]string{
 			"Authorization": "Basic " + encodedEndpointAuth,
 		},
 	}
 	rpcClient := jsonrpc.NewClientWithOpts(endpoint, opts)
-	err := rpcClient.CallFor(&object, method)
-	return err
+
+	return rpcClient.CallFor(
+		&object,
+		method,
+	)
 }
 
 // GetWalletAddress fetches the DERO wallet address.
@@ -54,8 +77,10 @@ func GetWalletAddress(endpoint string) (*rpc.Address, error) {
 	if err != nil {
 		return nil, err
 	}
-	address, err := rpc.NewAddress(config.DeroAddressResult.Address)
-	return address, err
+
+	return rpc.NewAddress(
+		config.DeroAddressResult.Address,
+	)
 }
 
 // GetEncryptedBalance fetches the encrypted balance for the given address.
@@ -66,7 +91,12 @@ func GetEncryptedBalance(endpoint, address string) (*rpc.GetEncryptedBalance_Res
 		"topoheight": -1,
 	}
 	var response rpc.GetEncryptedBalance_Result
-	err := CallRPCNode(endpoint, &response, "DERO.GetEncryptedBalance", params)
+	err := CallRPCNode(
+		endpoint,
+		&response,
+		"DERO.GetEncryptedBalance",
+		params,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +130,13 @@ func Comment(endpoint, comment, destionation string) (rpc.Transfer_Result, error
 		},
 	}
 
-	return object, CallRPCWalletWithParams(endpoint, &object, method, params)
+	return object,
+		CallRPCWalletWithParams(
+			endpoint,
+			&object,
+			method,
+			params,
+		)
 }
 
 func CreateAsset(endpoint, destination string) (rpc.Transfer_Result, error) {

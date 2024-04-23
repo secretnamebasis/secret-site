@@ -10,6 +10,11 @@
         <main>
             <section>
                 <h2>Register</h2>
+                <!-- Notice for failed registration -->
+                {{ if .Failed }}
+                    <p style="color: red;">{{ .FailedMessage }}</p>
+                {{ end }}
+                <!-- Registration form -->
                 <form id="newForm" action="/users/submit" method="POST" enctype="multipart/form-data">
                     <label for="name">Name:</label><br>
                     <input type="text" id="name" name="name" required><br><br>
@@ -20,11 +25,6 @@
                     <label for="password">Password:</label><br>
                     <input type="password" id="password" name="password" required><br><br>
 
-                    <!-- File input field for photo -->
-                    <!-- Store photos of users? -->
-                    <!-- <label for="photo">Photo:</label><br>
-                    <input type="file" id="photo" name="content.image" accept="image/*"><br><br> -->
-                    
                     <button type="submit">Register</button>
                 </form>
             </section>

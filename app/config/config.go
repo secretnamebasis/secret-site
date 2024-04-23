@@ -20,36 +20,38 @@ type Server struct {
 	EnvPath        string
 	NodeEndpoint   string
 	WalletEndpoint string
+	AppName        string
+	DevAddress     string
+	Domain         string
+	Domainname     string
 }
-
-var (
-	Domain = Env(
-		"DOMAIN",
-	)
-	Domainname = "https://" + Domain
-)
 
 const ()
 
 var (
+	Domain            string
+	Domainname        string
 	NodeEndpoint      string
 	WalletEndpoint    string
 	Environment       string
 	Port              int
 	ProjectDir        = "./"
-	EnvPath           = ProjectDir + ".env"
+	EnvPath           string
 	DatabaseDir       string
 	DeroAddress       *rpc.Address
 	DeroAddressResult rpc.GetAddress_Result
-	DEV_ADDRESS       = Env("DEV_ADDRESS")
-	APP_NAME          = Env("DOMAIN")
+	DevAddress        string
+	AppName           string
 )
 
 // Config func to get env value from key
-func Env(key string) string {
+func Env(envPath, key string) string {
+	if envPath == "" {
+		panic(envPath)
+	}
 
 	// Load .env file
-	err := godotenv.Load(EnvPath)
+	err := godotenv.Load(envPath)
 	if err != nil {
 		fmt.Println("Error loading .env file:", err)
 		return ""
@@ -81,6 +83,7 @@ var (
 )
 
 func Initialize() Server {
+
 	// Parse flags
 	flag.Parse()
 
@@ -90,19 +93,15 @@ func Initialize() Server {
 	DatabaseDir = *dbFlag
 
 	switch Environment {
-	case "prod":
-		NodeEndpoint = "http://" + Env("DERO_NODE_IP") + ":" + Env("DERO_NODE_PORT") + "/json_rpc"
-		WalletEndpoint = "http://" + Env("DERO_WALLET_IP") + ":" + Env("DERO_WALLET_PORT") + "/json_rpc"
-		// In production environments, we presuppose DERO mainnet
 	case "test":
 		Port = 3000
-		Domainname = "127.0.0.1"
-		NodeEndpoint = "http://" + Env("DERO_SIMULATOR_NODE_IP") + ":" + Env("DERO_SIMULATOR_NODE_PORT") + "/json_rpc"
-		WalletEndpoint = "http://" + Env("DERO_SIMULATOR_WALLET_IP") + ":" + Env("DERO_SIMULATOR_WALLET0_PORT") + "/json_rpc"
-		DatabaseDir = "../app/database/"
 		Environment = "test"
-		EnvPath = "../.env." + Environment
-		dir := "../vendors/derohe/cmd/simulator"
+		Domainname = "127.0.0.1"
+		EnvPath = "../../.env." + Environment
+		NodeEndpoint = "http://" + Env(EnvPath, "DERO_SIMULATOR_NODE_IP") + ":" + Env(EnvPath, "DERO_SIMULATOR_NODE_PORT") + "/json_rpc"
+		WalletEndpoint = "http://" + Env(EnvPath, "DERO_SIMULATOR_WALLET_IP") + ":" + Env(EnvPath, "DERO_SIMULATOR_WALLET0_PORT") + "/json_rpc"
+		DatabaseDir = "../app/database/"
+		dir := "../../vendors/derohe/cmd/simulator"
 		go func() {
 			if err := launchSimulator(dir); err != nil {
 				log.Println("Error launching simulator:", err)
@@ -113,8 +112,8 @@ func Initialize() Server {
 		EnvPath = "./.env." + Environment
 		Port = 3000
 		Domainname = "127.0.0.1"
-		NodeEndpoint = "http://" + Env("DERO_SIMULATOR_NODE_IP") + ":" + Env("DERO_SIMULATOR_NODE_PORT") + "/json_rpc"
-		WalletEndpoint = "http://" + Env("DERO_SIMULATOR_WALLET_IP") + ":" + Env("DERO_SIMULATOR_WALLET0_PORT") + "/json_rpc"
+		NodeEndpoint = "http://" + Env(EnvPath, "DERO_SIMULATOR_NODE_IP") + ":" + Env(EnvPath, "DERO_SIMULATOR_NODE_PORT") + "/json_rpc"
+		WalletEndpoint = "http://" + Env(EnvPath, "DERO_SIMULATOR_WALLET_IP") + ":" + Env(EnvPath, "DERO_SIMULATOR_WALLET0_PORT") + "/json_rpc"
 		// Launch the simulator in the background
 		go func() {
 			dir := "./vendors/derohe/cmd/simulator"
@@ -124,7 +123,14 @@ func Initialize() Server {
 		}()
 
 		time.Sleep(4 * time.Second)
+	case "prod":
+		NodeEndpoint = "http://" + Env(EnvPath, "DERO_NODE_IP") + ":" + Env(EnvPath, "DERO_NODE_PORT") + "/json_rpc"
+		WalletEndpoint = "http://" + Env(EnvPath, "DERO_WALLET_IP") + ":" + Env(EnvPath, "DERO_WALLET_PORT") + "/json_rpc"
+		// In production environments, we presuppose DERO mainnet
 	}
+
+	DevAddress = Env(EnvPath, "DEV_ADDRESS")
+	AppName = Env(EnvPath, "DOMAIN")
 
 	c := Server{
 		Port:         Port,
@@ -132,6 +138,10 @@ func Initialize() Server {
 		DatabasePath: DatabaseDir,
 		EnvPath:      EnvPath,
 		NodeEndpoint: NodeEndpoint,
+		DevAddress:   DevAddress,
+		AppName:      AppName,
+		Domain:       Domain,
+		Domainname:   Domainname,
 	}
 
 	return c

@@ -17,8 +17,8 @@ func CreateUser(c *fiber.Ctx) error {
 		return ErrorResponse(c, fiber.StatusBadRequest, err.Error())
 	}
 
-	if order.Wallet == "" {
-		return ErrorResponse(c, fiber.StatusBadRequest, "No Wallet Found")
+	if err := controllers.ValidateWalletAddress(order.Wallet); err != nil {
+		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
 	// Create user record in the database
@@ -26,7 +26,7 @@ func CreateUser(c *fiber.Ctx) error {
 		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	return SuccessResponse(c, order)
+	return SuccessResponse(c, &order)
 }
 
 // parseUserData parses form data or request body to populate the user object
@@ -115,7 +115,7 @@ func UpdateUser(c *fiber.Ctx) error {
 		return ErrorResponse(c, fiber.StatusBadRequest, err.Error())
 	}
 
-	if err := controllers.UpdateUser(id, updatedUser); err != nil {
+	if err := controllers.UpdateUser(updatedUser); err != nil {
 		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 

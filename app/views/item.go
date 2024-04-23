@@ -42,7 +42,7 @@ func Item(c *fiber.Ctx) error {
 	}
 	// Define data for rendering the template
 	data := ItemData{
-		Title:       config.APP_NAME,
+		Title:       config.Domain,
 		Address:     addr.String(),
 		Item:        item,
 		ImageUrl:    item.ImageURL,

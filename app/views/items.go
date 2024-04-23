@@ -39,7 +39,7 @@ func Items(c *fiber.Ctx) error {
 
 	// Define data for rendering the template
 	data := ItemsData{
-		Title:   config.APP_NAME,
+		Title:   config.Domain,
 		Address: addr.String(),
 		Items:   items,
 	}

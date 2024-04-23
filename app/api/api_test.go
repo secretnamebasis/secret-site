@@ -78,7 +78,14 @@ const // Endpoint configuration
 func // CONFIG
 loadWallets() error {
 	WalletEndpoint := "http://" +
-		config.Env("DERO_SIMULATOR_WALLET_IP") + ":" + config.Env("DERO_SIMULATOR_WALLET1_PORT") +
+		config.Env(
+			config.EnvPath,
+			"DERO_SIMULATOR_WALLET_IP") +
+		":" +
+		config.Env(
+			config.EnvPath,
+			"DERO_SIMULATOR_WALLET1_PORT",
+		) +
 		"/json_rpc"
 
 	err := dero.CallRPCWalletWithoutParams(WalletEndpoint, &config.DeroAddressResult, "GetAddress")
@@ -94,9 +101,16 @@ loadWallets() error {
 	}
 
 	WalletEndpoint1 := "http://" +
-		config.Env("DERO_SIMULATOR_WALLET_IP") + ":" + config.Env("DERO_SIMULATOR_WALLET2_PORT") +
+		config.Env(
+			config.EnvPath,
+			"DERO_SIMULATOR_WALLET_IP") +
+		":" +
+		config.Env(
+			config.EnvPath,
+			"DERO_SIMULATOR_WALLET2_PORT",
+		) +
 		"/json_rpc"
-
+	fmt.Print(WalletEndpoint1)
 	err = dero.CallRPCWalletWithoutParams(WalletEndpoint1, &config.DeroAddressResult, "GetAddress")
 	if err != nil {
 		return err
@@ -576,7 +590,12 @@ func createItemTestSuccess(t *testing.T) {
 		}
 		// fmt.Printf("DECODED DATA: %s\n", decodedData)
 		// Decrypt the data
-		decryptedData, err := cryptography.DecryptData(decodedData, config.Env("SECRET"))
+		decryptedData, err := cryptography.DecryptData(
+			decodedData, config.Env(
+				config.EnvPath,
+				"SECRET",
+			),
+		)
 		if err != nil {
 			t.Errorf("Error decrypting data: %v", err)
 			return false
@@ -1140,4 +1159,9 @@ var // DATA
 		Name:   user,
 		Wallet: successUpdateAddress,
 	}
+)
+
+// base64encoded images
+var ( // small
+	LittleImg = `iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFUlEQVR42mNkAAIAAAoAAv/lxKUAAAAASUVORK5CYII=`
 )

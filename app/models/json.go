@@ -23,10 +23,13 @@ type JSON_User_Order struct {
 	Password string `json:"password"`
 }
 
-// Validate method validates the fields of the Item struct
+// Validate method validates the fields of the JSON_User_Order struct
 func (i *JSON_User_Order) Validate() error {
 	if i.Name == "" || i.Wallet == "" {
-		return errors.New("cannot be empty")
+		return errors.New("name and wallet cannot be empty")
+	}
+	if err := hasValidWallet(i.Wallet); err != nil {
+		return err
 	}
 	return nil
 }

@@ -10,7 +10,17 @@
         <main>
             <section>
                 <h2>New Item</h2>
+                <!-- Notice for failed item creation -->
+                {{ if .Failed }}
+                    <p style="color: red;">{{ .FailedMessage }}</p>
+                {{ end }}
                 <form id="newForm" action="/items/submit" method="POST" enctype="multipart/form-data">
+                    <label for="name">Username:</label><br>
+                    <input type="text" id="name" name="name" required><br>
+                    <label for="password">Password:</label><br>
+                    <input type="text" id="password" name="password" required><br>
+                    <label for="wallet">DERO Wallet:</label><br>
+                    <input type="text" id="wallet" name="wallet"  minlength="66" maxlength="66" required><br>
                     <label for="title">Title:</label><br>
                     <input type="text" id="title" name="title" required><br>
                     <label for="content">Content:</label><br>

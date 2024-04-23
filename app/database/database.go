@@ -6,7 +6,6 @@ import (
 	"os"
 	"reflect"
 	"strconv"
-	"time"
 
 	"github.com/secretnamebasis/secret-site/app/config"
 	"github.com/secretnamebasis/secret-site/app/cryptography"
@@ -62,15 +61,43 @@ func CreateRecord(bucketName string, record interface{}) error {
 			}
 
 			i := int(id.Int())
+			fmt.Printf("CREATE ID %d\n", i)
 
 			recordJSON, err := json.Marshal(record)
 			if err != nil {
 				return err
 			}
+
 			return b.Put([]byte(strconv.Itoa(i)), recordJSON)
 		},
 	)
 }
+
+// GetRecordByID retrieves a record from the specified bucket by ID and unmarshals it into the provided model.
+func GetRecordByID(bucketName, id string, record interface{}) error {
+	return db.View(
+		func(tx *bbolt.Tx) error {
+			b := tx.Bucket([]byte(bucketName))
+			if b == nil {
+				return fmt.Errorf("bucket %s not found", bucketName)
+			}
+			fmt.Print("RETRIEVE ID " + id + "\n")
+			recordJSON := b.Get([]byte(id))
+			fmt.Print("THIS IS YOUR RECORD " + string(recordJSON) + "\n")
+			if recordJSON == nil {
+				return fmt.Errorf("record with ID %s not found", id) // Return error if item is not found
+			}
+
+			if err := json.Unmarshal(recordJSON, record); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	)
+}
+
+// TODO maybe just make this an array...?
 
 // GetAllRecords retrieves all records from the specified bucket and unmarshals them into the provided slice.
 func GetAllRecords(bucketName string, records interface{}) error {
@@ -98,7 +125,10 @@ func GetAllRecords(bucketName string, records interface{}) error {
 							// Decrypt the content before assigning it to the record
 							_, err := cryptography.DecryptData(
 								item.Data,
-								config.Env("SECRET"),
+								config.Env(
+									config.EnvPath,
+									"SECRET",
+								),
 							)
 							if err != nil {
 								return err
@@ -167,211 +197,6 @@ func GetAllItemTitles(bucketName string, records interface{}) error {
 				return fmt.Errorf("unsupported record type")
 			}
 		})
-}
-
-// UpdateRecord updates a record in the specified bucket with the provided ID and updated data.
-func UpdateRecord(bucketName, id string, updatedRecord interface{}) error {
-	return db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte(bucketName))
-		if b == nil {
-			return fmt.Errorf("bucket %s not found", bucketName)
-		}
-
-		recordJSON := b.Get([]byte(id))
-		if recordJSON == nil {
-			return fmt.Errorf("record with ID %s not found in bucket %s", id, bucketName)
-		}
-
-		switch updatedRecord := updatedRecord.(type) {
-		case *models.JSON_Item_Order:
-			var existingItem models.Item
-			if err := json.Unmarshal(recordJSON, &existingItem); err != nil {
-				return err
-			}
-
-			decryptedData, err := cryptography.DecryptData(existingItem.Data, config.Env("SECRET"))
-			if err != nil {
-				return err
-			}
-
-			var existingItemData models.ItemData
-			if err := json.Unmarshal(decryptedData, &existingItemData); err != nil {
-				return err
-			}
-			if updatedRecord.Title != "" {
-				existingItem.Title = updatedRecord.Title
-			}
-			// Update the existingItemData fields
-			if updatedRecord.Image != "" {
-				existingItemData.Image = updatedRecord.Image
-			}
-			if updatedRecord.Description != "" {
-				existingItemData.Description = updatedRecord.Description
-			}
-
-			// Marshal the updated data and encrypt it
-			updatedBytes, err := json.Marshal(existingItemData)
-			if err != nil {
-				return err
-			}
-
-			encryptedBytes, err := cryptography.EncryptData(updatedBytes, config.Env("SECRET"))
-			if err != nil {
-				return err
-			}
-
-			// Update existingItem with the encrypted data and set the updated timestamp
-			existingItem.Data = encryptedBytes
-			existingItem.UpdatedAt = time.Now()
-
-			// Marshal the updated existingItem and store it in the bucket
-			updatedItemJSON, err := json.Marshal(existingItem)
-			if err != nil {
-				return err
-			}
-			return b.Put([]byte(id), updatedItemJSON)
-
-		case *models.User:
-			var existingUser models.User
-			if err := json.Unmarshal(recordJSON, &existingUser); err != nil {
-				return err
-			}
-			updateExistingUser(updatedRecord, &existingUser)
-			// Marshal the updated existingUser and store it in the bucket
-			updatedUserJSON, err := json.Marshal(existingUser)
-			if err != nil {
-				return err
-			}
-			return b.Put([]byte(id), updatedUserJSON)
-
-		default:
-			return fmt.Errorf("unsupported record type")
-		}
-	})
-}
-
-func checkError(err error) error {
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// updateRecordFromJSON updates the provided record using data from JSON.
-func updateRecordFromJSON(recordJSON []byte, updatedRecord interface{}) error {
-	switch record := updatedRecord.(type) {
-	case *models.JSON_Item_Order:
-		var existingItem models.Item
-		if err := json.Unmarshal(recordJSON, &existingItem); err != nil {
-			return err
-		}
-
-		decryptedData, err := cryptography.DecryptData(existingItem.Data, config.Env("SECRET"))
-
-		if err != nil {
-			return err
-		}
-
-		var existingItemData models.ItemData
-
-		// Fill the existingItemData with the decryptedData
-		if err := json.Unmarshal(decryptedData, &existingItemData); err != nil {
-			return err
-		}
-
-		// Define a map to store the fields to be updated
-		fieldsToUpdate := map[string]bool{
-			"Data.Image":       record.Image != "",
-			"Data.Description": record.Description != "",
-		}
-
-		// Update the fields in the existingItemData
-		if fieldsToUpdate["Data.Image"] {
-			existingItemData.Image = record.Image
-		}
-		if fieldsToUpdate["Data.Description"] {
-			existingItemData.Description = record.Description
-		}
-
-		updatedBytes, err := json.Marshal(existingItemData)
-		if err != nil {
-			return err
-		}
-
-		encryptedBytes, err := cryptography.EncryptData(updatedBytes, config.Env("SECRET"))
-		if err != nil {
-			return err
-		}
-
-		existingItem.Data = encryptedBytes
-		existingItem.UpdatedAt = time.Now()
-
-	case *models.User:
-		var existingUser models.User
-		if err := json.Unmarshal(recordJSON, &existingUser); err != nil {
-			return err
-		}
-		updateExistingUser(record, &existingUser)
-	default:
-		return fmt.Errorf("unsupported record type")
-	}
-	return nil
-}
-
-// updateUserFromExisting updates the user record based on existing data.
-func updateExistingUser(updatedUser, existingUser *models.User) {
-	if updatedUser.Name != "" {
-		existingUser.Name = updatedUser.Name
-	}
-	if updatedUser.Wallet != "" {
-		existingUser.Wallet = updatedUser.Wallet
-	}
-	// Always update the password if provided
-	if updatedUser.Password != nil {
-		existingUser.Password = updatedUser.Password
-	} else {
-		// If password is not provided, preserve the existing password
-		updatedUser.Password = existingUser.Password
-	}
-	// Preserve the ID and creation timestamp
-	updatedUser.ID = existingUser.ID
-	updatedUser.CreatedAt = existingUser.CreatedAt
-	updatedUser.UpdatedAt = time.Now()
-}
-
-// GetRecordByID retrieves a record from the specified bucket by ID and unmarshals it into the provided model.
-func GetRecordByID(bucketName, id string, record interface{}) error {
-	return db.View(
-		func(tx *bbolt.Tx) error {
-			b := tx.Bucket([]byte(bucketName))
-			if b == nil {
-				return fmt.Errorf("bucket %s not found", bucketName)
-			}
-
-			recordJSON := b.Get([]byte(id))
-			if recordJSON == nil {
-				return fmt.Errorf("record with ID %s not found", id) // Return error if item is not found
-			}
-
-			if err := json.Unmarshal(recordJSON, record); err != nil {
-				return err
-			}
-
-			// Decrypt the content if the record type is models.Item
-			if item, ok := record.(*models.Item); ok {
-
-				// Encrypt JSON bytes
-				decryptedBytes, err := cryptography.DecryptData(item.Data, config.Env("SECRET"))
-				if err != nil {
-					return err
-				}
-
-				item.Data = decryptedBytes
-			}
-
-			return nil
-		},
-	)
 }
 
 func GetItemByTitle(title string) (*models.Item, error) {
