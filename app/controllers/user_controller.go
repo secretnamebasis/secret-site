@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/secretnamebasis/secret-site/app/config"
@@ -32,7 +31,6 @@ func CreateUserRecord(order *models.JSON_User_Order) error {
 		return err
 	}
 	user.ID = id
-	fmt.Printf("NEXT ID %d\n", id)
 	user.Name = order.Name
 	user.Wallet = order.Wallet
 	user.CreatedAt = timestamp
@@ -57,6 +55,7 @@ func CreateUserRecord(order *models.JSON_User_Order) error {
 	if err := user.Validate(); err != nil {
 		return err
 	}
+
 	// Create the user with the provided data
 	user.Initialize()
 

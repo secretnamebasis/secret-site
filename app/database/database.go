@@ -97,8 +97,6 @@ func GetRecordByID(bucketName, id string, record interface{}) error {
 	)
 }
 
-// TODO maybe just make this an array...?
-
 // GetAllRecords retrieves all records from the specified bucket and unmarshals them into the provided slice.
 func GetAllRecords(bucketName string, records interface{}) error {
 	return db.View(

@@ -100,7 +100,7 @@ func Initialize() Server {
 		EnvPath = "../../.env." + Environment
 		NodeEndpoint = "http://" + Env(EnvPath, "DERO_SIMULATOR_NODE_IP") + ":" + Env(EnvPath, "DERO_SIMULATOR_NODE_PORT") + "/json_rpc"
 		WalletEndpoint = "http://" + Env(EnvPath, "DERO_SIMULATOR_WALLET_IP") + ":" + Env(EnvPath, "DERO_SIMULATOR_WALLET0_PORT") + "/json_rpc"
-		DatabaseDir = "../app/database/"
+		DatabaseDir = "../database/"
 		dir := "../../vendors/derohe/cmd/simulator"
 		go func() {
 			if err := launchSimulator(dir); err != nil {
@@ -151,10 +151,11 @@ func launchSimulator(dir string) error {
 	cmd := exec.Command("go", "run", ".", "--http-address=0.0.0.0:8081")
 	cmd.Dir = dir
 	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("error starting command: %v", err)
+		return fmt.Errorf("failed to start simulator: %v", err)
 	}
+	defer cmd.Process.Kill() // Ensure the process is killed when the function exits
 	if err := cmd.Wait(); err != nil {
-		return fmt.Errorf("error waiting for command: %v", err)
+		return fmt.Errorf("error waiting for simulator to finish: %v", err)
 	}
 	return nil
 }
