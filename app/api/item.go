@@ -20,28 +20,52 @@ func CreateItem(c *fiber.Ctx) error {
 	// 	return err
 	// }
 	if form != nil {
-		if err := processItemOrderForm(form, &order); err != nil {
-			return ErrorResponse(c, fiber.StatusBadRequest, err.Error())
+		if err := processItemOrderForm(
+			form,
+			&order,
+		); err != nil {
+			return ErrorResponse(
+				c,
+				fiber.StatusBadRequest,
+				err.Error(),
+			)
 		}
 	} else {
 		// Parse request body into new item
 		if err := c.BodyParser(&order); err != nil {
-			return ErrorResponse(c, fiber.StatusBadRequest, err.Error())
+			return ErrorResponse(
+				c,
+				fiber.StatusBadRequest,
+				err.Error(),
+			)
 		}
 
 	}
-	if err := processItemOrderCredentials(c, &order); err != nil {
-		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
+	if err := processItemOrderCredentials(
+		c,
+		&order); err != nil {
+		return ErrorResponse(
+			c,
+			fiber.StatusInternalServerError,
+			err.Error(),
+		)
 	}
 
 	// Create the item record
 	item, err := controllers.CreateItemRecord(&order)
 	if err != nil {
-		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
+		return ErrorResponse(
+			c,
+			fiber.StatusInternalServerError,
+			err.Error(),
+		)
 	}
 
 	// Return success response
-	return SuccessResponse(c, item)
+	return SuccessResponse(
+		c,
+		item,
+	)
 }
 
 func ItemByID(c *fiber.Ctx) error {
@@ -49,22 +73,43 @@ func ItemByID(c *fiber.Ctx) error {
 
 	item, err := controllers.GetItemByID(id)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			return ErrorResponse(c, fiber.StatusNotFound, err.Error())
+		if strings.Contains(
+			err.Error(),
+			"not found",
+		) {
+			return ErrorResponse(
+				c,
+				fiber.StatusNotFound,
+				err.Error(),
+			)
 		}
-		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
+		return ErrorResponse(
+			c,
+			fiber.StatusInternalServerError,
+			err.Error(),
+		)
 	}
 
-	return SuccessResponse(c, item)
+	return SuccessResponse(
+		c,
+		item,
+	)
 }
 
 func AllItems(c *fiber.Ctx) error {
 	items, err := controllers.AllItems()
 	if err != nil {
-		return ErrorResponse(c, fiber.StatusInternalServerError, "Error retrieving items")
+		return ErrorResponse(
+			c,
+			fiber.StatusInternalServerError,
+			"Error retrieving items",
+		)
 	}
 
-	return SuccessResponse(c, items)
+	return SuccessResponse(
+		c,
+		items,
+	)
 }
 
 func UpdateItem(c *fiber.Ctx) error {
@@ -72,25 +117,58 @@ func UpdateItem(c *fiber.Ctx) error {
 	var updatedItem models.JSON_Item_Order
 
 	if err := c.BodyParser(&updatedItem); err != nil {
-		return ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
+		return ErrorResponse(
+			c,
+			fiber.StatusBadRequest,
+			"Invalid request body",
+		)
 	}
-	if err := processItemOrderCredentials(c, &updatedItem); err != nil {
-		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
+	if err := processItemOrderCredentials(
+		c,
+		&updatedItem,
+	); err != nil {
+		return ErrorResponse(
+			c,
+			fiber.StatusInternalServerError,
+			err.Error(),
+		)
 	}
 	if err := updatedItem.Validate(); err != nil {
-		return ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
+		return ErrorResponse(
+			c,
+			fiber.StatusBadRequest,
+			"Invalid request body",
+		)
 	}
 	// Check if the item exists
 	item, err := controllers.GetItemByID(id)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			return ErrorResponse(c, fiber.StatusNotFound, "Item not found")
+		if strings.Contains(
+			err.Error(),
+			"not found",
+		) {
+			return ErrorResponse(
+				c,
+				fiber.StatusNotFound,
+				"Item not found",
+			)
 		}
-		return ErrorResponse(c, fiber.StatusInternalServerError, "Error checking item")
+		return ErrorResponse(
+			c,
+			fiber.StatusInternalServerError,
+			"Error checking item",
+		)
 	}
 
-	if err := controllers.UpdateItem(id, updatedItem); err != nil {
-		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
+	if err := controllers.UpdateItem(
+		id,
+		updatedItem,
+	); err != nil {
+		return ErrorResponse(
+			c,
+			fiber.StatusInternalServerError,
+			err.Error(),
+		)
 	}
 
 	return SuccessResponse(c, &item)
@@ -101,14 +179,25 @@ func DeleteItem(c *fiber.Ctx) error {
 	// Check if the user exists
 	_, err := controllers.GetItemByID(id)
 	if err != nil {
-		return ErrorResponse(c, fiber.StatusNotFound, "User not found")
+		return ErrorResponse(
+			c,
+			fiber.StatusNotFound,
+			"User not found",
+		)
 	}
 	err = controllers.DeleteItem(id)
 	if err != nil {
-		return ErrorResponse(c, fiber.StatusInternalServerError, "Error deleting item")
+		return ErrorResponse(
+			c,
+			fiber.StatusInternalServerError,
+			"Error deleting item",
+		)
 	}
 
-	return SuccessResponse(c, "Item deleted successfully")
+	return SuccessResponse(
+		c,
+		"Item deleted successfully",
+	)
 }
 
 // private functions
@@ -170,7 +259,11 @@ func processItemOrderCredentials(c *fiber.Ctx, order *models.JSON_Item_Order) er
 	if order.User.Wallet == "" {
 		user, err := controllers.GetUserByName(order.User.Name)
 		if err != nil {
-			return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
+			return ErrorResponse(
+				c,
+				fiber.StatusInternalServerError,
+				err.Error(),
+			)
 		}
 		order.User.Wallet = user.Wallet
 	}

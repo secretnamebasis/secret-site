@@ -61,7 +61,6 @@ func CreateRecord(bucketName string, record interface{}) error {
 			}
 
 			i := int(id.Int())
-			fmt.Printf("CREATE ID %d\n", i)
 
 			recordJSON, err := json.Marshal(record)
 			if err != nil {
@@ -81,9 +80,9 @@ func GetRecordByID(bucketName, id string, record interface{}) error {
 			if b == nil {
 				return fmt.Errorf("bucket %s not found", bucketName)
 			}
-			fmt.Print("RETRIEVE ID " + id + "\n")
+
 			recordJSON := b.Get([]byte(id))
-			fmt.Print("THIS IS YOUR RECORD " + string(recordJSON) + "\n")
+
 			if recordJSON == nil {
 				return fmt.Errorf("record with ID %s not found", id) // Return error if item is not found
 			}
@@ -110,8 +109,11 @@ func GetAllRecords(bucketName string, records interface{}) error {
 			unmarshalRecord := func(recordType interface{}) error {
 				return b.ForEach(
 					func(k, v []byte) error {
+						r := reflect.TypeOf(recordType).Elem()
 						// Create a new instance of the record type
-						newRecord := reflect.New(reflect.TypeOf(recordType).Elem()).Interface()
+						newRecord := reflect.New(
+							r,
+						).Interface()
 
 						// Unmarshal the JSON data into the new record
 						if err := json.Unmarshal(v, newRecord); err != nil {
@@ -136,7 +138,12 @@ func GetAllRecords(bucketName string, records interface{}) error {
 
 						// Append the record to the slice
 						sliceValue := reflect.ValueOf(records).Elem()
-						sliceValue.Set(reflect.Append(sliceValue, reflect.ValueOf(newRecord).Elem()))
+						sliceValue.Set(
+							reflect.Append(
+								sliceValue,
+								reflect.ValueOf(newRecord).Elem(),
+							),
+						)
 
 						return nil
 					},
@@ -168,8 +175,11 @@ func GetAllItemTitles(bucketName string, records interface{}) error {
 			unmarshalRecord := func(recordType interface{}) error {
 				return b.ForEach(
 					func(k, v []byte) error {
+						reflectRecord := reflect.TypeOf(recordType).Elem()
 						// Create a new instance of the record type
-						newRecord := reflect.New(reflect.TypeOf(recordType).Elem()).Interface()
+						newRecord := reflect.New(
+							reflectRecord,
+						).Interface()
 
 						// Unmarshal the JSON data into the new record
 						if err := json.Unmarshal(v, newRecord); err != nil {
@@ -178,7 +188,12 @@ func GetAllItemTitles(bucketName string, records interface{}) error {
 
 						// Append the record to the slice
 						sliceValue := reflect.ValueOf(records).Elem()
-						sliceValue.Set(reflect.Append(sliceValue, reflect.ValueOf(newRecord).Elem()))
+						reflectNewRecord := reflect.ValueOf(newRecord).Elem()
+						sliceValue.Set(reflect.Append(
+							sliceValue,
+							reflectNewRecord,
+						),
+						)
 
 						return nil
 					},

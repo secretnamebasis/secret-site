@@ -4,7 +4,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/secretnamebasis/secret-site/app/config"
 	"github.com/secretnamebasis/secret-site/app/cryptography"
 	"github.com/secretnamebasis/secret-site/app/database"
 	"github.com/secretnamebasis/secret-site/app/models"
@@ -35,21 +34,10 @@ func CreateUserRecord(order *models.JSON_User_Order) error {
 	user.Wallet = order.Wallet
 	user.CreatedAt = timestamp
 	user.UpdatedAt = timestamp
-	// we store passwords as encrypted bytes for now
-	// it would be better to hash their pass
-	// and then compare the encrypted hash we have on file
-	// against the pasword that they give us as hash
-	encryptedPassword, err := cryptography.EncryptData(
-		[]byte(order.Password),
-		config.Env(
-			config.EnvPath,
-			"SECRET",
-		),
+
+	user.Password = cryptography.HashString( // so let's hash the string up
+		order.Password, // because we don't want to record this anywhere
 	)
-	if err != nil {
-		return err
-	}
-	user.Password = encryptedPassword
 
 	// Validate wallet address
 	if err := user.Validate(); err != nil {
@@ -89,9 +77,10 @@ func GetUserByName(name string) (models.User, error) {
 }
 
 // UpdateUser updates a user in the database with the provided ID and updated data.
-func UpdateUser(updatedUser models.User) error {
+func UpdateUser(order models.JSON_User_Order) error {
 	// Check if user with the provided ID exists
-	existingUser, err := database.GetUserByUsername(updatedUser.Name)
+	existingUser, err := database.GetUserByUsername(order.Name)
+
 	if err != nil {
 		return errors.New("error checking user existence")
 	}
@@ -100,28 +89,28 @@ func UpdateUser(updatedUser models.User) error {
 	}
 
 	// Validate wallet address
-	if err := ValidateWalletAddress(updatedUser.Wallet); err != nil {
+	if err := ValidateWalletAddress(order.Wallet); err != nil {
 		return err
 	}
-	if updatedUser.Name != "" {
-		existingUser.Name = updatedUser.Name
+	if order.Name != "" {
+		existingUser.Name = order.Name
 	}
-	if updatedUser.Wallet != "" {
-		existingUser.Wallet = updatedUser.Wallet
+	if order.Wallet != "" {
+		existingUser.Wallet = order.Wallet
 	}
 	// Always update the password if provided
-	if updatedUser.Password != nil {
-		existingUser.Password = updatedUser.Password
-	} else {
-		// If password is not provided, preserve the existing password
-		updatedUser.Password = existingUser.Password
+	if order.Password != "" {
+		existingUser.Password = []byte( // it will be "best" to store as byte
+			cryptography.HashString( // so let's hash the string up
+				order.Password, // because we don't want to record this anywhere
+			),
+		)
 	}
-	// Preserve the ID and creation timestamp
-	updatedUser.ID = existingUser.ID
-	updatedUser.CreatedAt = existingUser.CreatedAt
-	updatedUser.UpdatedAt = time.Now()
+
+	existingUser.UpdatedAt = time.Now()
+
 	// Update the user record in the database
-	return database.CreateRecord(bucketUsers, &updatedUser)
+	return database.CreateRecord(bucketUsers, existingUser)
 }
 
 // DeleteUser deletes a user from the database by ID.

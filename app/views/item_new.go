@@ -1,8 +1,8 @@
 package views
 
 import (
+	"bytes"
 	"net/http"
-	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/secretnamebasis/secret-site/app/api"
@@ -58,27 +58,48 @@ func SubmitItem(c *fiber.Ctx) error {
 
 	// Check if the response body is non-empty
 	if len(responseBody) > 0 {
-		// Check if the error message contains certain strings
-		if strings.Contains(
-			string(responseBody),
-			"user with the same username already exists",
-		) {
+		// Switch based on the content of the response body
+		switch {
+		case bytes.Contains(
+			responseBody,
+			[]byte(
+				"user with the same username already exists",
+			),
+		):
 			return handleNewItemFailure(
 				c,
 				"A user with the same username already exists. Please choose a different username.",
 			)
-		} else if strings.Contains(
-			string(responseBody),
-			"user with the same wallet already exists",
-		) {
-			return handleNewItemFailure(c, "A user with the same wallet already exists. Please use a different wallet address.")
-		} else if strings.Contains(
-			string(responseBody),
-			"invalid wallet address",
-		) {
+		case bytes.Contains(
+			responseBody,
+			[]byte(
+				"user with the same wallet already exists",
+			),
+		):
+			return handleNewItemFailure(
+				c,
+				"A user with the same wallet already exists. Please use a different wallet address.",
+			)
+		case bytes.Contains(
+			responseBody,
+			[]byte(
+				"invalid wallet address",
+			),
+		):
 			return handleNewItemFailure(
 				c,
 				"Invalid wallet address. Please provide a valid DERO wallet address.",
+			)
+
+		case bytes.Contains(
+			responseBody,
+			[]byte(
+				"error invalid password",
+			),
+		):
+			return handleNewItemFailure(
+				c,
+				"Invalid password. Please provide a valid password.",
 			)
 		}
 	}

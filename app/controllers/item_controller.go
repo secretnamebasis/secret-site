@@ -1,8 +1,10 @@
 package controllers
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"log"
 	"time"
 
 	"github.com/secretnamebasis/secret-site/app/config"
@@ -22,7 +24,7 @@ func CreateItemRecord(order *models.JSON_Item_Order) (models.Item, error) {
 		return models.Item{}, err
 	}
 
-	if err := checkUserRegisteration(order.User); err != nil {
+	if err := authenticateUser(order.User); err != nil {
 		return models.Item{}, err
 	}
 
@@ -141,7 +143,10 @@ func GetItemByID(id string) (models.Item, error) {
 }
 
 // UpdateItem updates an item in the database with the provided ID and updated data.
-func UpdateItem(id string, updatedItem models.JSON_Item_Order) error {
+func UpdateItem(id string, order models.JSON_Item_Order) error {
+	if err := authenticateUser(order.User); err != nil {
+		return err
+	}
 	var existingItem models.Item
 
 	if err := database.GetRecordByID(bucketItems, id, &existingItem); err != nil {
@@ -161,15 +166,15 @@ func UpdateItem(id string, updatedItem models.JSON_Item_Order) error {
 	if err := json.Unmarshal(decryptedData, &existingItemData); err != nil {
 		return err
 	}
-	if updatedItem.Title != "" {
-		existingItem.Title = updatedItem.Title
+	if order.Title != "" {
+		existingItem.Title = order.Title
 	}
 	// Update the existingItemData fields
-	if updatedItem.Image != "" {
-		existingItemData.Image = updatedItem.Image
+	if order.Image != "" {
+		existingItemData.Image = order.Image
 	}
-	if updatedItem.Description != "" {
-		existingItemData.Description = updatedItem.Description
+	if order.Description != "" {
+		existingItemData.Description = order.Description
 	}
 
 	// Marshal the updated data and encrypt it
@@ -178,7 +183,11 @@ func UpdateItem(id string, updatedItem models.JSON_Item_Order) error {
 		return err
 	}
 
-	encryptedBytes, err := cryptography.EncryptData(
+	// currently we are encrypting with our password
+	// we could futher hash the password for greater security...
+	//
+	encryptedBytes,
+		err := cryptography.EncryptData(
 		updatedBytes,
 		config.Env(
 			config.EnvPath,
@@ -223,19 +232,25 @@ func checkItemExistence(title string) error {
 	return nil
 }
 
-// checkUserExistence checks if a user with the same username or wallet already exists
-func checkUserRegisteration(order models.JSON_User_Order) error {
+// authenticateUser checks if a user with the same username or wallet already exists
+func authenticateUser(order models.JSON_User_Order) error {
 
-	// Check if user already exists with the same username
-	_, err := database.GetUserByUsername(order.Name)
+	// Check if a user already exists with the same username
+	existingUser, err := database.GetUserByUsername(order.Name)
 	if err != nil {
+		log.Printf("Error checking user existence: %v", err)
 		return errors.New("error checking user existence")
 	}
 
-	// Check if user already exists with the same wallet
-	_, err = database.GetUserByWallet(order.Wallet)
-	if err != nil {
-		return errors.New("error checking user existence")
+	// Hash the password for comparison
+	hashedPass := cryptography.HashString(
+		order.Password,
+	)
+
+	// Compare hashed passwords to authenticate
+	if !bytes.Equal(existingUser.Password, hashedPass) {
+		log.Println("Invalid password")
+		return errors.New("error invalid password")
 	}
 
 	return nil

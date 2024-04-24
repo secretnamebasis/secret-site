@@ -5,7 +5,6 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"io"
 
@@ -19,21 +18,19 @@ type Hash [HashLength]byte
 var ZEROHASH Hash
 
 // HashString calculates the SHA-256 hash of the input string and returns it as a hexadecimal string.
-func HashString(uniqueData string) string {
+func HashString(s string) []byte {
 
-	// Hash the unique data using SHA-256
+	// Hash the string using SHA-256
 	hasher := sha256.New()
-	hasher.Write([]byte(uniqueData))
+	hasher.Write([]byte(s))
 	hash := hasher.Sum(nil)
 
-	// Truncate the hash to 32 bytes
-	truncatedHash := hash[:HashLength]
-
 	// Convert the truncated hash to a hexadecimal string
-	return hex.EncodeToString(truncatedHash)
+	return hash
 }
 
 // EncryptData encrypts the input data using AES encryption with the provided password.
+// https://www.golinuxcloud.com/golang-encrypt-decrypt/
 func EncryptData(data []byte, password string) ([]byte, error) {
 	// Derive the key from the password
 	key := deriveKey(password)
@@ -60,6 +57,7 @@ func EncryptData(data []byte, password string) ([]byte, error) {
 }
 
 // DecryptData decrypts the input ciphertext using AES decryption with the provided password.
+// https://www.golinuxcloud.com/golang-encrypt-decrypt/
 func DecryptData(ciphertext []byte, password string) ([]byte, error) {
 	// Derive the key from the password
 	key := deriveKey(password)
@@ -88,6 +86,7 @@ func DecryptData(ciphertext []byte, password string) ([]byte, error) {
 }
 
 // deriveKey derives a key of length HashLength from the password using PBKDF2.
+// this seemed like the way to do it
 func deriveKey(password string) []byte {
 
 	salt := make([]byte, 16) // take a pinch of salt...
