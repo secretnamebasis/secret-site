@@ -6,6 +6,9 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strconv"
+	"strings"
+	"syscall"
 	"time"
 
 	"github.com/deroproject/derohe/rpc"
@@ -43,6 +46,7 @@ var (
 	DevAddress        string
 	AppName           string
 )
+var delay = 1 * time.Second
 
 // Config func to get env value from key
 func Env(envPath, key string) string {
@@ -107,6 +111,7 @@ func Initialize() Server {
 				log.Println("Error launching simulator:", err)
 			}
 		}()
+		time.Sleep(delay)
 	case "dev":
 		Environment = "dev"
 		EnvPath = "./.env." + Environment
@@ -121,8 +126,7 @@ func Initialize() Server {
 				log.Println("Error launching simulator:", err)
 			}
 		}()
-
-		time.Sleep(4 * time.Second)
+		time.Sleep(delay)
 	case "prod":
 		NodeEndpoint = "http://" + Env(EnvPath, "DERO_NODE_IP") + ":" + Env(EnvPath, "DERO_NODE_PORT") + "/json_rpc"
 		WalletEndpoint = "http://" + Env(EnvPath, "DERO_WALLET_IP") + ":" + Env(EnvPath, "DERO_WALLET_PORT") + "/json_rpc"
@@ -146,16 +150,57 @@ func Initialize() Server {
 
 	return c
 }
-
 func launchSimulator(dir string) error {
-	cmd := exec.Command("go", "run", ".", "--http-address=0.0.0.0:8081")
-	cmd.Dir = dir
-	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("failed to start simulator: %v", err)
+	// Start the simulator in a separate goroutine
+	go func() {
+		// Start the simulator
+		cmd := exec.Command("go", "run", ".", "--http-address=0.0.0.0:8081")
+		cmd.Dir = dir
+		if err := cmd.Start(); err != nil {
+			log.Printf("Failed to start simulator: %v\n", err)
+			return
+		}
+
+		// Wait for the simulator to finish
+		if err := cmd.Wait(); err != nil {
+			log.Printf("Error waiting for simulator to finish: %v\n", err)
+		}
+	}()
+
+	// Check if the simulator is already running and kill it if necessary
+	if err := killSimulator(); err != nil {
+		return err
 	}
-	defer cmd.Process.Kill() // Ensure the process is killed when the function exits
-	if err := cmd.Wait(); err != nil {
-		return fmt.Errorf("error waiting for simulator to finish: %v", err)
+	return nil
+}
+
+// killSimulator tries to kill the running simulator process
+func killSimulator() error {
+	// Find the process ID of the simulator
+	out, err := exec.Command("pgrep", "simulator").Output()
+	if err != nil {
+		// If pgrep failed, the simulator is not running
+		if strings.Contains(err.Error(), "exit status 1") {
+			return nil
+		}
+		return fmt.Errorf("error finding simulator process ID: %v", err)
 	}
+
+	// Parse the process ID
+	pidStr := strings.TrimSpace(string(out))
+	pid, err := strconv.Atoi(pidStr)
+	if err != nil {
+		return fmt.Errorf("error parsing simulator process ID: %v", err)
+	}
+
+	// Get the process and send a SIGTERM signal to kill it
+	process, err := os.FindProcess(pid)
+	if err != nil {
+		return fmt.Errorf("error finding simulator process: %v", err)
+	}
+	if err := process.Signal(syscall.SIGTERM); err != nil {
+		return fmt.Errorf("error killing simulator process: %v", err)
+	}
+	log.Printf("Simulator process %d killed", pid)
 	return nil
 }

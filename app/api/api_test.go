@@ -144,7 +144,6 @@ func TestAPI(t *testing.T) {
 
 	// Config server
 	cfg := config.Initialize()
-	pause(4)
 
 	// Check if config is empty
 	checkConfig(cfg)
