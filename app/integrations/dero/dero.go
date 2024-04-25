@@ -86,9 +86,9 @@ func GetWalletAddress(endpoint string) (*rpc.Address, error) {
 // GetEncryptedBalance fetches the encrypted balance for the given address.
 func GetEncryptedBalance(endpoint, address string) (*rpc.GetEncryptedBalance_Result, error) {
 
-	params := map[string]interface{}{
-		"address":    address,
-		"topoheight": -1,
+	params := rpc.GetEncryptedBalance_Params{
+		Address:    address,
+		TopoHeight: -1,
 	}
 	var response rpc.GetEncryptedBalance_Result
 	err := CallRPCNode(
@@ -102,6 +102,29 @@ func GetEncryptedBalance(endpoint, address string) (*rpc.GetEncryptedBalance_Res
 	}
 	return &response, nil
 }
+
+// GetSCID fetches the SCID for the given TXID.
+func GetSCID(endpoint, scid string) (*rpc.GetSC_Result, error) {
+
+	var response rpc.GetSC_Result
+
+	err := CallRPCNode(
+		endpoint,
+		&response,
+		"DERO.GetSC",
+		rpc.GetSC_Params{
+			SCID: scid,
+			Code: true,
+			// Variables: true,
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+	return &response, nil
+}
+
 func Comment(endpoint, comment, destionation string) (rpc.Transfer_Result, error) {
 
 	// and a pencil
@@ -139,7 +162,35 @@ func Comment(endpoint, comment, destionation string) (rpc.Transfer_Result, error
 		)
 }
 
-func CreateAsset(endpoint, destination string) (rpc.Transfer_Result, error) {
-	var txid rpc.Transfer_Result
-	return txid, nil
+func MintContract(endpoint, contract, destionation string) (rpc.Transfer_Result, error) {
+	t := rpc.Transfer{
+		Destination: destionation,
+		Amount:      0,
+	}
+	arg := rpc.Argument{
+		Name:     "entrypoint",
+		DataType: "S",
+		Value:    "InitializePrivate",
+	}
+	args := rpc.Arguments{arg}
+
+	params := rpc.Transfer_Params{
+		Transfers: []rpc.Transfer{t},
+		SC_Code:   contract,
+		SC_Value:  0,
+		SC_RPC:    args,
+		Ringsize:  2,
+	}
+	obj := rpc.Transfer_Result{}
+	method := "transfer"
+	if err := CallRPCWalletWithParams(
+		endpoint,
+		&obj,
+		method,
+		params,
+	); err != nil {
+		return rpc.Transfer_Result{}, err
+	}
+
+	return obj, nil
 }

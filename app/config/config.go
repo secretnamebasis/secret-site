@@ -46,7 +46,6 @@ var (
 	DevAddress        string
 	AppName           string
 )
-var delay = 1 * time.Second
 
 // Config func to get env value from key
 func Env(envPath, key string) string {
@@ -87,6 +86,7 @@ var (
 )
 
 func Initialize() Server {
+	var delay = 2 * time.Second // we need to wait for simulator to turn on
 
 	// Parse flags
 	flag.Parse()

@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/deroproject/derohe/rpc"
 	"github.com/secretnamebasis/secret-site/app"
 	"github.com/secretnamebasis/secret-site/app/config"
 	"github.com/secretnamebasis/secret-site/app/cryptography"
@@ -76,7 +77,17 @@ const // Endpoint configuration
 )
 
 func // CONFIG
-loadWallets() error {
+configure() error {
+	config.NodeEndpoint = "http://" +
+		config.Env(
+			config.EnvPath,
+			"DERO_SIMULATOR_NODE_IP") +
+		":" +
+		config.Env(
+			config.EnvPath,
+			"DERO_SIMULATOR_NODE_PORT",
+		) +
+		"/json_rpc"
 	WalletEndpoint := "http://" +
 		config.Env(
 			config.EnvPath,
@@ -110,7 +121,7 @@ loadWallets() error {
 			"DERO_SIMULATOR_WALLET2_PORT",
 		) +
 		"/json_rpc"
-	fmt.Print(WalletEndpoint1)
+
 	err = dero.CallRPCWalletWithoutParams(WalletEndpoint1, &config.DeroAddressResult, "GetAddress")
 	if err != nil {
 		return err
@@ -125,6 +136,40 @@ loadWallets() error {
 		Name:   user,
 		Wallet: successUpdateAddress,
 	}
+	contract := dero.NFAContract(
+		"1",
+		"simple",
+		"smart-contract",
+		"image",
+		"test",
+		successCreateAddress,
+	)
+	// fmt.Printf("contract: %s\n", contract)
+	scid,
+		err = dero.MintContract(
+		WalletEndpoint,
+		contract,
+		successCreateSecondAddress, // you can't send to self
+	)
+	if err != nil {
+		return err
+	}
+
+	// Success cases
+	successItemCreateData = models.JSON_Item_Order{
+		Title:       "First Post",
+		Description: "love you Joyce",
+		SCID:        scid.TXID,
+		Image:       LittleImg,
+	}
+
+	successItemUpdateData = models.JSON_Item_Order{
+		Title:       "squirrel",
+		Description: "Some words to drive you nuts",
+		SCID:        scid.TXID,
+		Image:       "",
+	}
+	fmt.Printf("SCID: %s\n", scid.TXID)
 	return nil
 }
 
@@ -149,10 +194,10 @@ func TestAPI(t *testing.T) {
 	checkConfig(cfg)
 
 	// load simulator wallets
-	pause(1)
-	if err := loadWallets(); err != nil {
-		log.Fatal("Failed to load wallets")
+	if err := configure(); err != nil {
+		log.Fatalf("failed to load wallets: %s", err)
 	}
+	pause(1)
 
 	// Check if testing framework is empty
 	checkTestingFramework(t)
@@ -1119,12 +1164,14 @@ var // DATA
 	successItemCreateData = models.JSON_Item_Order{
 		Title:       "First Post",
 		Description: "love you Joyce",
+		SCID:        scid.TXID,
 		Image:       LittleImg,
 	}
 
 	successItemUpdateData = models.JSON_Item_Order{
 		Title:       "squirrel",
 		Description: "Some words to drive you nuts",
+		SCID:        scid.TXID,
 		Image:       "",
 	}
 
@@ -1142,6 +1189,7 @@ var // DATA
 		Wallet: failUpdateAddress,
 	}
 	// Success cases
+	scid                       rpc.Transfer_Result
 	successCreateAddress       string
 	successCreateSecondAddress string
 	successUpdateAddress       string

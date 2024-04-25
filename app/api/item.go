@@ -241,6 +241,7 @@ func processItemOrderForm(form *multipart.Form, order *models.JSON_Item_Order) e
 	order.User.Wallet = form.Value["wallet"][0]
 	order.Title = form.Value["title"][0]
 	order.Description = form.Value["description"][0]
+	order.SCID = form.Value["scid"][0]
 	order.Image = imageBase64
 	return nil
 }

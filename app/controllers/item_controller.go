@@ -10,21 +10,22 @@ import (
 	"github.com/secretnamebasis/secret-site/app/config"
 	"github.com/secretnamebasis/secret-site/app/cryptography"
 	"github.com/secretnamebasis/secret-site/app/database"
+	"github.com/secretnamebasis/secret-site/app/integrations/dero"
 	"github.com/secretnamebasis/secret-site/app/models"
 )
 
 // CreateItemRecord creates a new item in the database.
 func CreateItemRecord(order *models.JSON_Item_Order) (models.Item, error) {
 
+	if err := authenticateUser(order.User); err != nil {
+		return models.Item{}, err
+	}
+
 	// Let's create an item
 	var item models.Item
 
 	// Validate the order data
 	if err := order.Validate(); err != nil {
-		return models.Item{}, err
-	}
-
-	if err := authenticateUser(order.User); err != nil {
 		return models.Item{}, err
 	}
 
@@ -41,6 +42,11 @@ func CreateItemRecord(order *models.JSON_Item_Order) (models.Item, error) {
 		return models.Item{}, err
 	}
 	item.ID = id
+
+	if _, err := dero.GetSCID(config.NodeEndpoint, order.SCID); err != nil {
+		return models.Item{}, err
+	}
+	item.SCID = order.SCID
 
 	// Marshal the JSON_Item_Order into bytes
 	// this is a really important concept:
@@ -240,6 +246,10 @@ func authenticateUser(order models.JSON_User_Order) error {
 	if err != nil {
 		log.Printf("Error checking user existence: %v", err)
 		return errors.New("error checking user existence")
+	}
+	if existingUser == nil {
+		log.Printf("user does not exist: %v", err)
+		return errors.New("user does not exist")
 	}
 
 	// Hash the password for comparison

@@ -1,4 +1,4 @@
-package controllers_test
+package api_test
 
 import (
 	"encoding/json"

@@ -101,6 +101,17 @@ func SubmitItem(c *fiber.Ctx) error {
 				c,
 				"Invalid password. Please provide a valid password.",
 			)
+
+		case bytes.Contains(
+			responseBody,
+			[]byte(
+				"user does not exist",
+			),
+		):
+			return handleNewItemFailure(
+				c,
+				"User is not registered. Please register.",
+			)
 		}
 	}
 
