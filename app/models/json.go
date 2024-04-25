@@ -2,7 +2,6 @@ package models
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/secretnamebasis/secret-site/app/config"
 	"github.com/secretnamebasis/secret-site/app/integrations/dero"
@@ -51,7 +50,7 @@ func hasValidSCID(scid string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("code: %s\n", result.Code)
+
 	if result.Code == "" {
 		return errors.New("error: code is empty")
 	}
