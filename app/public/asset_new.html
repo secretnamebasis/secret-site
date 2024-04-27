@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Asset</title>
+</head>
+<body>
+    <div class="container">
+        <main>
+            <section>
+                <h2>New Asset</h2>
+                <!-- Notice for failed item creation -->
+                {{ if .Failed }}
+                    <p style="color: red;">{{ .FailedMessage }}</p>
+                {{ end }}
+                <form id="newForm" action="/assets/submit" method="POST" enctype="multipart/form-data">
+                    <label for="name">Asset Name:</label><br>
+                    <input type="text" id="name" name="name" required><br>
+                    <label for="wallet">DERO Wallet:</label><br>
+                    <input type="text" id="wallet" name="wallet" minlength="66" maxlength="66" required><br>
+                    <label for="type">Type:</label><br>
+                    <input type="text" id="type" name="type" required><br>
+                    <label for="content">Description:</label><br>
+                    <textarea id="content" name="description" rows="5" cols="50" required></textarea><br>
+                    <label for="collection">Collection:</label><br>
+                    <input type="text" id="collection" name="collection" required><br>
+                    <button type="submit">Submit</button>
+                </form>
+                <!-- Display payment ID and message if available -->
+                {{ if .PaymentID }}
+                    <p>Payment ID: {{ .PaymentID }}</p>
+                {{ end }}
+                {{ if .Message }}
+                    <p>Message: {{ .Message }}</p>
+                {{ end }}
+            </section>
+        </main>
+    </div>
+</body>
+</html>

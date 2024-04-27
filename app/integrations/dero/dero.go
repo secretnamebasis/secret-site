@@ -2,6 +2,7 @@ package dero
 
 import (
 	"encoding/base64"
+	"time"
 
 	"github.com/deroproject/derohe/cryptography/crypto"
 	"github.com/deroproject/derohe/rpc"
@@ -73,19 +74,24 @@ func CallRPCWalletWithoutParams(endpoint string, object interface{}, method stri
 // GetWalletAddress fetches the DERO wallet address.
 func GetWalletAddress(endpoint string) (*rpc.Address, error) {
 	// params := map[string]interface{}{}
-	err := CallRPCWalletWithoutParams(endpoint, &config.DeroAddressResult, "GetAddress")
+	method := "GetAddress"
+	err := CallRPCWalletWithoutParams(
+		endpoint,
+		&config.ServerWallet,
+		method,
+	)
 	if err != nil {
 		return nil, err
 	}
 
 	return rpc.NewAddress(
-		config.DeroAddressResult.Address,
+		config.ServerWallet.Address,
 	)
 }
 
 // GetEncryptedBalance fetches the encrypted balance for the given address.
 func GetEncryptedBalance(endpoint, address string) (*rpc.GetEncryptedBalance_Result, error) {
-
+	method := "DERO.GetEncryptedBalance"
 	params := rpc.GetEncryptedBalance_Params{
 		Address:    address,
 		TopoHeight: -1,
@@ -94,7 +100,7 @@ func GetEncryptedBalance(endpoint, address string) (*rpc.GetEncryptedBalance_Res
 	err := CallRPCNode(
 		endpoint,
 		&response,
-		"DERO.GetEncryptedBalance",
+		method,
 		params,
 	)
 	if err != nil {
@@ -107,11 +113,11 @@ func GetEncryptedBalance(endpoint, address string) (*rpc.GetEncryptedBalance_Res
 func GetSCID(endpoint, scid string) (*rpc.GetSC_Result, error) {
 
 	var response rpc.GetSC_Result
-
+	method := "DERO.GetSC"
 	err := CallRPCNode(
 		endpoint,
 		&response,
-		"DERO.GetSC",
+		method,
 		rpc.GetSC_Params{
 			SCID: scid,
 			Code: true,
@@ -193,4 +199,34 @@ func MintContract(endpoint, contract, destionation string) (rpc.Transfer_Result,
 	}
 
 	return obj, nil
+}
+
+func MakeIntegratedAddress(comment string, price uint64, expiry time.Time) (rpc.Make_Integrated_Address_Result, error) {
+
+	params := rpc.Make_Integrated_Address_Params{
+		Address: config.ServerWallet.Address,
+		Payload_RPC: rpc.Arguments{
+			rpc.Argument{
+				Name:     rpc.RPC_COMMENT,
+				DataType: rpc.DataString,
+				Value:    comment,
+			},
+			rpc.Argument{
+				Name:     rpc.RPC_VALUE_TRANSFER,
+				DataType: rpc.DataUint64,
+				Value:    price,
+			},
+			rpc.Argument{
+				Name:     rpc.RPC_EXPIRY,
+				DataType: rpc.DataTime,
+				Value:    expiry,
+			},
+		},
+	}
+	var result rpc.Make_Integrated_Address_Result
+	method := "MakeIntegratedAddress"
+	if err := CallRPCWalletWithParams(config.WalletEndpoint, &result, method, params); err != nil {
+		return rpc.Make_Integrated_Address_Result{}, err
+	}
+	return result, nil
 }

@@ -67,13 +67,14 @@ import (
 // SERVER
 const // Endpoint configuration
 (
-	endpoint      = "http://127.0.0.1:3000/api"
-	routeApiUsers = "/users/"
-	routeApiItems = "/items/"
-	user          = "secret"
-	pass          = "pass"
-	user2         = pass
-	ID            = "1"
+	endpoint       = "http://127.0.0.1:3000/api"
+	routeApiUsers  = "/users/"
+	routeApiItems  = "/items/"
+	routeApiAssets = "/assets/"
+	user           = "secret"
+	pass           = "pass"
+	user2          = pass
+	ID             = "1"
 )
 
 func // CONFIG
@@ -99,12 +100,16 @@ configure() error {
 		) +
 		"/json_rpc"
 
-	err := dero.CallRPCWalletWithoutParams(WalletEndpoint, &config.DeroAddressResult, "GetAddress")
+	err := dero.CallRPCWalletWithoutParams(
+		WalletEndpoint,
+		&config.ServerWallet,
+		"GetAddress",
+	)
 	if err != nil {
 		return err
 	}
 
-	successCreateAddress = config.DeroAddressResult.Address
+	successCreateAddress = config.ServerWallet.Address
 
 	successUserCreateData = models.User{
 		Name:   user,
@@ -122,11 +127,15 @@ configure() error {
 		) +
 		"/json_rpc"
 
-	err = dero.CallRPCWalletWithoutParams(WalletEndpoint1, &config.DeroAddressResult, "GetAddress")
+	err = dero.CallRPCWalletWithoutParams(
+		WalletEndpoint1,
+		&config.ServerWallet,
+		"GetAddress",
+	)
 	if err != nil {
 		return err
 	}
-	successCreateSecondAddress = config.DeroAddressResult.Address
+	successCreateSecondAddress = config.ServerWallet.Address
 	successUserCreateSecondData = models.User{
 		Name:   user2,
 		Wallet: successCreateSecondAddress,
@@ -151,6 +160,15 @@ configure() error {
 		contract,
 		successCreateSecondAddress, // you can't send to self
 	)
+	successAssetCreateData = models.JSON_Asset_Order{
+		Name:        "name",
+		Description: "descript",
+		Royalty:     "1",
+		Type:        "image",
+		Collection:  "test",
+		Wallet:      successCreateSecondAddress,
+	}
+
 	if err != nil {
 		return err
 	}
@@ -380,6 +398,7 @@ var (
 			"Retrieve error when User 1 does not exist",
 			retrieveUserTestFail,
 		},
+		// this is the start
 		{
 			"Create success when User 1 is valid",
 			createUserTestSuccess,
@@ -388,6 +407,7 @@ var (
 			"Create fail when User 1 already exists",
 			createUserTestDuplicateDataFail,
 		},
+		// we want to know that they refer...
 		{
 			"Create success when User 2 is valid",
 			createUserTestSecondSuccess,
@@ -396,6 +416,17 @@ var (
 			"Retrieve success when User 1 exists",
 			retrieveUserTestSuccess,
 		},
+		// we want them to be able to make an asset
+		// asset create test fail
+		{
+			"Create fail when Asset order is invalid",
+			createAssetTestFail,
+		},
+		{
+			"Create success when Asset order is valid",
+			createAssetTestSuccess,
+		},
+		// asset create test success
 		{
 			"Create success when Item 1 is valid",
 			createItemTestSuccess,
@@ -480,6 +511,44 @@ var (
 )
 
 // TESTS
+
+// ASSESTS
+func createAsset(assetData interface{}) func() (string, error) {
+	return func() (string, error) {
+		return action(
+			"POST",
+			endpoint+routeApiAssets,
+			assetData,
+		)
+	}
+}
+func // CREATE FAIL
+createAssetTestFail(t *testing.T) {
+	validateFunc := func(responseBody string) bool {
+		var resp response
+		if err := json.Unmarshal([]byte(responseBody), &resp); err != nil {
+			t.Fatalf("Error parsing response: %v", err)
+		}
+		// Perform custom validation based on new expectations
+
+		return resp.Status == "error"
+	}
+	execute(t, createItem(failAssetCreateData), validateFunc)
+}
+func // CREATE SUCCESS
+createAssetTestSuccess(t *testing.T) {
+	validateFunc := func(responseBody string) bool {
+		var resp response
+		if err := json.Unmarshal([]byte(responseBody), &resp); err != nil {
+			t.Fatalf("Error parsing response: %v", err)
+		}
+		// Perform custom validation based on new expectations
+
+		return resp.Status == "success"
+	}
+	execute(t, createAsset(successAssetCreateData), validateFunc)
+}
+
 func // Retrieve All Items
 checkItems() (string, error) {
 	return action(
@@ -1149,6 +1218,23 @@ var // DATA
 	// Item Test Data
 	//
 	// Fail cases
+	failAssetCreateData = models.JSON_Asset_Order{
+		Name:        "name",
+		Description: "descript",
+		Royalty:     "1",
+		Type:        "image",
+		Collection:  "test",
+		Wallet:      "",
+	}
+	successAssetCreateData = models.JSON_Asset_Order{
+		Name:        "name",
+		Description: "descript",
+		Royalty:     "1",
+		Type:        "image",
+		Collection:  "test",
+		Wallet:      "",
+	}
+
 	// we don't store empty content
 	failItemCreateData = models.JSON_Item_Order{
 		Title:       "title",

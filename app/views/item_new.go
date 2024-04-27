@@ -45,7 +45,7 @@ func SubmitItem(c *fiber.Ctx) error {
 	// Call api.CreateItem asynchronously
 	errCh := make(chan error, 1)
 	go func() {
-		errCh <- api.CreateItem(c)
+		errCh <- api.CreateItemOrder(c)
 	}()
 
 	// Wait for the response from api.CreateItem

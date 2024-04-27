@@ -56,3 +56,12 @@ func hasValidSCID(scid string) error {
 	}
 	return nil
 }
+
+type JSON_Asset_Order struct {
+	Name        string `json:"name"`
+	Royalty     string `json:"royalty"`
+	Description string `json:"description"`
+	Type        string `json:"type"`
+	Collection  string `json:"collection"`
+	Wallet      string `json:"wallet"`
+}

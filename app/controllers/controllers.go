@@ -9,8 +9,9 @@ import (
 
 // Define bucket names
 const (
-	bucketItems = "items"
-	bucketUsers = "users"
+	bucketItems     = "items"
+	bucketUsers     = "users"
+	bucketCheckouts = "checkouts"
 )
 
 // isValidWallet checks if the provided wallet address is valid

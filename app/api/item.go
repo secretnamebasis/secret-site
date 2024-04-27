@@ -13,7 +13,7 @@ import (
 	"github.com/secretnamebasis/secret-site/app/models"
 )
 
-func CreateItem(c *fiber.Ctx) error {
+func CreateItemOrder(c *fiber.Ctx) error {
 	var order models.JSON_Item_Order
 	form, _ := c.MultipartForm()
 	// if err != nil {
@@ -64,6 +64,7 @@ func CreateItem(c *fiber.Ctx) error {
 	// Return success response
 	return SuccessResponse(
 		c,
+		"item created",
 		item,
 	)
 }
@@ -92,6 +93,7 @@ func ItemByID(c *fiber.Ctx) error {
 
 	return SuccessResponse(
 		c,
+		"item retrieved",
 		item,
 	)
 }
@@ -108,6 +110,7 @@ func AllItems(c *fiber.Ctx) error {
 
 	return SuccessResponse(
 		c,
+		"item retrieved",
 		items,
 	)
 }
@@ -171,7 +174,11 @@ func UpdateItem(c *fiber.Ctx) error {
 		)
 	}
 
-	return SuccessResponse(c, &item)
+	return SuccessResponse(
+		c,
+		"item updated",
+		&item,
+	)
 }
 
 func DeleteItem(c *fiber.Ctx) error {
@@ -197,6 +204,7 @@ func DeleteItem(c *fiber.Ctx) error {
 	return SuccessResponse(
 		c,
 		"Item deleted successfully",
+		nil,
 	)
 }
 

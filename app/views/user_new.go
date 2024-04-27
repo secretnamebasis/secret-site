@@ -44,7 +44,7 @@ func SubmitUser(c *fiber.Ctx) error {
 	// Call api.CreateUser asynchronously
 	errCh := make(chan error, 1)
 	go func() {
-		errCh <- api.CreateUser(c)
+		errCh <- api.CreateUserOrder(c)
 	}()
 
 	// Wait for the response from api.CreateUser

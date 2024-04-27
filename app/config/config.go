@@ -32,19 +32,19 @@ type Server struct {
 const ()
 
 var (
-	Domain            string
-	Domainname        string
-	NodeEndpoint      string
-	WalletEndpoint    string
-	Environment       string
-	Port              int
-	ProjectDir        = "./"
-	EnvPath           string
-	DatabaseDir       string
-	DeroAddress       *rpc.Address
-	DeroAddressResult rpc.GetAddress_Result
-	DevAddress        string
-	AppName           string
+	Domain         string
+	Domainname     string
+	NodeEndpoint   string
+	WalletEndpoint string
+	Environment    string
+	Port           int
+	ProjectDir     = "./"
+	EnvPath        string
+	DatabaseDir    string
+	DeroAddress    *rpc.Address
+	ServerWallet   rpc.GetAddress_Result
+	DevAddress     string
+	AppName        string
 )
 
 // Config func to get env value from key

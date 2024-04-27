@@ -7,7 +7,7 @@ import (
 )
 
 // CreateUser creates a new user via HTTP request
-func CreateUser(c *fiber.Ctx) error {
+func CreateUserOrder(c *fiber.Ctx) error {
 	order := parseUserData(c)
 	if err := controllers.ValidateWalletAddress(order.Wallet); err != nil {
 		return ErrorResponse(
@@ -25,6 +25,7 @@ func CreateUser(c *fiber.Ctx) error {
 	}
 	return SuccessResponse(
 		c,
+		"user created",
 		&order,
 	)
 }
@@ -41,6 +42,7 @@ func AllUsers(c *fiber.Ctx) error {
 	}
 	return SuccessResponse(
 		c,
+		"users retrieved",
 		users,
 	)
 }
@@ -58,6 +60,7 @@ func UserByID(c *fiber.Ctx) error {
 	}
 	return SuccessResponse(
 		c,
+		"user retreived",
 		user,
 	)
 }
@@ -74,9 +77,8 @@ func UpdateUser(c *fiber.Ctx) error {
 	}
 	return SuccessResponse(
 		c,
-		fiber.Map{
-			"message": "User updated successfully",
-		},
+		"user updated",
+		nil,
 	)
 }
 
@@ -98,9 +100,8 @@ func DeleteUser(c *fiber.Ctx) error {
 	}
 	return SuccessResponse(
 		c,
-		fiber.Map{
-			"message": "User deleted successfully",
-		},
+		"user deleted",
+		nil,
 	)
 }
 

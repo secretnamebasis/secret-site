@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strconv"
 
@@ -15,32 +16,45 @@ import (
 )
 
 var (
-	db          *bbolt.DB
-	itemsBucket = []byte("items")
-	usersBucket = []byte("users")
+	db             *bbolt.DB
+	itemsBucket    = []byte("items")
+	usersBucket    = []byte("users")
+	checkoutBucket = []byte("checkouts")
+
+	// this was my first byte array.
+	buckets = [][]byte{
+		itemsBucket,
+		checkoutBucket,
+		usersBucket,
+	}
 )
 
 func Initialize(c config.Server) error {
-	var err error
-	// set directory of the database
+	// Set directory of the database
 	if err := os.MkdirAll(c.DatabasePath, 0755); err != nil {
 		return err
 	}
 
-	db, err = bbolt.Open(c.DatabasePath+c.Environment+".db", 0600, nil)
+	dbPath := filepath.Join(c.DatabasePath, c.Environment+".db")
+
+	// Open or create the database file
+	var err error
+	db, err = bbolt.Open(dbPath, 0600, nil)
 	if err != nil {
 		return err
 	}
 
-	// Create buckets if they don't exist
-	err = db.Update(func(tx *bbolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists(itemsBucket)
-		if err != nil {
-			return err
-		}
-		_, err = tx.CreateBucketIfNotExists(usersBucket)
-		return err
-	})
+	// Ensure buckets exist
+	err = db.Update(
+		func(tx *bbolt.Tx) error {
+			for _, bucket := range buckets {
+				_, err := tx.CreateBucketIfNotExists(bucket)
+				if err != nil {
+					return err
+				}
+			}
+			return nil
+		})
 
 	return err
 }

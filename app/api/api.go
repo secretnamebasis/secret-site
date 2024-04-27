@@ -20,11 +20,12 @@ func ErrorResponse(c *fiber.Ctx, status int, message string) error {
 }
 
 // SuccessResponse is a common function to generate success responses
-func SuccessResponse(c *fiber.Ctx, data interface{}) error {
+func SuccessResponse(c *fiber.Ctx, message string, data interface{}) error {
 	return c.JSON(
 		fiber.Map{
-			"result": data,
-			"status": "success",
+			"message": message,
+			"result":  data,
+			"status":  "success",
 		},
 	)
 }
