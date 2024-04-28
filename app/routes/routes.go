@@ -78,10 +78,6 @@ func defineViewsRoutes(app *fiber.App, mw *middleware.Middleware) {
 			Path:   "/users/new",
 			Handle: views.NewUser,
 		},
-		{
-			Path:   "/assets/new",
-			Handle: views.NewAsset,
-		},
 	}
 
 	// Register view routes
@@ -94,7 +90,7 @@ func defineViewsRoutes(app *fiber.App, mw *middleware.Middleware) {
 	// Actions
 	viewsGroup.Post("users/submit", views.SubmitUser)
 	viewsGroup.Post("items/submit", views.SubmitItem)
-	viewsGroup.Post("assets/submit", views.SubmitAsset)
+
 }
 
 // DefineAPIRoutes defines routes for APIs
@@ -115,7 +111,7 @@ func defineAPIRoutes(app *fiber.App, mw *middleware.Middleware) {
 	// here there be monsters
 	roles := []string{"user"}
 	apiGroup.Use(mw.AuthRequired(roles[0]))
-	apiGroup.Post("/assets", api.CreateAssetOrder)
+
 	// Define API routes for items
 	defineResourceRoutes(
 		apiGroup,

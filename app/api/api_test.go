@@ -100,7 +100,7 @@ configure() error {
 		) +
 		"/json_rpc"
 
-	err := dero.CallRPCWalletWithoutParams(
+	err := dero.CallRPC(
 		WalletEndpoint,
 		&config.ServerWallet,
 		"GetAddress",
@@ -127,7 +127,7 @@ configure() error {
 		) +
 		"/json_rpc"
 
-	err = dero.CallRPCWalletWithoutParams(
+	err = dero.CallRPC(
 		WalletEndpoint1,
 		&config.ServerWallet,
 		"GetAddress",
@@ -416,17 +416,6 @@ var (
 			"Retrieve success when User 1 exists",
 			retrieveUserTestSuccess,
 		},
-		// we want them to be able to make an asset
-		// asset create test fail
-		{
-			"Create fail when Asset order is invalid",
-			createAssetTestFail,
-		},
-		{
-			"Create success when Asset order is valid",
-			createAssetTestSuccess,
-		},
-		// asset create test success
 		{
 			"Create success when Item 1 is valid",
 			createItemTestSuccess,
@@ -511,43 +500,6 @@ var (
 )
 
 // TESTS
-
-// ASSESTS
-func createAsset(assetData interface{}) func() (string, error) {
-	return func() (string, error) {
-		return action(
-			"POST",
-			endpoint+routeApiAssets,
-			assetData,
-		)
-	}
-}
-func // CREATE FAIL
-createAssetTestFail(t *testing.T) {
-	validateFunc := func(responseBody string) bool {
-		var resp response
-		if err := json.Unmarshal([]byte(responseBody), &resp); err != nil {
-			t.Fatalf("Error parsing response: %v", err)
-		}
-		// Perform custom validation based on new expectations
-
-		return resp.Status == "error"
-	}
-	execute(t, createItem(failAssetCreateData), validateFunc)
-}
-func // CREATE SUCCESS
-createAssetTestSuccess(t *testing.T) {
-	validateFunc := func(responseBody string) bool {
-		var resp response
-		if err := json.Unmarshal([]byte(responseBody), &resp); err != nil {
-			t.Fatalf("Error parsing response: %v", err)
-		}
-		// Perform custom validation based on new expectations
-
-		return resp.Status == "success"
-	}
-	execute(t, createAsset(successAssetCreateData), validateFunc)
-}
 
 func // Retrieve All Items
 checkItems() (string, error) {

@@ -2,68 +2,66 @@ package dero
 
 import (
 	"encoding/base64"
+	"strings"
 	"time"
 
 	"github.com/deroproject/derohe/cryptography/crypto"
 	"github.com/deroproject/derohe/rpc"
-	"github.com/secretnamebasis/secret-site/app/config"
+	c "github.com/secretnamebasis/secret-site/app/config"
 	"github.com/ybbus/jsonrpc"
 )
 
+const prefix = "DERO."
+const user = "DERO_WALLET_USER"
+const pass = "DERO_WALLET_PASS"
 const DERO_SCID_STRING = "0000000000000000000000000000000000000000000000000000000000000000"
 
-var ()
+// CallRPC is a generic function to make JSON-RPC calls to either the DERO wallet or node.
+func CallRPC(
+	endpoint string,
+	object interface{},
+	method string,
+	params ...interface{},
+) error {
 
-// CallRPCNode is a generic function to make JSON-RPC calls to the DERO node.
-func CallRPCNode(endpoint string, object interface{}, method string, params interface{}) error {
-	rpcClient := jsonrpc.NewClient(endpoint)
-	return rpcClient.CallFor(&object, method, params)
-}
-
-// CallRPCWallet is a generic function to make JSON-RPC calls to the DERO wallet.
-func CallRPCWalletWithParams(endpoint string, object interface{}, method string, params interface{}) error {
-	endpointAuth := config.Env(
-		config.EnvPath,
-		"DERO_WALLET_USER",
-	) +
-		":" +
-		config.Env(
-			config.EnvPath,
-			"DERO_WALLET_PASS",
+	// For DERO Node calls
+	if strings.Contains(method, prefix) {
+		rpcClient := jsonrpc.NewClient(endpoint)
+		if len(params) > 0 {
+			return rpcClient.CallFor(
+				&object,
+				method,
+				params[0],
+			)
+		}
+		return rpcClient.CallFor(
+			&object,
+			method,
 		)
+	}
+
+	// For DERO Wallet calls
+	endpointAuth := c.Env(c.EnvPath, user) + ":" + c.Env(c.EnvPath, pass)
 	encodedEndpointAuth := base64.StdEncoding.EncodeToString([]byte(endpointAuth))
+
 	opts := &jsonrpc.RPCClientOpts{
 		CustomHeaders: map[string]string{
 			"Authorization": "Basic " + encodedEndpointAuth,
 		},
 	}
-	rpcClient := jsonrpc.NewClientWithOpts(endpoint, opts)
 
-	return rpcClient.CallFor(
-		&object,
-		method,
-		params,
+	rpcClient := jsonrpc.NewClientWithOpts(
+		endpoint,
+		opts,
 	)
-}
 
-// CallRPCWallet is a generic function to make JSON-RPC calls to the DERO wallet.
-func CallRPCWalletWithoutParams(endpoint string, object interface{}, method string) error {
-	endpointAuth := config.Env(
-		config.EnvPath,
-		"DERO_WALLET_USER",
-	) +
-		":" +
-		config.Env(
-			config.EnvPath,
-			"DERO_WALLET_PASS",
+	if len(params) > 0 {
+		return rpcClient.CallFor(
+			&object,
+			method,
+			params[0],
 		)
-	encodedEndpointAuth := base64.StdEncoding.EncodeToString([]byte(endpointAuth))
-	opts := &jsonrpc.RPCClientOpts{
-		CustomHeaders: map[string]string{
-			"Authorization": "Basic " + encodedEndpointAuth,
-		},
 	}
-	rpcClient := jsonrpc.NewClientWithOpts(endpoint, opts)
 
 	return rpcClient.CallFor(
 		&object,
@@ -75,29 +73,41 @@ func CallRPCWalletWithoutParams(endpoint string, object interface{}, method stri
 func GetWalletAddress(endpoint string) (*rpc.Address, error) {
 	// params := map[string]interface{}{}
 	method := "GetAddress"
-	err := CallRPCWalletWithoutParams(
-		endpoint,
-		&config.ServerWallet,
-		method,
-	)
+	err := CallRPC(endpoint, &c.ServerWallet, method)
 	if err != nil {
 		return nil, err
 	}
 
 	return rpc.NewAddress(
-		config.ServerWallet.Address,
+		c.ServerWallet.Address,
 	)
+}
+
+func GetWalletTransfers(endpoint string) (*rpc.Get_Transfers_Result, error) {
+	method := "GetTransfers"
+	params := rpc.Get_Transfers_Params{}
+	var response rpc.Get_Transfers_Result
+	err := CallRPC(
+		endpoint,
+		&response,
+		method,
+		params,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &response, nil
 }
 
 // GetEncryptedBalance fetches the encrypted balance for the given address.
 func GetEncryptedBalance(endpoint, address string) (*rpc.GetEncryptedBalance_Result, error) {
-	method := "DERO.GetEncryptedBalance"
+	method := prefix + "GetEncryptedBalance"
 	params := rpc.GetEncryptedBalance_Params{
 		Address:    address,
 		TopoHeight: -1,
 	}
 	var response rpc.GetEncryptedBalance_Result
-	err := CallRPCNode(
+	err := CallRPC(
 		endpoint,
 		&response,
 		method,
@@ -113,8 +123,8 @@ func GetEncryptedBalance(endpoint, address string) (*rpc.GetEncryptedBalance_Res
 func GetSCID(endpoint, scid string) (*rpc.GetSC_Result, error) {
 
 	var response rpc.GetSC_Result
-	method := "DERO.GetSC"
-	err := CallRPCNode(
+	method := prefix + "GetSC"
+	err := CallRPC(
 		endpoint,
 		&response,
 		method,
@@ -131,7 +141,7 @@ func GetSCID(endpoint, scid string) (*rpc.GetSC_Result, error) {
 	return &response, nil
 }
 
-func Comment(endpoint, comment, destionation string) (rpc.Transfer_Result, error) {
+func Comment(endpoint, comment, destination string) (rpc.Transfer_Result, error) {
 
 	// and a pencil
 	object := rpc.Transfer_Result{}
@@ -141,11 +151,9 @@ func Comment(endpoint, comment, destionation string) (rpc.Transfer_Result, error
 	transfer := rpc.Transfer{
 		//
 		SCID:        crypto.ZEROHASH,
-		Destination: destionation,
+		Destination: destination,
 		Amount:      1, // we want them to keep one,
 		Payload_RPC: rpc.Arguments{
-			// the first thing we want to do is establish
-			// the habit of getting passwords by wallet.
 			rpc.Argument{
 				Name:     rpc.RPC_COMMENT,
 				DataType: rpc.DataString,
@@ -160,7 +168,7 @@ func Comment(endpoint, comment, destionation string) (rpc.Transfer_Result, error
 	}
 
 	return object,
-		CallRPCWalletWithParams(
+		CallRPC(
 			endpoint,
 			&object,
 			method,
@@ -168,9 +176,14 @@ func Comment(endpoint, comment, destionation string) (rpc.Transfer_Result, error
 		)
 }
 
-func MintContract(endpoint, contract, destionation string) (rpc.Transfer_Result, error) {
+func MintContract(
+	endpoint,
+	contract,
+	destination string,
+) (rpc.Transfer_Result, error) {
+
 	t := rpc.Transfer{
-		Destination: destionation,
+		Destination: destination,
 		Amount:      0,
 	}
 	arg := rpc.Argument{
@@ -189,7 +202,7 @@ func MintContract(endpoint, contract, destionation string) (rpc.Transfer_Result,
 	}
 	obj := rpc.Transfer_Result{}
 	method := "transfer"
-	if err := CallRPCWalletWithParams(
+	if err := CallRPC(
 		endpoint,
 		&obj,
 		method,
@@ -201,10 +214,14 @@ func MintContract(endpoint, contract, destionation string) (rpc.Transfer_Result,
 	return obj, nil
 }
 
-func MakeIntegratedAddress(comment string, price uint64, expiry time.Time) (rpc.Make_Integrated_Address_Result, error) {
+func MakeIntegratedAddress(
+	comment string,
+	price uint64,
+	expiry time.Time,
+) (rpc.Make_Integrated_Address_Result, error) {
 
 	params := rpc.Make_Integrated_Address_Params{
-		Address: config.ServerWallet.Address,
+		Address: c.ServerWallet.Address,
 		Payload_RPC: rpc.Arguments{
 			rpc.Argument{
 				Name:     rpc.RPC_COMMENT,
@@ -225,7 +242,12 @@ func MakeIntegratedAddress(comment string, price uint64, expiry time.Time) (rpc.
 	}
 	var result rpc.Make_Integrated_Address_Result
 	method := "MakeIntegratedAddress"
-	if err := CallRPCWalletWithParams(config.WalletEndpoint, &result, method, params); err != nil {
+	if err := CallRPC(
+		c.WalletEndpoint,
+		&result,
+		method,
+		params,
+	); err != nil {
 		return rpc.Make_Integrated_Address_Result{}, err
 	}
 	return result, nil
