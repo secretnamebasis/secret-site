@@ -83,10 +83,15 @@ var (
 		443, //default
 		"server port number",
 	)
+	simFlag = flag.Bool(
+		"simulator",
+		false, //default
+		"run in simulator",
+	)
 )
 
+var delay = 2 * time.Second // Delay for simulator startup
 func Initialize() Server {
-	var delay = 2 * time.Second // we need to wait for simulator to turn on
 
 	// Parse flags
 	flag.Parse()
@@ -96,47 +101,18 @@ func Initialize() Server {
 	Port = *portFlag
 	DatabaseDir = *dbFlag
 
+	// Common initialization steps
 	switch Environment {
 	case "test":
-		Port = 3000
-		Environment = "test"
-		Domainname = "127.0.0.1"
-		EnvPath = "../../.env." + Environment
-		NodeEndpoint = "http://" + Env(EnvPath, "DERO_SIMULATOR_NODE_IP") + ":" + Env(EnvPath, "DERO_SIMULATOR_NODE_PORT") + "/json_rpc"
-		WalletEndpoint = "http://" + Env(EnvPath, "DERO_SIMULATOR_WALLET_IP") + ":" + Env(EnvPath, "DERO_SIMULATOR_WALLET0_PORT") + "/json_rpc"
-		DatabaseDir = "../database/"
-		dir := "../../vendors/derohe/cmd/simulator"
-		go func() {
-			if err := launchSimulator(dir); err != nil {
-				log.Println("Error launching simulator:", err)
-			}
-		}()
-		time.Sleep(delay)
+		initializeForTest()
 	case "dev":
-		Environment = "dev"
-		EnvPath = "./.env." + Environment
-		Port = 3000
-		Domainname = "127.0.0.1"
-		NodeEndpoint = "http://" + Env(EnvPath, "DERO_SIMULATOR_NODE_IP") + ":" + Env(EnvPath, "DERO_SIMULATOR_NODE_PORT") + "/json_rpc"
-		WalletEndpoint = "http://" + Env(EnvPath, "DERO_SIMULATOR_WALLET_IP") + ":" + Env(EnvPath, "DERO_SIMULATOR_WALLET0_PORT") + "/json_rpc"
-		// Launch the simulator in the background
-		go func() {
-			dir := "./vendors/derohe/cmd/simulator"
-			if err := launchSimulator(dir); err != nil {
-				log.Println("Error launching simulator:", err)
-			}
-		}()
-		time.Sleep(delay)
+		initializeForDev()
 	case "prod":
-		NodeEndpoint = "http://" + Env(EnvPath, "DERO_NODE_IP") + ":" + Env(EnvPath, "DERO_NODE_PORT") + "/json_rpc"
-		WalletEndpoint = "http://" + Env(EnvPath, "DERO_WALLET_IP") + ":" + Env(EnvPath, "DERO_WALLET_PORT") + "/json_rpc"
-		// In production environments, we presuppose DERO mainnet
+		initializeForProd()
 	}
 
-	DevAddress = Env(EnvPath, "DEV_ADDRESS")
-	AppName = Env(EnvPath, "DOMAIN")
-
-	c := Server{
+	// Create and return the server configuration
+	return Server{
 		Port:         Port,
 		Environment:  Environment,
 		DatabasePath: DatabaseDir,
@@ -147,9 +123,54 @@ func Initialize() Server {
 		Domain:       Domain,
 		Domainname:   Domainname,
 	}
-
-	return c
 }
+
+func initializeForTest() {
+	Port = 3000
+	Environment = "test"
+	Domainname = "127.0.0.1"
+	EnvPath = "../../.env." + Environment
+	NodeEndpoint = buildEndpoint("DERO_SIMULATOR_NODE_IP", "DERO_SIMULATOR_NODE_PORT")
+	WalletEndpoint = buildEndpoint("DERO_SIMULATOR_WALLET_IP", "DERO_SIMULATOR_WALLET0_PORT")
+	DatabaseDir = "../database/"
+	launchSimulatorInBackground("../../vendors/derohe/cmd/simulator")
+}
+
+func initializeForDev() {
+	Environment = "dev"
+	EnvPath = "./.env." + Environment
+	Port = 3000
+	Domainname = "127.0.0.1"
+	NodeEndpoint = buildEndpoint("DERO_NODE_IP", "DERO_NODE_PORT")
+	WalletEndpoint = buildEndpoint("DERO_WALLET_IP", "DERO_WALLET_PORT")
+
+	// Launch the simulator in the background if not explicitly disabled
+	if !*simFlag {
+		NodeEndpoint = buildEndpoint("DERO_SIMULATOR_NODE_IP", "DERO_SIMULATOR_NODE_PORT")
+		WalletEndpoint = buildEndpoint("DERO_SIMULATOR_WALLET_IP", "DERO_SIMULATOR_WALLET0_PORT")
+		launchSimulatorInBackground("./vendors/derohe/cmd/simulator")
+	}
+}
+
+func initializeForProd() {
+	NodeEndpoint = buildEndpoint("DERO_NODE_IP", "DERO_NODE_PORT")
+	WalletEndpoint = buildEndpoint("DERO_WALLET_IP", "DERO_WALLET_PORT")
+	// In production environments, we presuppose DERO mainnet
+}
+
+func buildEndpoint(ipEnvVar, portEnvVar string) string {
+	return "http://" + Env(EnvPath, ipEnvVar) + ":" + Env(EnvPath, portEnvVar) + "/json_rpc"
+}
+
+func launchSimulatorInBackground(dir string) {
+	go func() {
+		if err := launchSimulator(dir); err != nil {
+			log.Println("Error launching simulator:", err)
+		}
+	}()
+	time.Sleep(delay)
+}
+
 func launchSimulator(dir string) error {
 	// Start the simulator in a separate goroutine
 	go func() {
