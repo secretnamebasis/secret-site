@@ -133,6 +133,7 @@ func initializeForTest() {
 	NodeEndpoint = buildEndpoint("DERO_SIMULATOR_NODE_IP", "DERO_SIMULATOR_NODE_PORT")
 	WalletEndpoint = buildEndpoint("DERO_SIMULATOR_WALLET_IP", "DERO_SIMULATOR_WALLET0_PORT")
 	DatabaseDir = "../database/"
+	// Launch the simulator in the background
 	launchSimulatorInBackground("../../vendors/derohe/cmd/simulator")
 }
 
@@ -144,8 +145,8 @@ func initializeForDev() {
 	NodeEndpoint = buildEndpoint("DERO_NODE_IP", "DERO_NODE_PORT")
 	WalletEndpoint = buildEndpoint("DERO_WALLET_IP", "DERO_WALLET_PORT")
 
-	// Launch the simulator in the background if not explicitly disabled
-	if !*simFlag {
+	// Launch the simulator in the background if enabled
+	if *simFlag {
 		NodeEndpoint = buildEndpoint("DERO_SIMULATOR_NODE_IP", "DERO_SIMULATOR_NODE_PORT")
 		WalletEndpoint = buildEndpoint("DERO_SIMULATOR_WALLET_IP", "DERO_SIMULATOR_WALLET0_PORT")
 		launchSimulatorInBackground("./vendors/derohe/cmd/simulator")

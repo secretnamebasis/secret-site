@@ -148,6 +148,26 @@ func GetItemByID(id string) (models.Item, error) {
 	return existingItem, err
 }
 
+// GetItemByID retrieves an item from the database by ID.
+func GetItemBySCID(scid string) (models.Item, error) {
+
+	item, err := database.GetItemByField("scid", scid)
+	if err != nil {
+		return models.Item{}, err
+	}
+
+	decryptedData, // seeing as this is a big garbaldy goop...
+		err := cryptography.DecryptData(
+		item.Data,
+		config.Env(config.EnvPath, "SECRET"),
+	)
+	if err != nil {
+		return models.Item{}, err
+	}
+	item.Data = decryptedData
+	return item, err
+}
+
 // UpdateItem updates an item in the database with the provided ID and updated data.
 func UpdateItem(id string, order models.JSON_Item_Order) error {
 	if err := authenticateUser(order.User); err != nil {
@@ -231,7 +251,7 @@ func checkItemExistence(title string) error {
 		return errors.New("error checking item existence")
 	}
 
-	if existingItem != nil {
+	if existingItem.Title != "" {
 		return errors.New("item with the same title already exists")
 	}
 
@@ -247,7 +267,7 @@ func authenticateUser(order models.JSON_User_Order) error {
 		log.Printf("Error checking user existence: %v", err)
 		return errors.New("error checking user existence")
 	}
-	if existingUser == nil {
+	if existingUser.Name != "" {
 		log.Printf("user does not exist: %v", err)
 		return errors.New("user does not exist")
 	}

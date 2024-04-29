@@ -10,41 +10,21 @@ import (
 func CreateUserOrder(c *fiber.Ctx) error {
 	order := parseUserData(c)
 	if err := controllers.ValidateWalletAddress(order.Wallet); err != nil {
-		return ErrorResponse(
-			c,
-			fiber.StatusInternalServerError,
-			err.Error(),
-		)
+		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 	if err := controllers.CreateUserRecord(&order); err != nil {
-		return ErrorResponse(
-			c,
-			fiber.StatusInternalServerError,
-			err.Error(),
-		)
+		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
-	return SuccessResponse(
-		c,
-		"user created",
-		&order,
-	)
+	return SuccessResponse(c, "user created", &order)
 }
 
 // AllUsers retrieves all users from the database
 func AllUsers(c *fiber.Ctx) error {
 	users, err := controllers.AllUsers()
 	if err != nil {
-		return ErrorResponse(
-			c,
-			fiber.StatusInternalServerError,
-			"Error retrieving users",
-		)
+		return ErrorResponse(c, fiber.StatusInternalServerError, "Error retrieving users")
 	}
-	return SuccessResponse(
-		c,
-		"users retrieved",
-		users,
-	)
+	return SuccessResponse(c, "users retrieved", users)
 }
 
 // UserByID retrieves a user from the database by ID
@@ -52,57 +32,30 @@ func UserByID(c *fiber.Ctx) error {
 	id := c.Params("id")
 	user, err := controllers.GetUserByID(id)
 	if err != nil {
-		return ErrorResponse(
-			c,
-			fiber.StatusNotFound,
-			err.Error(),
-		)
+		return ErrorResponse(c, fiber.StatusNotFound, err.Error())
 	}
-	return SuccessResponse(
-		c,
-		"user retreived",
-		user,
-	)
+	return SuccessResponse(c, "user retreived", user)
 }
 
 // UpdateUser updates a user in the database
 func UpdateUser(c *fiber.Ctx) error {
 	updatedUser := parseUpdatedUserData(c)
 	if err := controllers.UpdateUser(updatedUser); err != nil {
-		return ErrorResponse(
-			c,
-			fiber.StatusInternalServerError,
-			err.Error(),
-		)
+		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
-	return SuccessResponse(
-		c,
-		"user updated",
-		nil,
-	)
+	return SuccessResponse(c, "user updated", nil)
 }
 
 // DeleteUser deletes a user from the database
 func DeleteUser(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if _, err := controllers.GetUserByID(id); err != nil {
-		return ErrorResponse(
-			c,
-			fiber.StatusNotFound, "User not found",
-		)
+		return ErrorResponse(c, fiber.StatusNotFound, "User not found")
 	}
 	if err := controllers.DeleteUser(id); err != nil {
-		return ErrorResponse(
-			c,
-			fiber.StatusInternalServerError,
-			"Error deleting user",
-		)
+		return ErrorResponse(c, fiber.StatusInternalServerError, "Error deleting user")
 	}
-	return SuccessResponse(
-		c,
-		"user deleted",
-		nil,
-	)
+	return SuccessResponse(c, "user deleted", nil)
 }
 
 //private functions

@@ -68,10 +68,10 @@ func GetUserByID(id string) (models.User, error) {
 func GetUserByName(name string) (models.User, error) {
 	existingUser, err := database.GetUserByUsername(name)
 	if err != nil {
-		return *existingUser, errors.New("error checking user existence")
+		return existingUser, errors.New("error checking user existence")
 	}
-	if existingUser != nil {
-		return *existingUser, nil
+	if existingUser.Name != "" {
+		return existingUser, nil
 	}
 	return models.User{}, err
 }
@@ -84,7 +84,7 @@ func UpdateUser(order models.JSON_User_Order) error {
 	if err != nil {
 		return errors.New("error checking user existence")
 	}
-	if existingUser == nil {
+	if existingUser.Name == "" {
 		return errors.New("user not found")
 	}
 
@@ -132,7 +132,7 @@ func checkUserExistence(order models.JSON_User_Order) error {
 		return errors.New("error checking user existence")
 	}
 
-	if existingUser != nil {
+	if existingUser.Name != "" {
 		return errors.New("user with the same username already exists")
 	}
 
@@ -141,7 +141,7 @@ func checkUserExistence(order models.JSON_User_Order) error {
 	if err != nil {
 		return errors.New("error checking user existence")
 	}
-	if existingUser != nil {
+	if existingUser.Name != "" {
 		return errors.New("user with the same wallet already exists")
 	}
 

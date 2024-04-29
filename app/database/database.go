@@ -226,12 +226,12 @@ func GetAllItemTitles(bucketName string, records interface{}) error {
 		})
 }
 
-func GetItemByTitle(title string) (*models.Item, error) {
+func GetItemByTitle(title string) (models.Item, error) {
 	return GetItemByField("title", title)
 }
 
 // getUserByField retrieves a user by a specific field (e.g., username or wallet) from the database
-func GetItemByField(field string, value string) (*models.Item, error) {
+func GetItemByField(field string, value string) (models.Item, error) {
 	var item models.Item
 	err := db.View(
 		func(tx *bbolt.Tx) error {
@@ -257,6 +257,9 @@ func GetItemByField(field string, value string) (*models.Item, error) {
 				} else if field == "data" && string(i.Data) == value {
 					item = i
 					return nil
+				} else if field == "scid" && i.SCID == value {
+					item = i
+					return nil
 				}
 			}
 			return nil // User not found
@@ -264,28 +267,28 @@ func GetItemByField(field string, value string) (*models.Item, error) {
 	)
 
 	if err != nil {
-		return nil, err
+		return item, err
 	}
 
 	if item.ID == 0 {
-		return nil, nil // item not found
+		return item, nil // item not found
 	}
 	// now return the object back upstairs.
-	return &item, nil
+	return item, nil
 }
 
 // GetUserByUsername retrieves a user by username from the database
-func GetUserByUsername(username string) (*models.User, error) {
+func GetUserByUsername(username string) (models.User, error) {
 	return GetUserByField("user", username)
 }
 
 // GetUserByWallet retrieves a user by wallet address from the database
-func GetUserByWallet(wallet string) (*models.User, error) {
+func GetUserByWallet(wallet string) (models.User, error) {
 	return GetUserByField("wallet", wallet)
 }
 
 // getUserByField retrieves a user by a specific field (e.g., username or wallet) from the database
-func GetUserByField(field string, value string) (*models.User, error) {
+func GetUserByField(field string, value string) (models.User, error) {
 	var user models.User
 	err := db.View(
 		func(tx *bbolt.Tx) error {
@@ -318,14 +321,14 @@ func GetUserByField(field string, value string) (*models.User, error) {
 	)
 
 	if err != nil {
-		return nil, err
+		return user, err
 	}
 
 	if user.ID == 0 {
-		return nil, nil // User not found
+		return user, nil // User not found
 	}
 	// now return the object back upstairs.
-	return &user, nil
+	return user, nil
 }
 
 func DeleteRecord(bucketName, id string) error {

@@ -54,16 +54,11 @@ func defineViewsRoutes(app *fiber.App, mw *middleware.Middleware) {
 			Handle: views.Items,
 		},
 		{
-			// this route needs authorization
-			Path: "/items/new",
-			// but as we don't have auth on right now
-			// this will only serve as an example
-			// but ideally, you wouldn't want just anyone
-			// having access to creating items with out authorization
+			Path:   "/items/new",
 			Handle: views.NewItem,
 		},
 		{
-			Path:   "/items/:id",
+			Path:   "/items/:scid",
 			Handle: views.Item,
 		},
 		{
@@ -77,6 +72,10 @@ func defineViewsRoutes(app *fiber.App, mw *middleware.Middleware) {
 		{
 			Path:   "/users/new",
 			Handle: views.NewUser,
+		},
+		{
+			Path:   "/users/:wallet",
+			Handle: views.User,
 		},
 	}
 

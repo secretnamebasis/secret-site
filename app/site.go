@@ -14,6 +14,9 @@ import (
 	"github.com/secretnamebasis/secret-site/app/routes"
 )
 
+var cert = "/etc/letsencrypt/live/" + config.Domain + "/cert.pem"
+var privkey = "/etc/letsencrypt/live/" + config.Domain + "/privkey.pem"
+
 // App represents the Fiber application
 type App struct {
 	*fiber.App
@@ -38,9 +41,9 @@ func (a *App) StartApp(c config.Server) error {
 	switch config.Environment {
 	case "prod":
 		return a.ListenTLS(
-			":"+fmt.Sprintf("%d", c.Port),
-			"/etc/letsencrypt/live/"+config.Domain+"/cert.pem",
-			"/etc/letsencrypt/live/"+config.Domain+"/privkey.pem",
+			fmt.Sprintf(":%d", c.Port),
+			cert,
+			privkey,
 		)
 	case "dev", "test":
 		return a.Listen(
@@ -59,7 +62,11 @@ func (a *App) WaitForShutdown() error {
 
 	// Listen for termination signals
 	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(
+		sigChan,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+	)
 	<-sigChan
 
 	// Shutdown the server gracefully

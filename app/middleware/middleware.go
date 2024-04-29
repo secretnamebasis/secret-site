@@ -32,16 +32,16 @@ func (m *Middleware) LogRequests() fiber.Handler {
 		log.Printf("Request: %s %s", c.Method(), c.OriginalURL())
 
 		// Log request headers
-		// log.Println("Request Headers:")
-		// c.Request().Header.VisitAll(func(key, value []byte) {
-		// 	log.Printf("%s: %s", key, value)
-		// })
+		log.Println("Request Headers:")
+		c.Request().Header.VisitAll(func(key, value []byte) {
+			log.Printf("%s: %s", key, value)
+		})
 
 		// Log request body if present
 		// this adds overhead to the processing of the server by 2x
-		// if len(c.Request().Body()) > 0 {
-		// 	log.Println("Request Body: " + string(c.Request().Body()))
-		// }
+		if len(c.Request().Body()) > 0 {
+			log.Println("Request Body: " + string(c.Request().Body()))
+		}
 
 		// Proceed to next middleware or route handler
 		if err := c.Next(); err != nil {
@@ -50,20 +50,20 @@ func (m *Middleware) LogRequests() fiber.Handler {
 
 		// Log response details
 		// adds little overhead if any.
-		// log.Printf("Response: %d", c.Response().StatusCode())
+		log.Printf("Response: %d", c.Response().StatusCode())
 
 		// // // Log response headers
 		// // adds little overhead, but more noise
-		// log.Println("Response Headers:")
-		// c.Response().Header.VisitAll(func(key, value []byte) {
-		// 	log.Printf("%s: %s", key, value)
-		// })
+		log.Println("Response Headers:")
+		c.Response().Header.VisitAll(func(key, value []byte) {
+			log.Printf("%s: %s", key, value)
+		})
 
 		// // Log response body if present
 		// this add trmendous insight, but causes the server to work 4x
-		// if len(c.Response().Body()) > 0 {
-		// 	log.Printf("Response Body: %s\n", string(c.Response().Body()))
-		// }
+		if len(c.Response().Body()) > 0 {
+			log.Printf("Response Body: %s\n", string(c.Response().Body()))
+		}
 
 		return nil
 	}

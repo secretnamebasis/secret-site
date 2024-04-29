@@ -29,16 +29,31 @@ func Item(c *fiber.Ctx) error {
 	}
 
 	// Get the item ID from the request parameters
-	id := c.Params("id")
+	scid := c.Params("scid")
 
 	// Retrieve the item by ID
-	item, err := controllers.GetItemByID(id)
+	item, err := controllers.GetItemBySCID(scid)
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"message": err.Error(), "status": "error"})
+		return c.Status(
+			fiber.StatusNotFound,
+		).JSON(
+			fiber.Map{
+				"message": err.Error(),
+				"status":  "error",
+			},
+		)
 	}
+
 	var itemData models.ItemData
 	if err := json.Unmarshal(item.Data, &itemData); err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"message": err.Error(), "status": "error"})
+		return c.Status(
+			fiber.StatusNotFound,
+		).JSON(
+			fiber.Map{
+				"message": err.Error(),
+				"status":  "error",
+			},
+		)
 	}
 	// Define data for rendering the template
 	data := ItemData{
