@@ -129,9 +129,9 @@ func GetSCID(endpoint, scid string) (*rpc.GetSC_Result, error) {
 		&response,
 		method,
 		rpc.GetSC_Params{
-			SCID: scid,
-			Code: true,
-			// Variables: true,
+			SCID:      scid,
+			Code:      true,
+			Variables: true,
 		},
 	)
 

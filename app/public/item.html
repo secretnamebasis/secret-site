@@ -20,7 +20,55 @@
             <p>{{.Item.ImageURL}}</p>
             <p>{{.Item.SCID}}</p>
             <p>{{.Description}}</p>
-            <p><em>Created: {{.Item.CreatedAt.Format "2006-01-02 15:04:05"}}</em></p>
+            <p><em>Listed: {{.Item.CreatedAt.Format "2006-01-02 15:04:05"}}</em></p>
+            <div class="center" style="border: 1px solid black; width: 100%; overflow: hidden; text-overflow: ellipsis;">
+                <h5 style="margin: 5px;">SCID Current Reserves</h5>
+
+                <table class="center" style="width: 80%; margin-top: 10px; border: 1px solid black;">
+                    <tr>
+                        <td>SCID</td> 
+                        <td style="width: 20%;">Amount (in atomic units)</td>
+                    </tr>
+                    {{range $k, $v := .SC_Data.Balances}} 
+                        <tr>
+                            <td>{{ $k }}</td> 
+                            <td>{{ $v }}</td>
+                        </tr>
+                    {{end}}
+                </table>
+
+                <h5 style="margin: 5px;">SCID String Variables</h5>
+                <table class="center" style="border: 1px solid black; width: 80%; margin-top: 10px; overflow: hidden; text-overflow: ellipsis;">
+                    <tr>
+                        <td>Key</td> 
+                        <td style="width: 20%; text-align: left;">Value</td>
+                    </tr>
+                    {{range $k, $v := .SC_Data.VariableStringKeys}} 
+                        <tr>
+                            <td>{{ $k }}</td> 
+                            <td style="width: 20%; text-align: left; overflow: hidden; text-overflow: ellipsis;">{{ $v }}</td>
+                        </tr>
+                    {{end}}
+                </table>
+
+                <h5 style="margin: 5px;">SCID Uint64 Variables</h5>
+                <table class="center" style="border: 1px solid black; width: 80%; margin-top: 10px;">
+                    <tr>
+                        <td>Key</td> 
+                        <td style="width: 20%; text-align: left;">Value</td>
+                    </tr>
+                    {{range $k, $v := .SC_Data.VariableUint64Keys}} 
+                        <tr>
+                            <td>{{ $k }}</td> 
+                            <td style="width: 20%; text-align: left; overflow: hidden; text-overflow: ellipsis;">{{ $v }}</td>
+                        </tr>
+                    {{end}}
+                </table>
+
+                <p>SC CODE:</p>
+                <pre style="text-align: left;">{{.SC_Data.Code}}</pre>
+
+            </div>
         </div>
     </main>
 </body>
