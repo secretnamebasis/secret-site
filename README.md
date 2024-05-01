@@ -90,9 +90,13 @@ Any `env` but `prod` runs app without TLS. Use parse flags to customize your dev
 ```sh
 go run . -env=dev -port=3000 -db=./app/database/
 ```
-Or:
+You can launch the server using DERO mainnet backend:
 ```sh
 bin/dev
+```
+Or, you can launch the server using DERO simulator backend
+```sh
+bin/dev sim
 ```
 ### `test`
 When you `run_integration_test.sh`, you will find times-stamped builds in `./build/` and logs in `./log/`.

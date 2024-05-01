@@ -24,10 +24,7 @@ func Draw(app *fiber.App) {
 func defineViewsRoutes(app *fiber.App, mw *middleware.Middleware) {
 
 	// Create a route group for views
-	viewsGroup := app.Group("/")
-
-	// Apply middleware to the viewsGroup
-	viewsGroup.Use(
+	viewsGroup := app.Group("/").Use(
 		mw.HelmetMiddleware(),
 		mw.RateLimiter(),
 	)
@@ -87,8 +84,8 @@ func defineViewsRoutes(app *fiber.App, mw *middleware.Middleware) {
 		)
 	}
 	// Actions
-	viewsGroup.Post("users/submit", views.SubmitUser)
-	viewsGroup.Post("items/submit", views.SubmitItem)
+	viewsGroup.Post("/users/submit", views.SubmitUser)
+	viewsGroup.Post("/items/submit", views.SubmitItem)
 
 }
 

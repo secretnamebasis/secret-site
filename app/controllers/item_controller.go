@@ -267,7 +267,7 @@ func authenticateUser(order models.JSON_User_Order) error {
 		log.Printf("Error checking user existence: %v", err)
 		return errors.New("error checking user existence")
 	}
-	if existingUser.Name != "" {
+	if existingUser.Name == "" {
 		log.Printf("user does not exist: %v", err)
 		return errors.New("user does not exist")
 	}

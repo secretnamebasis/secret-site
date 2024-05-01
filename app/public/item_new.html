@@ -14,7 +14,7 @@
                 {{ if .Failed }}
                     <p style="color: red;">{{ .FailedMessage }}</p>
                 {{ end }}
-                <form id="newForm" action="/items/submit" method="POST" enctype="multipart/form-data">
+                <form id="newItem" action="/items/submit" method="POST" enctype="multipart/form-data">
                     <label for="name">Username:</label><br>
                     <input type="text" id="name" name="name" required><br>
                     <label for="password">Password:</label><br>

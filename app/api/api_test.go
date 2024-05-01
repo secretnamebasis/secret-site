@@ -145,29 +145,20 @@ configure() error {
 		Name:   user,
 		Wallet: successUpdateAddress,
 	}
-	contract := dero.NFAContract(
-		"1",
-		"simple",
-		"smart-contract",
-		"image",
-		"test",
-		successCreateAddress,
-	)
-	// fmt.Printf("contract: %s\n", contract)
+
 	scid,
 		err = dero.MintContract(
 		WalletEndpoint,
-		contract,
+		dero.NFAContract(
+			"1",
+			"simple",
+			"smart-contract",
+			"image",
+			"test",
+			successCreateAddress,
+		),
 		successCreateSecondAddress, // you can't send to self
 	)
-	successAssetCreateData = models.JSON_Asset_Order{
-		Name:        "name",
-		Description: "descript",
-		Royalty:     "1",
-		Type:        "image",
-		Collection:  "test",
-		Wallet:      successCreateSecondAddress,
-	}
 
 	if err != nil {
 		return err
@@ -187,7 +178,7 @@ configure() error {
 		SCID:        scid.TXID,
 		Image:       "",
 	}
-	fmt.Printf("SCID: %s\n", scid.TXID)
+
 	return nil
 }
 
@@ -1170,22 +1161,6 @@ var // DATA
 	// Item Test Data
 	//
 	// Fail cases
-	failAssetCreateData = models.JSON_Asset_Order{
-		Name:        "name",
-		Description: "descript",
-		Royalty:     "1",
-		Type:        "image",
-		Collection:  "test",
-		Wallet:      "",
-	}
-	successAssetCreateData = models.JSON_Asset_Order{
-		Name:        "name",
-		Description: "descript",
-		Royalty:     "1",
-		Type:        "image",
-		Collection:  "test",
-		Wallet:      "",
-	}
 
 	// we don't store empty content
 	failItemCreateData = models.JSON_Item_Order{

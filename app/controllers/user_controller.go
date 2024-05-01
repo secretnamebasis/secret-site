@@ -110,7 +110,7 @@ func UpdateUser(order models.JSON_User_Order) error {
 	existingUser.UpdatedAt = time.Now()
 
 	// Update the user record in the database
-	return database.CreateRecord(bucketUsers, existingUser)
+	return database.CreateRecord(bucketUsers, &existingUser)
 }
 
 // DeleteUser deletes a user from the database by ID.

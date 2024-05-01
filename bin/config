@@ -74,6 +74,8 @@ CONFIG
 # Copy the .env file for development
 cp ./.env ./.env.dev
 
-# Copy the .env file to the ./test/ directory
-cp ./.env ./test/.env
+# Copy the .env file for test
+cp ./.env ./.env.test
 
+# Copy the .env file for sim
+cp ./.env ./.env.sim

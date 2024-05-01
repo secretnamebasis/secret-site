@@ -30,8 +30,10 @@ func CreateItemOrder(c *fiber.Ctx) error {
 		}
 
 	}
-	if err := processItemOrderCredentials(c,
-		&order); err != nil {
+	if err := processItemOrderCredentials(
+		c,
+		&order,
+	); err != nil {
 		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 

@@ -45,7 +45,7 @@ func (a *App) StartApp(c config.Server) error {
 			cert,
 			privkey,
 		)
-	case "dev", "test":
+	case "dev", "sim", "test":
 		return a.Listen(
 			fmt.Sprintf(":%d", c.Port),
 		)

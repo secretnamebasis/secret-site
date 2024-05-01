@@ -45,6 +45,7 @@ var (
 	ServerWallet   rpc.GetAddress_Result
 	DevAddress     string
 	AppName        string
+	SimulatorDir   string
 )
 
 // Config func to get env value from key
@@ -100,15 +101,29 @@ func Initialize() Server {
 	Environment = *envFlag
 	Port = *portFlag
 	DatabaseDir = *dbFlag
+	SimulatorDir = "./vendors/derohe/cmd/simulator"
 
 	// Common initialization steps
 	switch Environment {
-	case "test":
-		initializeForTest()
-	case "dev":
-		initializeForDev()
+	// prod env
 	case "prod":
 		initializeForProd()
+
+	// dev env
+	case "dev": // assumes mainnet wallet
+		initializeForDev()
+	case "sim": // assumes simulator wallets
+		// the db and .env.sim is different
+		// this is to prevent mainnet-testnet conversion errors
+		initializeForSim()
+
+	// test env
+	case "test":
+		initializeForTest()
+	}
+
+	if *simFlag {
+		launchSimulatorInBackground(SimulatorDir)
 	}
 
 	// Create and return the server configuration
@@ -133,8 +148,7 @@ func initializeForTest() {
 	NodeEndpoint = buildEndpoint("DERO_SIMULATOR_NODE_IP", "DERO_SIMULATOR_NODE_PORT")
 	WalletEndpoint = buildEndpoint("DERO_SIMULATOR_WALLET_IP", "DERO_SIMULATOR_WALLET0_PORT")
 	DatabaseDir = "../database/"
-	// Launch the simulator in the background
-	launchSimulatorInBackground("../../vendors/derohe/cmd/simulator")
+	SimulatorDir = "../../vendors/derohe/cmd/simulator"
 }
 
 func initializeForDev() {
@@ -144,19 +158,23 @@ func initializeForDev() {
 	Domainname = "127.0.0.1"
 	NodeEndpoint = buildEndpoint("DERO_NODE_IP", "DERO_NODE_PORT")
 	WalletEndpoint = buildEndpoint("DERO_WALLET_IP", "DERO_WALLET_PORT")
+}
 
-	// Launch the simulator in the background if enabled
-	if *simFlag {
-		NodeEndpoint = buildEndpoint("DERO_SIMULATOR_NODE_IP", "DERO_SIMULATOR_NODE_PORT")
-		WalletEndpoint = buildEndpoint("DERO_SIMULATOR_WALLET_IP", "DERO_SIMULATOR_WALLET0_PORT")
-		launchSimulatorInBackground("./vendors/derohe/cmd/simulator")
-	}
+func initializeForSim() {
+	// this allows for development in non-mainnet conditions, eg simulator
+	Environment = "sim"
+	EnvPath = "./.env." + Environment
+	Port = 3000
+	Domainname = "127.0.0.1"
+	NodeEndpoint = buildEndpoint("DERO_SIMULATOR_NODE_IP", "DERO_SIMULATOR_NODE_PORT")
+	WalletEndpoint = buildEndpoint("DERO_SIMULATOR_WALLET_IP", "DERO_SIMULATOR_WALLET0_PORT")
+
 }
 
 func initializeForProd() {
+	// In production environments, we presuppose DERO mainnet
 	NodeEndpoint = buildEndpoint("DERO_NODE_IP", "DERO_NODE_PORT")
 	WalletEndpoint = buildEndpoint("DERO_WALLET_IP", "DERO_WALLET_PORT")
-	// In production environments, we presuppose DERO mainnet
 }
 
 func buildEndpoint(ipEnvVar, portEnvVar string) string {

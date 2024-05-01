@@ -35,7 +35,7 @@ func Item(c *fiber.Ctx) error {
 	// Get the item ID from the request parameters
 	scid := c.Params("scid")
 
-	scData, err := dero.GetSCID(
+	sc_data, err := dero.GetSCID(
 		config.NodeEndpoint,
 		scid,
 	)
@@ -49,16 +49,25 @@ func Item(c *fiber.Ctx) error {
 			},
 		)
 	}
-
+	if sc_data.Code == "" {
+		return c.Status(
+			fiber.StatusNotFound,
+		).JSON(
+			fiber.Map{
+				"message": "lol",
+				"status":  "error",
+			},
+		)
+	}
 	// Truncate key "C" value to display first 16 bytes followed by an ellipsis and then the next 16 bytes
-	cValue := scData.VariableStringKeys["C"].(string)
+	cValue := sc_data.VariableStringKeys["C"].(string)
 	if len(cValue) > 32 {
 		truncatedValue := cValue[:16] + "..." + cValue[len(cValue)-16:]
-		scData.VariableStringKeys["C"] = truncatedValue
+		sc_data.VariableStringKeys["C"] = truncatedValue
 	}
 
 	// Decode hex values in VariableStringKeys for all keys except "c"
-	for k, v := range scData.VariableStringKeys {
+	for k, v := range sc_data.VariableStringKeys {
 		if k != "C" { // Exclude key "c"
 			hexValue, ok := v.(string)
 			if ok && isHex(hexValue) {
@@ -70,9 +79,9 @@ func Item(c *fiber.Ctx) error {
 						return err
 					}
 					// Handle non-printable characters or characters that can't be directly represented as strings
-					scData.VariableStringKeys[k] = result.String()
+					sc_data.VariableStringKeys[k] = result.String()
 				} else {
-					scData.VariableStringKeys[k] = decodedValue
+					sc_data.VariableStringKeys[k] = decodedValue
 				}
 			}
 		}
@@ -107,7 +116,7 @@ func Item(c *fiber.Ctx) error {
 		Title:       config.Domain,
 		Address:     addr.String(),
 		Item:        item,
-		SC_Data:     *scData,
+		SC_Data:     *sc_data,
 		ImageUrl:    item.ImageURL,
 		Image:       itemData.Image,
 		Description: itemData.Description,

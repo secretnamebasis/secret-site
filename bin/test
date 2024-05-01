@@ -1,1 +1,1 @@
-go test app/api/api_test.go -v -env=test -failfast
+go test app/api/api_test.go -v -env=test -simulator=true -failfast
