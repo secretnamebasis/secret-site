@@ -172,6 +172,10 @@ func initializeForSim() {
 }
 
 func initializeForProd() {
+	Environment = "prod"
+	EnvPath = "./.env"
+	Port = 443
+	Domainname = Env(EnvPath, "DOMAIN")
 	// In production environments, we presuppose DERO mainnet
 	NodeEndpoint = buildEndpoint("DERO_NODE_IP", "DERO_NODE_PORT")
 	WalletEndpoint = buildEndpoint("DERO_WALLET_IP", "DERO_WALLET_PORT")
