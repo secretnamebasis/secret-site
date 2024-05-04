@@ -626,7 +626,7 @@ func createItemTestSuccess(t *testing.T) {
 		// Validate created
 		url, urlOK := result["image_url"].(string)
 		if !urlOK || url == "" {
-			t.Errorf("Expected title to be `"+config.Domainname+"'images/1` got '%s'", url)
+			t.Errorf("Expected title to be `"+config.Domain+"'images/1` got '%s'", url)
 			return false
 		}
 

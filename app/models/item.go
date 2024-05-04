@@ -28,8 +28,8 @@ type ItemData struct {
 // InitializeItem creates and initializes a new Item instance
 func (i *Item) Initialize() *Item {
 	timestamp := time.Now()
-	i.ImageURL = config.Domainname + "/images/" + i.SCID
-	i.FileURL = config.Domainname + "/files/" + i.SCID
+	i.ImageURL = config.Domain + "/images/" + i.SCID
+	i.FileURL = config.Domain + "/files/" + i.SCID
 	i.CreatedAt = timestamp
 	i.UpdatedAt = timestamp
 	item := &Item{
