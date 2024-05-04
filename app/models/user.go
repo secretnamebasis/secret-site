@@ -64,7 +64,7 @@ func (u *User) Validate() error {
 
 // hasValidWallet checks if the provided wallet address is valid
 func hasValidWallet(wallet string) error {
-	// Attempt to fetch the balance of the wallet address
+	// Attempts to fetch the encrypted balance of the wallet address
 	_, err := dero.GetEncryptedBalance(config.NodeEndpoint, wallet)
 	if err != nil {
 		return err

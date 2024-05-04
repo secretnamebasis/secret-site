@@ -43,9 +43,9 @@ func (i *JSON_User_Order) Validate() error {
 	return nil
 }
 
-// hasValidWallet checks if the provided wallet address is valid
+// hasValidSCID checks if the provided SCID is valid
 func hasValidSCID(scid string) error {
-	// Attempt to fetch the balance of the wallet address
+	// Attempt to fetch the code of the contract
 	result, err := dero.GetSCID(config.NodeEndpoint, scid)
 	if err != nil {
 		return err
