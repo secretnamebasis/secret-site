@@ -59,7 +59,7 @@ func defineViewsRoutes(app *fiber.App, mw *middleware.Middleware) {
 			Handle: views.Item,
 		},
 		{
-			Path:   "/images/:id",
+			Path:   "/images/:scid",
 			Handle: views.Images,
 		},
 		{

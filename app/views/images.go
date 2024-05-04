@@ -12,10 +12,10 @@ import (
 
 func Images(c *fiber.Ctx) error {
 	// Extract the image ID from the request URL
-	id := c.Params("id")
+	scid := c.Params("scid")
 
 	// Retrieve the item by ID from the database
-	item, err := controllers.GetItemByID(id)
+	item, err := controllers.GetItemBySCID(scid)
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).SendString("Image not found")
 	}

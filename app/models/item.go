@@ -2,7 +2,6 @@ package models
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/secretnamebasis/secret-site/app/config"
@@ -29,8 +28,8 @@ type ItemData struct {
 // InitializeItem creates and initializes a new Item instance
 func (i *Item) Initialize() *Item {
 	timestamp := time.Now()
-	i.ImageURL = config.Domainname + "/images/" + fmt.Sprintf("%d", i.ID)
-	i.FileURL = config.Domainname + "/files/" + fmt.Sprintf("%d", i.ID)
+	i.ImageURL = config.Domainname + "/images/" + i.SCID
+	i.FileURL = config.Domainname + "/files/" + i.SCID
 	i.CreatedAt = timestamp
 	i.UpdatedAt = timestamp
 	item := &Item{
