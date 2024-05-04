@@ -63,22 +63,22 @@ func SubmitItem(c *fiber.Ctx) error {
 		case bytes.Contains(
 			responseBody,
 			[]byte(
-				"user with the same username already exists",
+				"item with the same scid already exists",
 			),
 		):
 			return handleNewItemFailure(
 				c,
-				"A user with the same username already exists. Please choose a different username.",
+				"An item with the same SCID already exists. Please choose a different SCID.",
 			)
 		case bytes.Contains(
 			responseBody,
 			[]byte(
-				"user with the same wallet already exists",
+				"item with the same title already exists",
 			),
 		):
 			return handleNewItemFailure(
 				c,
-				"A user with the same wallet already exists. Please use a different wallet address.",
+				"An item with the same Title already exists. Please choose a different Title.",
 			)
 		case bytes.Contains(
 			responseBody,

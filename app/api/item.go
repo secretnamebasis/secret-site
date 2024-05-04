@@ -118,7 +118,7 @@ func DeleteItem(c *fiber.Ctx) error {
 func processItemOrderForm(form *multipart.Form, order *models.JSON_Item_Order) error {
 	var imageBase64 string
 	imageBase64 = ""
-	if file, ok := form.File["itemdata.image"]; ok && len(file) > 0 {
+	if file, ok := form.File["item_data.image"]; ok && len(file) > 0 {
 		imageFile, err := file[0].Open()
 		if err != nil {
 			return err

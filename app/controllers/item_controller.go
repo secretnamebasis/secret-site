@@ -255,6 +255,10 @@ func checkItemExistence(title string) error {
 		return errors.New("item with the same title already exists")
 	}
 
+	if existingItem.SCID != "" {
+		return errors.New("item with the same scid already exists")
+	}
+
 	return nil
 }
 
