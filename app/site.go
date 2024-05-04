@@ -14,9 +14,6 @@ import (
 	"github.com/secretnamebasis/secret-site/app/routes"
 )
 
-var cert = "/etc/letsencrypt/live/" + config.Domain + "/cert.pem"
-var privkey = "/etc/letsencrypt/live/" + config.Domain + "/privkey.pem"
-
 // App represents the Fiber application
 type App struct {
 	*fiber.App
@@ -40,6 +37,8 @@ func MakeApp(c config.Server) *App {
 func (a *App) StartApp(c config.Server) error {
 	switch config.Environment {
 	case "prod":
+		var cert = "/etc/letsencrypt/live/" + config.Domain + "/cert.pem"
+		var privkey = "/etc/letsencrypt/live/" + config.Domain + "/privkey.pem"
 		return a.ListenTLS(
 			fmt.Sprintf(":%d", c.Port),
 			cert,

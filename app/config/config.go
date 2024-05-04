@@ -26,14 +26,12 @@ type Server struct {
 	AppName        string
 	DevAddress     string
 	Domain         string
-	Domainname     string
 }
 
 const ()
 
 var (
 	Domain         string
-	Domainname     string
 	NodeEndpoint   string
 	WalletEndpoint string
 	Environment    string
@@ -136,14 +134,13 @@ func Initialize() Server {
 		DevAddress:   DevAddress,
 		AppName:      AppName,
 		Domain:       Domain,
-		Domainname:   Domainname,
 	}
 }
 
 func initializeForTest() {
 	Port = 3000
 	Environment = "test"
-	Domainname = "127.0.0.1"
+	Domain = "127.0.0.1"
 	EnvPath = "../../.env." + Environment
 	NodeEndpoint = buildEndpoint("DERO_SIMULATOR_NODE_IP", "DERO_SIMULATOR_NODE_PORT")
 	WalletEndpoint = buildEndpoint("DERO_SIMULATOR_WALLET_IP", "DERO_SIMULATOR_WALLET0_PORT")
@@ -155,7 +152,7 @@ func initializeForDev() {
 	Environment = "dev"
 	EnvPath = "./.env." + Environment
 	Port = 3000
-	Domainname = "127.0.0.1"
+	Domain = "127.0.0.1"
 	NodeEndpoint = buildEndpoint("DERO_NODE_IP", "DERO_NODE_PORT")
 	WalletEndpoint = buildEndpoint("DERO_WALLET_IP", "DERO_WALLET_PORT")
 }
@@ -165,13 +162,17 @@ func initializeForSim() {
 	Environment = "sim"
 	EnvPath = "./.env." + Environment
 	Port = 3000
-	Domainname = "127.0.0.1"
+	Domain = "127.0.0.1"
 	NodeEndpoint = buildEndpoint("DERO_SIMULATOR_NODE_IP", "DERO_SIMULATOR_NODE_PORT")
 	WalletEndpoint = buildEndpoint("DERO_SIMULATOR_WALLET_IP", "DERO_SIMULATOR_WALLET0_PORT")
 
 }
 
 func initializeForProd() {
+	Environment = "prod"
+	EnvPath = "./.env"
+	Port = 443
+	Domain = Env(EnvPath, "DOMAIN")
 	// In production environments, we presuppose DERO mainnet
 	NodeEndpoint = buildEndpoint("DERO_NODE_IP", "DERO_NODE_PORT")
 	WalletEndpoint = buildEndpoint("DERO_WALLET_IP", "DERO_WALLET_PORT")
