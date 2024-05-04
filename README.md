@@ -11,14 +11,13 @@ The coolest feature included is the integration with `DERO`.
 `secret-site` is a TLS encrypted website for hosting encrypted content. 
 
 The following models are supported in the `bbolt` database with the accompanying features: 
-- Item: `{ id: , title: , data: :description, :image, imageURL: }`
-    - `AES` encryption/decryption of `:description`, `:image`
-- User `{ user: , wallet: , password: }`
-    - validates wallet addresses with `DERO` network
+- Item with`AES` encryption/decryption of `data:`
+- User with wallet address validations for `DERO` network
 ## Roadmap
 ### DOCS
 - API documentation 
 ### DB
+- db encryption migrations
 - routine backups
     - segmented backups (conserve storage)
 #### ITEM
@@ -42,8 +41,14 @@ The following models are supported in the `bbolt` database with the accompanying
 As a pre requisite, running `secret-site` in production environments requires a DERO wallet instance:
 - CLI:
     - Download the latest binaries of [`DERO`](https://github.com/deroproject/derohe/releases/latest/)
-    - Launch `dero-wallet-cli` with these suggested flags `--rpc-bind=127.0.0.1:10103 --daemon-address=node.derofoundation.org:11012 --rpc-server --rpc-login="secret:pass"`
     - Restore, or create, a wallet file
+    - Launch `dero-wallet-cli` with these suggested flags ; supposing of course that `derod` runs locally:
+```sh
+--rpc-bind=127.0.0.1:10103 \
+--daemon-address=127.0.0.1:10102 \
+--rpc-server \
+--rpc-login="secret:pass"
+```
 - GUI: 
     - Download the latest [`ENGRAM`](https://github.com/DEROFDN/Engram/releases/latest/)
     - Restore, or create, wallet file
@@ -55,13 +60,18 @@ Clone repo and change directories:
 git clone https://github.com/secretnamebasis/secret-site.git
 cd secret-site
 ```
+## Config
+It is assume that on first `config`, that production (`prod`), development (`dev`) and testing (`test`) are the same. 
 ### `.env`
-Default values in [`dot.env.sample`](https://github.com/secretnamebasis/secret-site/blob/main/dot.env.sample) are used to set default values for the `.env` variables prior to running the `config`, which will write `env` files to the project directory `./` for `.`, `.env.dev` and `.env.test`. We assume that on first `config`, that insteance of production (`prod`), development (`dev`) and testing (`test`) are the same. 
+Default values in [`dot.env.sample`](https://github.com/secretnamebasis/secret-site/blob/main/dot.env.sample) are used to set default values for the `.env` variables prior to running the `config`, which will write `env` files to the project directory `./`: 
+- `.env` 
+- `.env.dev`
+- `.env.test` 
 ```sh
 bin/config
 ```  
-### TLS cert
-This site [assumes TLS certification](https://github.com/secretnamebasis/secret-site/blob/cd559806442bad5553464d6fbee86966fec1aa3e/app/site.go#L41).
+### SSL cert
+This site [assumes SSL certification](https://github.com/secretnamebasis/secret-site/blob/cd559806442bad5553464d6fbee86966fec1aa3e/app/site.go#L41).
 ### Run
 To run the application: 
 ```sh
@@ -73,16 +83,20 @@ go build .
 ./secret-site
 ```
 ## Development/Testing
-The `DERO` `simulator` runs in the background for all developemnt and testing environments
+The `DERO` `simulator` runs in the background for all developemnt and testing environments.
 
 ### `dev`
 Any `env` but `prod` runs app without TLS. Use parse flags to customize your development environment. 
 ```sh
 go run . -env=dev -port=3000 -db=./app/database/
 ```
-Or:
+You can launch the server using DERO mainnet backend:
 ```sh
 bin/dev
+```
+Or, you can launch the server using DERO simulator backend
+```sh
+bin/dev sim
 ```
 ### `test`
 When you `run_integration_test.sh`, you will find times-stamped builds in `./build/` and logs in `./log/`.
@@ -90,4 +104,9 @@ When you `run_integration_test.sh`, you will find times-stamped builds in `./bui
 Alternatively, if you would like to test only the API:
 ```sh
 bin/test
+```
+### Releases
+We have also included a helpful `gh` script for deploying releases to `GitHub`
+```sh
+bin/release
 ```

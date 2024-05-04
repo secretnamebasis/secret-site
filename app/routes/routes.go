@@ -24,10 +24,7 @@ func Draw(app *fiber.App) {
 func defineViewsRoutes(app *fiber.App, mw *middleware.Middleware) {
 
 	// Create a route group for views
-	viewsGroup := app.Group("/")
-
-	// Apply middleware to the viewsGroup
-	viewsGroup.Use(
+	viewsGroup := app.Group("/").Use(
 		mw.HelmetMiddleware(),
 		mw.RateLimiter(),
 	)
@@ -54,21 +51,20 @@ func defineViewsRoutes(app *fiber.App, mw *middleware.Middleware) {
 			Handle: views.Items,
 		},
 		{
-			// this route needs authorization
-			Path: "/items/new",
-			// but as we don't have auth on right now
-			// this will only serve as an example
-			// but ideally, you wouldn't want just anyone
-			// having access to creating items with out authorization
+			Path:   "/items/new",
 			Handle: views.NewItem,
 		},
 		{
-			Path:   "/items/:id",
+			Path:   "/items/:scid",
 			Handle: views.Item,
 		},
 		{
-			Path:   "/images/:id",
+			Path:   "/images/:scid",
 			Handle: views.Images,
+		},
+		{
+			Path:   "/files/:scid",
+			Handle: views.Files,
 		},
 		{
 			Path:   "/users/",
@@ -78,15 +74,23 @@ func defineViewsRoutes(app *fiber.App, mw *middleware.Middleware) {
 			Path:   "/users/new",
 			Handle: views.NewUser,
 		},
+		{
+			Path:   "/users/:wallet",
+			Handle: views.User,
+		},
 	}
 
 	// Register view routes
 	for _, route := range viewRoutes {
-		viewsGroup.Get(route.Path, route.Handle)
+		viewsGroup.Get(
+			route.Path,
+			route.Handle,
+		)
 	}
 	// Actions
-	viewsGroup.Post("users/submit", views.SubmitUser)
+	viewsGroup.Post("/users/submit", views.SubmitUser)
 	viewsGroup.Post("/items/submit", views.SubmitItem)
+
 }
 
 // DefineAPIRoutes defines routes for APIs
@@ -107,13 +111,14 @@ func defineAPIRoutes(app *fiber.App, mw *middleware.Middleware) {
 	// here there be monsters
 	roles := []string{"user"}
 	apiGroup.Use(mw.AuthRequired(roles[0]))
+
 	// Define API routes for items
 	defineResourceRoutes(
 		apiGroup,
 		"items",
 		api.AllItems,
 		api.ItemByID,
-		api.CreateItem,
+		api.CreateItemOrder,
 		api.UpdateItem,
 		api.DeleteItem,
 	)
@@ -124,7 +129,7 @@ func defineAPIRoutes(app *fiber.App, mw *middleware.Middleware) {
 		"users",
 		api.AllUsers,
 		api.UserByID,
-		api.CreateUser,
+		api.CreateUserOrder,
 		api.UpdateUser,
 		api.DeleteUser,
 	)

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/gofiber/fiber/v2/log"
 	"github.com/secretnamebasis/secret-site/app/config"
 	"github.com/secretnamebasis/secret-site/app/integrations/dero"
 )
@@ -17,7 +16,7 @@ type User struct {
 	// Wallet stores the DERO wallet address of the user.
 	Wallet string `json:"wallet"`
 	// Password stores the hashed password of the user.
-	Password string `json:"password"`
+	Password []byte `json:"password"`
 	// Role represents the roles assigned to the user.
 	Role []string `json:"roles"`
 	// LastSignIn stores the timestamp of the user's last sign-in.
@@ -38,8 +37,8 @@ func (u *User) Initialize() *User {
 		Wallet:    u.Wallet,
 		Password:  u.Password,
 		Role:      []string{"user"},
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedAt: u.CreatedAt,
+		UpdatedAt: u.UpdatedAt,
 	}
 }
 
@@ -56,7 +55,7 @@ func (u *User) Validate() error {
 	}
 
 	// when creating a user... they don't have a password on file yet
-	if u.Password == "" {
+	if u.Password == nil {
 		return errors.New("password cannot be empty")
 	}
 	// Add more validation rules as needed
@@ -65,19 +64,20 @@ func (u *User) Validate() error {
 
 // hasValidWallet checks if the provided wallet address is valid
 func hasValidWallet(wallet string) error {
-	// Attempt to fetch the balance of the wallet address
+	// Attempts to fetch the encrypted balance of the wallet address
 	_, err := dero.GetEncryptedBalance(config.NodeEndpoint, wallet)
 	if err != nil {
-		log.Errorf("reg: %s", err)
+		return err
 	}
-	return err
+	return nil
 }
 
 // validateUserData checks if the provided user data is valid
 func (u *User) isEmpty() error {
 	if u.Name == "" ||
 		u.Wallet == "" ||
-		u.ID == 0 {
+		u.ID == 0 ||
+		u.Password == nil {
 		return errors.New("user and wallet fields are required")
 	}
 	return nil

@@ -1,17 +1,13 @@
 package views
 
 import (
-	"encoding/base64"
-	"errors"
-	"io"
+	"bytes"
 	"net/http"
-	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/secretnamebasis/secret-site/app/api"
 	"github.com/secretnamebasis/secret-site/app/config"
 	"github.com/secretnamebasis/secret-site/app/integrations/dero"
-	"github.com/secretnamebasis/secret-site/app/models"
 )
 
 // NewItem renders the new item page
@@ -26,9 +22,11 @@ func NewItem(c *fiber.Ctx) error {
 	data := struct {
 		Title   string
 		Address string
+		Failed  bool // Add the Failed field
 	}{
-		Title:   config.APP_NAME,
+		Title:   config.Domain,
 		Address: addr.String(),
+		Failed:  false, // Initially set to false
 	}
 
 	// Render the template
@@ -42,65 +40,113 @@ func NewItem(c *fiber.Ctx) error {
 	return nil
 }
 
-// CreateItem handles the form submission for creating a new item
+// SubmitItem handles the form submission for creating a new item
 func SubmitItem(c *fiber.Ctx) error {
+	// Call api.CreateItem asynchronously
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- api.CreateItemOrder(c)
+	}()
 
-	// Parse form data
-	form, err := c.MultipartForm()
-	if err != nil {
-		return err
+	// Wait for the response from api.CreateItem
+	if err := <-errCh; err != nil {
+		return fiber.NewError(http.StatusInternalServerError, "Internal Server Error")
 	}
-	// Extract form values
 
-	// Check if an image file was uploaded
-	var imageBase64 string
-	imageBase64 = ""
-	if file, ok := form.File["itemdata.image"]; ok && len(file) > 0 {
-		// Check MIME type of the uploaded file
-		imageFile, err := file[0].Open()
-		if err != nil {
-			return err
+	// Read the response body
+	responseBody := c.Response().Body()
+
+	// Check if the response body is non-empty
+	if len(responseBody) > 0 {
+		// Switch based on the content of the response body
+		switch {
+		case bytes.Contains(
+			responseBody,
+			[]byte(
+				"item with the same scid already exists",
+			),
+		):
+			return handleNewItemFailure(
+				c,
+				"An item with the same SCID already exists. Please choose a different SCID.",
+			)
+		case bytes.Contains(
+			responseBody,
+			[]byte(
+				"item with the same title already exists",
+			),
+		):
+			return handleNewItemFailure(
+				c,
+				"An item with the same Title already exists. Please choose a different Title.",
+			)
+		case bytes.Contains(
+			responseBody,
+			[]byte(
+				"invalid wallet address",
+			),
+		):
+			return handleNewItemFailure(
+				c,
+				"Invalid wallet address. Please provide a valid DERO wallet address.",
+			)
+
+		case bytes.Contains(
+			responseBody,
+			[]byte(
+				"error invalid password",
+			),
+		):
+			return handleNewItemFailure(
+				c,
+				"Invalid password. Please provide a valid password.",
+			)
+
+		case bytes.Contains(
+			responseBody,
+			[]byte(
+				"user does not exist",
+			),
+		):
+			return handleNewItemFailure(
+				c,
+				"User is not registered. Please register.",
+			)
 		}
-		defer imageFile.Close()
-
-		// Read the first 512 bytes to detect the MIME type
-		buffer := make([]byte, 512)
-		_, err = imageFile.Read(buffer)
-		if err != nil {
-			return err
-		}
-
-		// Reset the file offset to start
-		_, err = imageFile.Seek(0, io.SeekStart)
-		if err != nil {
-			return err
-		}
-
-		// Detect MIME type
-		mimeType := http.DetectContentType(buffer)
-		if !strings.HasPrefix(mimeType, "image/") {
-			// Return error if the uploaded file is not an image
-			return errors.New("invalid file format, please upload an image")
-		}
-
-		// Read file contents
-		imageBytes, err := io.ReadAll(imageFile)
-		if err != nil {
-			return err
-		}
-
-		// Encode image bytes as base64
-		imageBase64 = base64.StdEncoding.EncodeToString(imageBytes)
 	}
-	var item models.JSON_Item_Order
-
-	item.Title = form.Value["title"][0]
-	// Convert ItemData into bytes
-	item.Description = form.Value["description"][0]
-	item.Image = imageBase64
-
-	api.CreateItem(c)
 
 	// Redirect to /items upon successful form submission
 	return c.Redirect("/items")
+}
+
+// handleNewItemFailure handles the rendering of the registration failure page with a custom message
+func handleNewItemFailure(c *fiber.Ctx, message string) error {
+	// Fetch Dero wallet address
+	addr, err := dero.GetWalletAddress(config.WalletEndpoint)
+	if err != nil {
+		return fiber.NewError(http.StatusInternalServerError, "Failed to fetch Dero wallet address")
+	}
+
+	// Define data for rendering the template
+	data := struct {
+		Title         string
+		Address       string
+		Failed        bool   // Flag indicating whether registration failed
+		FailedMessage string // Custom failed registration message
+	}{
+		Title:         config.Domain,
+		Address:       addr.String(),
+		Failed:        true, // Set to true indicating registration failure
+		FailedMessage: message,
+	}
+
+	// Render the template again with the notice
+	if err := renderTemplate(c, "app/public/item_new.html", data); err != nil {
+		return fiber.NewError(http.StatusInternalServerError, "Internal Server Error")
+	}
+
+	// Set the Content-Type header
+	c.Set(fiber.HeaderContentType, fiber.MIMETextHTML)
+
+	return nil
 }

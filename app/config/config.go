@@ -6,6 +6,9 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strconv"
+	"strings"
+	"syscall"
 	"time"
 
 	"github.com/deroproject/derohe/rpc"
@@ -20,36 +23,39 @@ type Server struct {
 	EnvPath        string
 	NodeEndpoint   string
 	WalletEndpoint string
+	AppName        string
+	DevAddress     string
+	Domain         string
+	Domainname     string
 }
-
-var (
-	Domain = Env(
-		"DOMAIN",
-	)
-	Domainname = "https://" + Domain
-)
 
 const ()
 
 var (
-	NodeEndpoint      string
-	WalletEndpoint    string
-	Environment       string
-	Port              int
-	ProjectDir        = "./"
-	EnvPath           = ProjectDir + ".env"
-	DatabaseDir       string
-	DeroAddress       *rpc.Address
-	DeroAddressResult rpc.GetAddress_Result
-	DEV_ADDRESS       = Env("DEV_ADDRESS")
-	APP_NAME          = Env("DOMAIN")
+	Domain         string
+	Domainname     string
+	NodeEndpoint   string
+	WalletEndpoint string
+	Environment    string
+	Port           int
+	ProjectDir     = "./"
+	EnvPath        string
+	DatabaseDir    string
+	DeroAddress    *rpc.Address
+	ServerWallet   rpc.GetAddress_Result
+	DevAddress     string
+	AppName        string
+	SimulatorDir   string
 )
 
 // Config func to get env value from key
-func Env(key string) string {
+func Env(envPath, key string) string {
+	if envPath == "" {
+		panic(envPath)
+	}
 
 	// Load .env file
-	err := godotenv.Load(EnvPath)
+	err := godotenv.Load(envPath)
 	if err != nil {
 		fmt.Println("Error loading .env file:", err)
 		return ""
@@ -78,9 +84,16 @@ var (
 		443, //default
 		"server port number",
 	)
+	simFlag = flag.Bool(
+		"simulator",
+		false, //default
+		"run in simulator",
+	)
 )
 
+var delay = 2 * time.Second // Delay for simulator startup
 func Initialize() Server {
+
 	// Parse flags
 	flag.Parse()
 
@@ -88,63 +101,146 @@ func Initialize() Server {
 	Environment = *envFlag
 	Port = *portFlag
 	DatabaseDir = *dbFlag
+	SimulatorDir = "./vendors/derohe/cmd/simulator"
 
+	// Common initialization steps
 	switch Environment {
+	// prod env
 	case "prod":
-		NodeEndpoint = "http://" + Env("DERO_NODE_IP") + ":" + Env("DERO_NODE_PORT") + "/json_rpc"
-		WalletEndpoint = "http://" + Env("DERO_WALLET_IP") + ":" + Env("DERO_WALLET_PORT") + "/json_rpc"
-		// In production environments, we presuppose DERO mainnet
-	case "test":
-		Port = 3000
-		Domainname = "127.0.0.1"
-		NodeEndpoint = "http://" + Env("DERO_SIMULATOR_NODE_IP") + ":" + Env("DERO_SIMULATOR_NODE_PORT") + "/json_rpc"
-		WalletEndpoint = "http://" + Env("DERO_SIMULATOR_WALLET_IP") + ":" + Env("DERO_SIMULATOR_WALLET_PORT") + "/json_rpc"
-		DatabaseDir = "../app/database/"
-		Environment = "test"
-		EnvPath = "../.env." + Environment
-		dir := "../vendors/derohe/cmd/simulator"
-		go func() {
-			if err := launchSimulator(dir); err != nil {
-				log.Println("Error launching simulator:", err)
-			}
-		}()
-	case "dev":
-		Environment = "dev"
-		EnvPath = "./.env." + Environment
-		Port = 3000
-		Domainname = "127.0.0.1"
-		NodeEndpoint = "http://" + Env("DERO_SIMULATOR_NODE_IP") + ":" + Env("DERO_SIMULATOR_NODE_PORT") + "/json_rpc"
-		WalletEndpoint = "http://" + Env("DERO_SIMULATOR_WALLET_IP") + ":" + Env("DERO_SIMULATOR_WALLET0_PORT") + "/json_rpc"
-		// Launch the simulator in the background
-		go func() {
-			dir := "./vendors/derohe/cmd/simulator"
-			if err := launchSimulator(dir); err != nil {
-				log.Println("Error launching simulator:", err)
-			}
-		}()
+		initializeForProd()
 
-		time.Sleep(4 * time.Second)
+	// dev env
+	case "dev": // assumes mainnet wallet
+		initializeForDev()
+	case "sim": // assumes simulator wallets
+		// the db and .env.sim is different
+		// this is to prevent mainnet-testnet conversion errors
+		initializeForSim()
+
+	// test env
+	case "test":
+		initializeForTest()
 	}
 
-	c := Server{
+	if *simFlag {
+		launchSimulatorInBackground(SimulatorDir)
+	}
+
+	// Create and return the server configuration
+	return Server{
 		Port:         Port,
 		Environment:  Environment,
 		DatabasePath: DatabaseDir,
 		EnvPath:      EnvPath,
 		NodeEndpoint: NodeEndpoint,
+		DevAddress:   DevAddress,
+		AppName:      AppName,
+		Domain:       Domain,
+		Domainname:   Domainname,
 	}
+}
 
-	return c
+func initializeForTest() {
+	Port = 3000
+	Environment = "test"
+	Domainname = "127.0.0.1"
+	EnvPath = "../../.env." + Environment
+	NodeEndpoint = buildEndpoint("DERO_SIMULATOR_NODE_IP", "DERO_SIMULATOR_NODE_PORT")
+	WalletEndpoint = buildEndpoint("DERO_SIMULATOR_WALLET_IP", "DERO_SIMULATOR_WALLET0_PORT")
+	DatabaseDir = "../database/"
+	SimulatorDir = "../../vendors/derohe/cmd/simulator"
+}
+
+func initializeForDev() {
+	Environment = "dev"
+	EnvPath = "./.env." + Environment
+	Port = 3000
+	Domainname = "127.0.0.1"
+	NodeEndpoint = buildEndpoint("DERO_NODE_IP", "DERO_NODE_PORT")
+	WalletEndpoint = buildEndpoint("DERO_WALLET_IP", "DERO_WALLET_PORT")
+}
+
+func initializeForSim() {
+	// this allows for development in non-mainnet conditions, eg simulator
+	Environment = "sim"
+	EnvPath = "./.env." + Environment
+	Port = 3000
+	Domainname = "127.0.0.1"
+	NodeEndpoint = buildEndpoint("DERO_SIMULATOR_NODE_IP", "DERO_SIMULATOR_NODE_PORT")
+	WalletEndpoint = buildEndpoint("DERO_SIMULATOR_WALLET_IP", "DERO_SIMULATOR_WALLET0_PORT")
+
+}
+
+func initializeForProd() {
+	// In production environments, we presuppose DERO mainnet
+	NodeEndpoint = buildEndpoint("DERO_NODE_IP", "DERO_NODE_PORT")
+	WalletEndpoint = buildEndpoint("DERO_WALLET_IP", "DERO_WALLET_PORT")
+}
+
+func buildEndpoint(ipEnvVar, portEnvVar string) string {
+	return "http://" + Env(EnvPath, ipEnvVar) + ":" + Env(EnvPath, portEnvVar) + "/json_rpc"
+}
+
+func launchSimulatorInBackground(dir string) {
+	go func() {
+		if err := launchSimulator(dir); err != nil {
+			log.Println("Error launching simulator:", err)
+		}
+	}()
+	time.Sleep(delay)
 }
 
 func launchSimulator(dir string) error {
-	cmd := exec.Command("go", "run", ".", "--http-address=0.0.0.0:8081")
-	cmd.Dir = dir
-	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("error starting command: %v", err)
+	// Start the simulator in a separate goroutine
+	go func() {
+		// Start the simulator
+		cmd := exec.Command("go", "run", ".", "--http-address=0.0.0.0:8081")
+		cmd.Dir = dir
+		if err := cmd.Start(); err != nil {
+			log.Printf("Failed to start simulator: %v\n", err)
+			return
+		}
+
+		// Wait for the simulator to finish
+		if err := cmd.Wait(); err != nil {
+			log.Printf("Error waiting for simulator to finish: %v\n", err)
+		}
+	}()
+
+	// Check if the simulator is already running and kill it if necessary
+	if err := killSimulator(); err != nil {
+		return err
 	}
-	if err := cmd.Wait(); err != nil {
-		return fmt.Errorf("error waiting for command: %v", err)
+	return nil
+}
+
+// killSimulator tries to kill the running simulator process
+func killSimulator() error {
+	// Find the process ID of the simulator
+	out, err := exec.Command("pgrep", "simulator").Output()
+	if err != nil {
+		// If pgrep failed, the simulator is not running
+		if strings.Contains(err.Error(), "exit status 1") {
+			return nil
+		}
+		return fmt.Errorf("error finding simulator process ID: %v", err)
 	}
+
+	// Parse the process ID
+	pidStr := strings.TrimSpace(string(out))
+	pid, err := strconv.Atoi(pidStr)
+	if err != nil {
+		return fmt.Errorf("error parsing simulator process ID: %v", err)
+	}
+
+	// Get the process and send a SIGTERM signal to kill it
+	process, err := os.FindProcess(pid)
+	if err != nil {
+		return fmt.Errorf("error finding simulator process: %v", err)
+	}
+	if err := process.Signal(syscall.SIGTERM); err != nil {
+		return fmt.Errorf("error killing simulator process: %v", err)
+	}
+	log.Printf("Simulator process %d killed", pid)
 	return nil
 }

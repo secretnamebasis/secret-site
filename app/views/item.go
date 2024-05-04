@@ -3,7 +3,10 @@ package views
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
+	"strings"
 
+	"github.com/deroproject/derohe/rpc"
 	"github.com/gofiber/fiber/v2"
 	"github.com/secretnamebasis/secret-site/app/config"
 	"github.com/secretnamebasis/secret-site/app/controllers"
@@ -16,6 +19,7 @@ type ItemData struct {
 	Title       string
 	Address     string
 	Item        models.Item
+	SC_Data     rpc.GetSC_Result
 	ImageUrl    string
 	Image       string
 	Description string
@@ -29,22 +33,90 @@ func Item(c *fiber.Ctx) error {
 	}
 
 	// Get the item ID from the request parameters
-	id := c.Params("id")
+	scid := c.Params("scid")
+
+	sc_data, err := dero.GetSCID(
+		config.NodeEndpoint,
+		scid,
+	)
+	if err != nil {
+		return c.Status(
+			fiber.StatusNotFound,
+		).JSON(
+			fiber.Map{
+				"message": err.Error(),
+				"status":  "error",
+			},
+		)
+	}
+	if sc_data.Code == "" {
+		return c.Status(
+			fiber.StatusNotFound,
+		).JSON(
+			fiber.Map{
+				"message": "lol",
+				"status":  "error",
+			},
+		)
+	}
+	// Truncate key "C" value to display first 16 bytes followed by an ellipsis and then the next 16 bytes
+	cValue := sc_data.VariableStringKeys["C"].(string)
+	if len(cValue) > 32 {
+		truncatedValue := cValue[:16] + "..." + cValue[len(cValue)-16:]
+		sc_data.VariableStringKeys["C"] = truncatedValue
+	}
+
+	// Decode hex values in VariableStringKeys for all keys except "c"
+	for k, v := range sc_data.VariableStringKeys {
+		if k != "C" { // Exclude key "c"
+			hexValue, ok := v.(string)
+			if ok && isHex(hexValue) {
+				decodedValue := decodeHex(hexValue)
+				// Convert certain keys to string after decoding
+				if k == "artificerAddr" || k == "creatorAddr" || k == "owner" {
+					result, err := rpc.NewAddressFromCompressedKeys([]byte(decodedValue))
+					if err != nil {
+						return err
+					}
+					// Handle non-printable characters or characters that can't be directly represented as strings
+					sc_data.VariableStringKeys[k] = result.String()
+				} else {
+					sc_data.VariableStringKeys[k] = decodedValue
+				}
+			}
+		}
+	}
 
 	// Retrieve the item by ID
-	item, err := controllers.GetItemByID(id)
+	item, err := controllers.GetItemBySCID(scid)
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"message": err.Error(), "status": "error"})
+		return c.Status(
+			fiber.StatusNotFound,
+		).JSON(
+			fiber.Map{
+				"message": err.Error(),
+				"status":  "error",
+			},
+		)
 	}
+
 	var itemData models.ItemData
 	if err := json.Unmarshal(item.Data, &itemData); err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"message": err.Error(), "status": "error"})
+		return c.Status(
+			fiber.StatusNotFound,
+		).JSON(
+			fiber.Map{
+				"message": err.Error(),
+				"status":  "error",
+			},
+		)
 	}
 	// Define data for rendering the template
 	data := ItemData{
-		Title:       config.APP_NAME,
+		Title:       config.Domain,
 		Address:     addr.String(),
 		Item:        item,
+		SC_Data:     *sc_data,
 		ImageUrl:    item.ImageURL,
 		Image:       itemData.Image,
 		Description: itemData.Description,
@@ -59,4 +131,24 @@ func Item(c *fiber.Ctx) error {
 	c.Set(fiber.HeaderContentType, fiber.MIMETextHTML)
 
 	return nil
+}
+
+// isHex checks if a string is in hexadecimal format
+func isHex(s string) bool {
+	for _, c := range s {
+		if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+			return false
+		}
+	}
+	return true
+}
+
+// decodeHex decodes a hexadecimal string to its ASCII representation
+func decodeHex(hexString string) string {
+	var str strings.Builder
+	for i := 0; i < len(hexString); i += 2 {
+		b, _ := strconv.ParseUint(hexString[i:i+2], 16, 8)
+		str.WriteByte(byte(b))
+	}
+	return str.String()
 }

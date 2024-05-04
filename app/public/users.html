@@ -6,7 +6,10 @@
             <section>
                 <ul>
                     {{range .Users}}
-                    {{.Name}}
+                    <div class="user">
+                        <h3><a href="/users/{{.Wallet}}">{{.Name}}</a></h3>
+                        <!-- Check if the item has an image -->
+                    </div>
                     {{end}}
                 </ul>
             </section>

@@ -10,14 +10,14 @@ import (
 	"github.com/secretnamebasis/secret-site/app/models"
 )
 
-func Images(c *fiber.Ctx) error {
+func Files(c *fiber.Ctx) error {
 	// Extract the image ID from the request URL
 	scid := c.Params("scid")
 
 	// Retrieve the item by ID from the database
 	item, err := controllers.GetItemBySCID(scid)
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).SendString("Image not found")
+		return c.Status(fiber.StatusNotFound).SendString("File not found")
 	}
 
 	var itemData models.ItemData
@@ -25,18 +25,20 @@ func Images(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"message": err.Error(), "status": "error"})
 	}
 
-	encoded, err := base64.StdEncoding.DecodeString(itemData.Image)
+	// Decode the base64 encoded file data
+	decoded, err := base64.StdEncoding.DecodeString(itemData.File)
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"message": err.Error(), "status": "error"})
-
 	}
 
-	// Detect the content type of the image data
-	contentType := http.DetectContentType([]byte(encoded))
-
 	// Set the appropriate content type header
+	contentType := http.DetectContentType(decoded)
 	c.Set(fiber.HeaderContentType, contentType)
 
-	// Send the image data in the response
-	return c.Send([]byte(encoded))
+	// Set the Content-Disposition header for downloading
+	filename := item.FileURL
+	c.Set(fiber.HeaderContentDisposition, "attachment; filename="+filename)
+
+	// Send the file data in the response
+	return c.Send(decoded)
 }
