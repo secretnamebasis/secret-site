@@ -19,13 +19,13 @@ type ItemsData struct {
 }
 
 func Items(c *fiber.Ctx) error {
-	addr, err := dero.GetWalletAddress()
+	addr, err := dero.GetWalletAddress(config.WalletEndpoint)
 	if err != nil {
 		return fiber.NewError(http.StatusInternalServerError, "Failed to fetch Dero wallet address")
 	}
 	var items []models.Item
 	// Retrieve blog posts
-	items, err = controllers.AllItems()
+	items, err = controllers.AllItemTitles()
 	if err != nil {
 		return fiber.NewError(http.StatusInternalServerError, "Failed to retrieve items")
 	}
@@ -39,7 +39,7 @@ func Items(c *fiber.Ctx) error {
 
 	// Define data for rendering the template
 	data := ItemsData{
-		Title:   config.APP_NAME,
+		Title:   config.Domain,
 		Address: addr.String(),
 		Items:   items,
 	}

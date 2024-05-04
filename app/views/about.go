@@ -12,7 +12,7 @@ import (
 // Home renders the home page
 func About(c *fiber.Ctx) error {
 	// Fetch Dero wallet address
-	addr, err := dero.GetWalletAddress()
+	addr, err := dero.GetWalletAddress(config.WalletEndpoint)
 	if err != nil {
 		return fiber.NewError(http.StatusInternalServerError, "Failed to fetch Dero wallet address")
 	}
@@ -22,7 +22,7 @@ func About(c *fiber.Ctx) error {
 		Title   string
 		Address string
 	}{
-		Title:   config.APP_NAME,
+		Title:   config.Domain,
 		Address: addr.String(),
 	}
 

@@ -23,9 +23,9 @@ type App struct {
 func MakeApp(c config.Server) *App {
 	app := fiber.New(
 		fiber.Config{
-			AppName:               config.APP_NAME,
+			AppName:               config.Domain,
 			CaseSensitive:         true,
-			DisableStartupMessage: false,
+			DisableStartupMessage: true,
 		},
 	)
 
@@ -37,17 +37,19 @@ func MakeApp(c config.Server) *App {
 func (a *App) StartApp(c config.Server) error {
 	switch config.Environment {
 	case "prod":
+		var cert = "/etc/letsencrypt/live/" + config.Domain + "/cert.pem"
+		var privkey = "/etc/letsencrypt/live/" + config.Domain + "/privkey.pem"
 		return a.ListenTLS(
-			":"+fmt.Sprintf("%d", c.Port),
-			"/etc/letsencrypt/live/"+config.Domain+"/cert.pem",
-			"/etc/letsencrypt/live/"+config.Domain+"/privkey.pem",
+			fmt.Sprintf(":%d", c.Port),
+			cert,
+			privkey,
 		)
-	case "dev", "test":
+	case "dev", "sim", "test":
 		return a.Listen(
 			fmt.Sprintf(":%d", c.Port),
 		)
 	default:
-		return fmt.Errorf("unsupported environment: %s", config.Env)
+		return fmt.Errorf("unsupported environment: %s", config.Environment)
 	}
 }
 
@@ -59,7 +61,11 @@ func (a *App) WaitForShutdown() error {
 
 	// Listen for termination signals
 	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(
+		sigChan,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+	)
 	<-sigChan
 
 	// Shutdown the server gracefully

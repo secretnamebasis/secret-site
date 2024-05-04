@@ -9,14 +9,15 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
 	"testing"
 	"time"
 
+	"github.com/deroproject/derohe/rpc"
 	"github.com/secretnamebasis/secret-site/app"
 	"github.com/secretnamebasis/secret-site/app/config"
 	"github.com/secretnamebasis/secret-site/app/cryptography"
 	"github.com/secretnamebasis/secret-site/app/database"
+	"github.com/secretnamebasis/secret-site/app/integrations/dero"
 	"github.com/secretnamebasis/secret-site/app/models"
 )
 
@@ -66,28 +67,119 @@ import (
 // SERVER
 const // Endpoint configuration
 (
-	endpoint      = "http://127.0.0.1:3000/api"
-	routeApiUsers = "/users/"
-	routeApiItems = "/items/"
-	user          = "secret"
-	pass          = "pass"
-	user2         = pass
-	ID            = "1"
+	endpoint       = "http://127.0.0.1:3000/api"
+	routeApiUsers  = "/users/"
+	routeApiItems  = "/items/"
+	routeApiAssets = "/assets/"
+	user           = "secret"
+	pass           = "pass"
+	user2          = pass
+	ID             = "1"
 )
 
 func // CONFIG
-configServer() config.Server {
-	config.Domainname = "127.0.0.1"
-	config.Environment = "test"
-	config.DatabaseDir = "../app/database/"
-	config.EnvPath = "./.env"
-	c := config.Server{
-		Port:         3000, // production runs with :443 for TLS connections
-		Env:          config.Environment,
-		DatabasePath: config.DatabaseDir,
-		EnvPath:      config.EnvPath,
+configure() error {
+	config.NodeEndpoint = "http://" +
+		config.Env(
+			config.EnvPath,
+			"DERO_SIMULATOR_NODE_IP") +
+		":" +
+		config.Env(
+			config.EnvPath,
+			"DERO_SIMULATOR_NODE_PORT",
+		) +
+		"/json_rpc"
+	WalletEndpoint := "http://" +
+		config.Env(
+			config.EnvPath,
+			"DERO_SIMULATOR_WALLET_IP") +
+		":" +
+		config.Env(
+			config.EnvPath,
+			"DERO_SIMULATOR_WALLET1_PORT",
+		) +
+		"/json_rpc"
+
+	err := dero.CallRPC(
+		WalletEndpoint,
+		&config.ServerWallet,
+		"GetAddress",
+	)
+	if err != nil {
+		return err
 	}
-	return c
+
+	successCreateAddress = config.ServerWallet.Address
+
+	successUserCreateData = models.User{
+		Name:   user,
+		Wallet: successCreateAddress,
+	}
+
+	WalletEndpoint1 := "http://" +
+		config.Env(
+			config.EnvPath,
+			"DERO_SIMULATOR_WALLET_IP") +
+		":" +
+		config.Env(
+			config.EnvPath,
+			"DERO_SIMULATOR_WALLET2_PORT",
+		) +
+		"/json_rpc"
+
+	err = dero.CallRPC(
+		WalletEndpoint1,
+		&config.ServerWallet,
+		"GetAddress",
+	)
+	if err != nil {
+		return err
+	}
+	successCreateSecondAddress = config.ServerWallet.Address
+	successUserCreateSecondData = models.User{
+		Name:   user2,
+		Wallet: successCreateSecondAddress,
+	}
+	successUpdateAddress = successCreateAddress
+	successUserUpdateData = models.User{
+		Name:   user,
+		Wallet: successUpdateAddress,
+	}
+
+	scid,
+		err = dero.MintContract(
+		WalletEndpoint,
+		dero.NFAContract(
+			"1",
+			"simple",
+			"smart-contract",
+			"image",
+			"test",
+			successCreateAddress,
+		),
+		successCreateSecondAddress, // you can't send to self
+	)
+
+	if err != nil {
+		return err
+	}
+
+	// Success cases
+	successItemCreateData = models.JSON_Item_Order{
+		Title:       "First Post",
+		Description: "love you Joyce",
+		SCID:        scid.TXID,
+		Image:       LittleImg,
+	}
+
+	successItemUpdateData = models.JSON_Item_Order{
+		Title:       "squirrel",
+		Description: "Some words to drive you nuts",
+		SCID:        scid.TXID,
+		Image:       "",
+	}
+
+	return nil
 }
 
 type // RESPONSE
@@ -97,20 +189,27 @@ response struct {
 }
 
 var // DELAY
-delay = 0 * time.Nanosecond
+delay = 1 * time.Nanosecond
 
-func briefPause() { time.Sleep(1 * time.Millisecond) }
+func pause(i time.Duration) { time.Sleep(i * time.Second) }
 
 // MAIN
 func TestAPI(t *testing.T) {
-	// Check if testing framework is empty
-	checkTestingFramework(t)
 
 	// Config server
-	cfg := configServer()
+	cfg := config.Initialize()
 
 	// Check if config is empty
 	checkConfig(cfg)
+
+	// load simulator wallets
+	if err := configure(); err != nil {
+		log.Fatalf("failed to load wallets: %s", err)
+	}
+	pause(1)
+
+	// Check if testing framework is empty
+	checkTestingFramework(t)
 
 	// Initialize the database with configs
 	initializeDatabase(cfg)
@@ -120,14 +219,6 @@ func TestAPI(t *testing.T) {
 
 	// Check if app is empty
 	checkApp(app)
-
-	// Let the server turn on
-	briefPause()
-
-	//
-	// if err := launchSimulator(); err != nil {
-	// 	log.Fatal(err)
-	// }
 
 	// // Run tests with configs
 	runTests(t, cfg)
@@ -177,41 +268,8 @@ func startServer(t *testing.T, c config.Server) *app.App { // start the server
 	return a
 }
 
-func launchSimulator() error {
-	dir := "../vendors/derohe/cmd/simulator"
-	// Command to execute the simulator.go file
-	cmd := exec.Command("go", "run", ".", "--http-address=0.0.0.0:8081")
-
-	// Set the working directory
-	cmd.Dir = dir
-
-	// Create a pipe to capture the command output
-	// stdoutPipe, err := cmd.StdoutPipe()
-	// if err != nil {
-	// 	return fmt.Errorf("error creating stdout pipe: %v", err)
-	// }
-
-	// Start the command
-	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("error starting command: %v", err)
-	}
-
-	// Create a scanner to read from the pipe
-	// scanner := bufio.NewScanner(stdoutPipe)
-	// for scanner.Scan() {
-	// 	line := scanner.Text()
-	// 	fmt.Println(line) // Do something with the output line
-	// }
-
-	// Wait for the command to finish
-	if err := cmd.Wait(); err != nil {
-		return fmt.Errorf("error waiting for command: %v", err)
-	}
-
-	return nil
-}
 func runTests(t *testing.T, c config.Server) { // run tests
-	log.Printf("Environment: %s\n", c.Env)
+	log.Printf("Environment: %s\n", c.Environment)
 	for _, tc := range testCases {
 		tc := tc // Capture range variable
 		t.Run(tc.name, tc.fn)
@@ -226,7 +284,7 @@ func stopServer(t *testing.T, a *app.App) { // stop the server
 	}
 }
 func deleteTestDB(c config.Server) { // clean up
-	err := os.Remove(c.DatabasePath + c.Env + ".db")
+	err := os.Remove(c.DatabasePath + c.Environment + ".db")
 	if err != nil {
 		log.Fatalf("Error deleting database: %s\n", err)
 	}
@@ -331,6 +389,7 @@ var (
 			"Retrieve error when User 1 does not exist",
 			retrieveUserTestFail,
 		},
+		// this is the start
 		{
 			"Create success when User 1 is valid",
 			createUserTestSuccess,
@@ -339,6 +398,7 @@ var (
 			"Create fail when User 1 already exists",
 			createUserTestDuplicateDataFail,
 		},
+		// we want to know that they refer...
 		{
 			"Create success when User 2 is valid",
 			createUserTestSecondSuccess,
@@ -431,6 +491,7 @@ var (
 )
 
 // TESTS
+
 func // Retrieve All Items
 checkItems() (string, error) {
 	return action(
@@ -565,7 +626,7 @@ func createItemTestSuccess(t *testing.T) {
 		// Validate created
 		url, urlOK := result["image_url"].(string)
 		if !urlOK || url == "" {
-			t.Errorf("Expected title to be `"+config.Domainname+"'images/1` got '%s'", url)
+			t.Errorf("Expected title to be `"+config.Domain+"'images/1` got '%s'", url)
 			return false
 		}
 
@@ -576,21 +637,26 @@ func createItemTestSuccess(t *testing.T) {
 			return false
 		}
 
-		fmt.Printf("ENCODED DATA: %s\n", encodedData)
+		// fmt.Printf("ENCODED DATA: %s\n", encodedData)
 		// Decode base64-encoded data
 		decodedData, err := base64.StdEncoding.DecodeString(encodedData)
 		if err != nil {
 			t.Errorf("Expected to dedcode")
 			return false
 		}
-		fmt.Printf("DECODED DATA: %s\n", decodedData)
+		// fmt.Printf("DECODED DATA: %s\n", decodedData)
 		// Decrypt the data
-		decryptedData, err := cryptography.DecryptData(decodedData, config.Env("SECRET"))
+		decryptedData, err := cryptography.DecryptData(
+			decodedData, config.Env(
+				config.EnvPath,
+				"SECRET",
+			),
+		)
 		if err != nil {
 			t.Errorf("Error decrypting data: %v", err)
 			return false
 		}
-		fmt.Printf("DECRYPTED DATA: %s\n", decryptedData)
+		// fmt.Printf("DECRYPTED DATA: %s\n", decryptedData)
 		// Unmarshal decrypted data into a struct
 		var itemData models.ItemData
 		if err := json.Unmarshal(decryptedData, &itemData); err != nil {
@@ -673,7 +739,7 @@ retrieveItemTestSuccess(t *testing.T) {
 			t.Errorf("Expected 'data' field to be present")
 			return false
 		}
-		fmt.Printf("ENCODED DATA: %s\n", encodedData)
+		// fmt.Printf("ENCODED DATA: %s\n", encodedData)
 
 		// Decode base64-encoded data
 		decodedData, err := base64.StdEncoding.DecodeString(encodedData)
@@ -681,7 +747,7 @@ retrieveItemTestSuccess(t *testing.T) {
 			t.Errorf("Expected to dedcode")
 			return false
 		}
-		fmt.Printf("DECODED DATA: %s\n", decodedData)
+		// fmt.Printf("DECODED DATA: %s\n", decodedData)
 		// Unmarshal decrypted data into a struct
 		var itemData models.ItemData
 		if err := json.Unmarshal(decodedData, &itemData); err != nil {
@@ -742,7 +808,7 @@ retrieveItemTestUpdateSuccess(t *testing.T) {
 			t.Errorf("Expected 'data' field to be present")
 			return false
 		}
-		fmt.Printf("ENCODED DATA: %s\n", encodedData)
+		// fmt.Printf("ENCODED DATA: %s\n", encodedData)
 
 		// Decode base64-encoded data
 		decodedData, err := base64.StdEncoding.DecodeString(encodedData)
@@ -750,7 +816,7 @@ retrieveItemTestUpdateSuccess(t *testing.T) {
 			t.Errorf("Expected to dedcode")
 			return false
 		}
-		fmt.Printf("DECODED DATA: %s\n", decodedData)
+		// fmt.Printf("DECODED DATA: %s\n", decodedData)
 		// Unmarshal decrypted data into a struct
 		var itemData models.ItemData
 		if err := json.Unmarshal(decodedData, &itemData); err != nil {
@@ -1095,6 +1161,7 @@ var // DATA
 	// Item Test Data
 	//
 	// Fail cases
+
 	// we don't store empty content
 	failItemCreateData = models.JSON_Item_Order{
 		Title:       "title",
@@ -1110,11 +1177,14 @@ var // DATA
 	successItemCreateData = models.JSON_Item_Order{
 		Title:       "First Post",
 		Description: "love you Joyce",
-		Image:       img,
+		SCID:        scid.TXID,
+		Image:       LittleImg,
 	}
+
 	successItemUpdateData = models.JSON_Item_Order{
 		Title:       "squirrel",
 		Description: "Some words to drive you nuts",
+		SCID:        scid.TXID,
 		Image:       "",
 	}
 
@@ -1132,9 +1202,10 @@ var // DATA
 		Wallet: failUpdateAddress,
 	}
 	// Success cases
-	successCreateAddress       = "dero1qynmz4tgkmtmmspqmywvjjmtl0x8vn5ahz4xwaldw0hu6r5500hryqgptvnj8"
-	successCreateSecondAddress = "dero1qykz2fqtptcnvmr65042jwljpwmglnezax4wms5w4htat20vzsdauqq58979y"
-	successUpdateAddress       = "dero1qyvqpdftj8r6005xs20rnflakmwa5pdxg9vcjzdcuywq2t8skqhvwqglt6x0g"
+	scid                       rpc.Transfer_Result
+	successCreateAddress       string
+	successCreateSecondAddress string
+	successUpdateAddress       string
 
 	successUserCreateData = models.User{
 		Name:   user,
@@ -1150,6 +1221,7 @@ var // DATA
 	}
 )
 
-var ( // base64encoded image
-	img = "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+// base64encoded images
+var ( // small
+	LittleImg = `iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFUlEQVR42mNkAAIAAAoAAv/lxKUAAAAASUVORK5CYII=`
 )

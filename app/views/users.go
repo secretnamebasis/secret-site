@@ -1,7 +1,6 @@
 package views
 
 import (
-	"fmt"
 	"net/http"
 	"sort"
 
@@ -21,7 +20,7 @@ type UsersData struct {
 }
 
 func Users(c *fiber.Ctx) error {
-	addr, err := dero.GetWalletAddress()
+	addr, err := dero.GetWalletAddress(config.WalletEndpoint)
 	if err != nil {
 		return fiber.NewError(http.StatusInternalServerError, "Failed to fetch Dero wallet address")
 	}
@@ -41,11 +40,11 @@ func Users(c *fiber.Ctx) error {
 
 	// Define data for rendering the template
 	data := UsersData{
-		Title:   config.APP_NAME,
+		Title:   config.Domain,
 		Address: addr.String(),
 		Users:   users,
 	}
-	fmt.Printf("users: %+v", users)
+
 	// Render the template
 	if err := renderTemplate(c, "app/public/users.html", data); err != nil {
 		return fiber.NewError(http.StatusInternalServerError, "Internal Server Error")

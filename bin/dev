@@ -1,3 +1,20 @@
 #!/bin/bash
 
-go run . -env=dev -port=3000 -db=./app/database/
+# Set default values
+env="dev"
+bool="false"
+
+# Check if an argument is provided
+if [ $# -eq 1 ]; then
+    # Set environment based on the provided argument
+    if [ "$1" == "sim" ]; then
+        env="sim"
+        bool="true"
+    elif [ "$1" != "dev" ]; then
+        echo "Invalid environment. Please use 'dev' or 'sim'."
+        exit 1
+    fi
+fi
+
+# Run the application with the specified environment
+go run . -env="$env" -port=3000 -db=./app/database/ -simulator="$bool"
