@@ -114,7 +114,6 @@ func DeleteItem(c *fiber.Ctx) error {
 }
 
 // private functions
-
 func processItemOrderForm(form *multipart.Form, order *models.JSON_Item_Order) error {
 	var imageBase64 string
 	imageBase64 = ""
@@ -149,6 +148,23 @@ func processItemOrderForm(form *multipart.Form, order *models.JSON_Item_Order) e
 		imageBase64 = base64.StdEncoding.EncodeToString(imageBytes)
 	}
 
+	var fileBase64 string
+	fileBase64 = ""
+	if file, ok := form.File["item_data.file"]; ok && len(file) > 0 {
+		fileFile, err := file[0].Open()
+		if err != nil {
+			return err
+		}
+		defer fileFile.Close()
+
+		fileBytes, err := io.ReadAll(fileFile)
+		if err != nil {
+			return err
+		}
+
+		fileBase64 = base64.StdEncoding.EncodeToString(fileBytes)
+	}
+
 	order.User.Name = form.Value["name"][0]
 	order.User.Password = form.Value["password"][0]
 	order.User.Wallet = form.Value["wallet"][0]
@@ -156,8 +172,10 @@ func processItemOrderForm(form *multipart.Form, order *models.JSON_Item_Order) e
 	order.Description = form.Value["description"][0]
 	order.SCID = form.Value["scid"][0]
 	order.Image = imageBase64
+	order.File = fileBase64 // Assuming order.File is a string field to store the base64 representation of the file
 	return nil
 }
+
 func processItemOrderCredentials(c *fiber.Ctx, order *models.JSON_Item_Order) error {
 
 	name, pass, err := getCredentials(c)

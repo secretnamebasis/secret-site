@@ -12,6 +12,7 @@ type JSON_Item_Order struct {
 	SCID        string          `json:"scid"`
 	Description string          `json:"description"`
 	Image       string          `json:"image"`
+	File        string          `json:"file"`
 	User        JSON_User_Order `json:"user"`
 }
 

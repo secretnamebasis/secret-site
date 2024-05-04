@@ -63,6 +63,7 @@ func CreateItemRecord(order *models.JSON_Item_Order) (models.Item, error) {
 		models.ItemData{
 			Description: order.Description,
 			Image:       order.Image,
+			File:        order.File,
 		},
 	)
 	// this should not be a problem...
@@ -92,6 +93,7 @@ func CreateItemRecord(order *models.JSON_Item_Order) (models.Item, error) {
 		return models.Item{}, err
 	}
 	item.Data = encryptedBytes
+
 	item.Initialize()
 
 	// Validate the item
