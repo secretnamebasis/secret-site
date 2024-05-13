@@ -26,6 +26,8 @@ func MakeApp(c config.Server) *App {
 			AppName:               config.Domain,
 			CaseSensitive:         true,
 			DisableStartupMessage: true,
+			StreamRequestBody:     true,
+			BodyLimit:             64 * (1024 ^ 2), // 67,108,864 ; item < 68 MB
 		},
 	)
 
