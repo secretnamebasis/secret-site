@@ -9,22 +9,14 @@ import (
 )
 
 type User struct {
-	// ID represents the unique identifier of the user.
-	ID int `json:"id"`
-	// Name stores the name of the user.
-	Name string `json:"name"`
-	// Wallet stores the DERO wallet address of the user.
-	Wallet string `json:"wallet"`
-	// Password stores the hashed password of the user.
-	Password []byte `json:"password"`
-	// Role represents the roles assigned to the user.
-	Role []string `json:"roles"`
-	// LastSignIn stores the timestamp of the user's last sign-in.
+	ID         int       `json:"id"`
+	Name       string    `json:"name"`
+	Wallet     string    `json:"wallet"`
+	Password   []byte    `json:"password"`
+	Role       []string  `json:"roles"`
 	LastSignIn time.Time `json:"last_sign_in"`
-	// CreatedAt stores the timestamp when the user was created.
-	CreatedAt time.Time `json:"created_at"`
-	// UpdatedAt stores the timestamp when the user was last updated.
-	UpdatedAt time.Time `json:"updated_at"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 }
 
 // NewUser creates a new User instance with the provided data

@@ -11,7 +11,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/deroproject/derohe/rpc"
 	"github.com/joho/godotenv"
 )
 
@@ -26,6 +25,7 @@ type Server struct {
 	AppName        string
 	DevAddress     string
 	Domain         string
+	ServerWallet   string
 }
 
 const ()
@@ -39,8 +39,6 @@ var (
 	ProjectDir     = "./"
 	EnvPath        string
 	DatabaseDir    string
-	DeroAddress    *rpc.Address
-	ServerWallet   rpc.GetAddress_Result
 	DevAddress     string
 	AppName        string
 	SimulatorDir   string
@@ -126,14 +124,15 @@ func Initialize() Server {
 
 	// Create and return the server configuration
 	return Server{
-		Port:         Port,
-		Environment:  Environment,
-		DatabasePath: DatabaseDir,
-		EnvPath:      EnvPath,
-		NodeEndpoint: NodeEndpoint,
-		DevAddress:   DevAddress,
-		AppName:      AppName,
-		Domain:       Domain,
+		Port:           Port,
+		Environment:    Environment,
+		DatabasePath:   DatabaseDir,
+		EnvPath:        EnvPath,
+		NodeEndpoint:   NodeEndpoint,
+		WalletEndpoint: WalletEndpoint,
+		DevAddress:     DevAddress,
+		AppName:        AppName,
+		Domain:         Domain,
 	}
 }
 

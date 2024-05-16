@@ -30,12 +30,12 @@ func CreateItemOrder(c *fiber.Ctx) error {
 		}
 
 	}
-	if err := processItemOrderCredentials(
-		c,
-		&order,
-	); err != nil {
-		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
-	}
+	// if err := processItemOrderCredentials(
+	// 	c,
+	// 	&order,
+	// ); err != nil {
+	// 	return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
+	// }
 
 	// Create the item record
 	item, err := controllers.CreateItemRecord(&order)
@@ -165,9 +165,9 @@ func processItemOrderForm(form *multipart.Form, order *models.JSON_Item_Order) e
 		fileBase64 = base64.StdEncoding.EncodeToString(fileBytes)
 	}
 
-	order.User.Name = form.Value["name"][0]
-	order.User.Password = form.Value["password"][0]
-	order.User.Wallet = form.Value["wallet"][0]
+	// order.User.Name = form.Value["name"][0]
+	// order.User.Password = form.Value["password"][0]
+	// order.User.Wallet = form.Value["wallet"][0]
 	order.Title = form.Value["title"][0]
 	order.Description = form.Value["description"][0]
 	order.SCID = form.Value["scid"][0]

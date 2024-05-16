@@ -79,6 +79,7 @@ const // Endpoint configuration
 
 func // CONFIG
 configure() error {
+
 	config.NodeEndpoint = "http://" +
 		config.Env(
 			config.EnvPath,
@@ -89,6 +90,7 @@ configure() error {
 			"DERO_SIMULATOR_NODE_PORT",
 		) +
 		"/json_rpc"
+
 	WalletEndpoint := "http://" +
 		config.Env(
 			config.EnvPath,
@@ -100,16 +102,17 @@ configure() error {
 		) +
 		"/json_rpc"
 
+	var response rpc.GetAddress_Result
 	err := dero.CallRPC(
 		WalletEndpoint,
-		&config.ServerWallet,
+		&response,
 		"GetAddress",
 	)
 	if err != nil {
 		return err
 	}
 
-	successCreateAddress = config.ServerWallet.Address
+	successCreateAddress = response.Address
 
 	successUserCreateData = models.User{
 		Name:   user,
@@ -127,15 +130,17 @@ configure() error {
 		) +
 		"/json_rpc"
 
+	// empty it out
+	response = rpc.GetAddress_Result{}
 	err = dero.CallRPC(
 		WalletEndpoint1,
-		&config.ServerWallet,
+		&response,
 		"GetAddress",
 	)
 	if err != nil {
 		return err
 	}
-	successCreateSecondAddress = config.ServerWallet.Address
+	successCreateSecondAddress = response.Address
 	successUserCreateSecondData = models.User{
 		Name:   user2,
 		Wallet: successCreateSecondAddress,
@@ -1046,15 +1051,17 @@ func createUserTestSecondSuccess(t *testing.T) {
 	execute(t, createUser(successUserCreateSecondData), validateFunc)
 }
 func // RETRIEVE
-retrieveUser() (string, error) {
+retrieveUser(address string) (string, error) {
 	return action(
 		"GET",
-		endpoint+routeApiUsers+ID,
+		endpoint+routeApiUsers+address,
 		nil,
 	)
 }
 func // RETRIEVE SUCCESS
 retrieveUserTestSuccess(t *testing.T) {
+	// the address needs to exist prior to validation
+
 	validateFunc := func(responseBody string) bool {
 		var resp response
 		if err := json.Unmarshal([]byte(responseBody), &resp); err != nil {
@@ -1065,7 +1072,7 @@ retrieveUserTestSuccess(t *testing.T) {
 
 		return resp.Status == "success"
 	}
-	execute(t, retrieveUser, validateFunc)
+	execute(t, func() (string, error) { return retrieveUser(successCreateAddress) }, validateFunc)
 }
 func // RETRIEVE FAIL
 retrieveUserTestFail(t *testing.T) {
@@ -1079,7 +1086,7 @@ retrieveUserTestFail(t *testing.T) {
 
 		return resp.Status == "error"
 	}
-	execute(t, retrieveUser, validateFunc)
+	execute(t, func() (string, error) { return retrieveUser(failCreateAddress) }, validateFunc)
 }
 func // UPDATE
 updateUser(updateData interface{}) func() (string, error) {
@@ -1179,6 +1186,7 @@ var // DATA
 		Description: "love you Joyce",
 		SCID:        scid.TXID,
 		Image:       LittleImg,
+		File:        File,
 	}
 
 	successItemUpdateData = models.JSON_Item_Order{
@@ -1194,8 +1202,7 @@ var // DATA
 	failCreateAddress  = "dero1qynmz4tgkmtmmspqmywvjjmtl0x8vn5ahz4xwaldw0hu6r5500hryqgptvnj"
 	failUpdateAddress  = "dero1qyvqpdftj8r6005xs20rnflakmwa5pdxg9vcjzdcuywq2t8skqhvwqglt6x0"
 	failUserCreateData = models.User{
-		Name:   user,
-		Wallet: failCreateAddress,
+		Name: "srpn534luegssnviukp30mtwi1fzwo611x2iivsofjwzgao19azo366niyp7pmr2svrpox4na8qy8buna6fk2aeimeg894qu7g068ihiyuhqy6gs5nf3nudeniv60mawvbnk220ol6rxynj6nii5ob83c2vklldfuylp651318i0u7wq9g2rp9ccrm75yxcxy1vtkj34s1hprgj7uhxiunxqm2rjij3fvkbsldm6ksqn7dyat9ccqrbg2w8hyee8",
 	}
 	failUserUpdateData = models.User{
 		Name:   user,
@@ -1223,5 +1230,14 @@ var // DATA
 
 // base64encoded images
 var ( // small
-	LittleImg = `iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFUlEQVR42mNkAAIAAAoAAv/lxKUAAAAASUVORK5CYII=`
+	LittleImg        = `iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFUlEQVR42mNkAAIAAAoAAv/lxKUAAAAASUVORK5CYII=`
+	File      string = `
+	-----BEGIN DERO SIGNED MESSAGE-----
+	Address: dero1qyfk5w2rvqpl9kzfd7fpteyp2k362y6audydcu2qrgcmj6vtasfkgqq9704gn
+	C: ce34dd75b765f92a7af9f834974a2f729e5f53591a76a34991bafa501166388
+	S: 2bbcf2f5e4e3e91835d8364f636df4fb16726cc0bb3321a73685af4eabb0570a
+	
+	iVBORw0KGgoAAAANSUhEUgAADXAAAAWgCAYAAABNcorEAAAgAElEQVR4nOy9Z6xl
+		-----END DERO SIGNED MESSAGE-----
+`
 )

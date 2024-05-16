@@ -28,7 +28,7 @@ func Users(c *fiber.Ctx) error {
 	// Retrieve blog posts
 	users, err := controllers.AllUsers()
 	if err != nil {
-		return fiber.NewError(http.StatusInternalServerError, "Failed to retrieve items")
+		return fiber.NewError(http.StatusInternalServerError, err.Error())
 	}
 	// Sort by create date, for now
 	sort.Slice(

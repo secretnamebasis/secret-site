@@ -73,8 +73,15 @@ func Item(c *fiber.Ctx) error {
 			if ok && isHex(hexValue) {
 				decodedValue := decodeHex(hexValue)
 				// Convert certain keys to string after decoding
-				if k == "artificerAddr" || k == "creatorAddr" || k == "owner" {
-					result, err := rpc.NewAddressFromCompressedKeys([]byte(decodedValue))
+				if k == "artificerAddr" ||
+					k == "creatorAddr" ||
+					k == "owner" ||
+					k == "previousOwner" {
+					result, err := rpc.NewAddressFromCompressedKeys(
+						[]byte(
+							decodedValue,
+						),
+					)
 					if err != nil {
 						return err
 					}

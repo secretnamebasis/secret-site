@@ -3,11 +3,11 @@ package dero
 import (
 	"encoding/base64"
 	"strings"
-	"time"
+
+	c "github.com/secretnamebasis/secret-site/app/config"
 
 	"github.com/deroproject/derohe/cryptography/crypto"
 	"github.com/deroproject/derohe/rpc"
-	c "github.com/secretnamebasis/secret-site/app/config"
 	"github.com/ybbus/jsonrpc"
 )
 
@@ -73,19 +73,19 @@ func CallRPC(
 func GetWalletAddress(endpoint string) (*rpc.Address, error) {
 	// params := map[string]interface{}{}
 	method := "GetAddress"
-	err := CallRPC(endpoint, &c.ServerWallet, method)
+	var response rpc.GetAddress_Result
+	err := CallRPC(endpoint, &response, method)
 	if err != nil {
 		return nil, err
 	}
 
 	return rpc.NewAddress(
-		c.ServerWallet.Address,
+		response.Address,
 	)
 }
 
-func GetWalletTransfers(endpoint string) (*rpc.Get_Transfers_Result, error) {
+func GetWalletTransfers(endpoint string, params rpc.Get_Transfers_Params) (*rpc.Get_Transfers_Result, error) {
 	method := "GetTransfers"
-	params := rpc.Get_Transfers_Params{}
 	var response rpc.Get_Transfers_Result
 	err := CallRPC(
 		endpoint,
@@ -215,31 +215,8 @@ func MintContract(
 }
 
 func MakeIntegratedAddress(
-	comment string,
-	price uint64,
-	expiry time.Time,
+	params rpc.Make_Integrated_Address_Params,
 ) (rpc.Make_Integrated_Address_Result, error) {
-
-	params := rpc.Make_Integrated_Address_Params{
-		Address: c.ServerWallet.Address,
-		Payload_RPC: rpc.Arguments{
-			rpc.Argument{
-				Name:     rpc.RPC_COMMENT,
-				DataType: rpc.DataString,
-				Value:    comment,
-			},
-			rpc.Argument{
-				Name:     rpc.RPC_VALUE_TRANSFER,
-				DataType: rpc.DataUint64,
-				Value:    price,
-			},
-			rpc.Argument{
-				Name:     rpc.RPC_EXPIRY,
-				DataType: rpc.DataTime,
-				Value:    expiry,
-			},
-		},
-	}
 	var result rpc.Make_Integrated_Address_Result
 	method := "MakeIntegratedAddress"
 	if err := CallRPC(

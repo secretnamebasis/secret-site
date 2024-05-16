@@ -17,9 +17,9 @@ import (
 // CreateItemRecord creates a new item in the database.
 func CreateItemRecord(order *models.JSON_Item_Order) (models.Item, error) {
 
-	if err := authenticateUser(order.User); err != nil {
-		return models.Item{}, err
-	}
+	// if err := authenticateUser(order.User); err != nil {
+	// 	return models.Item{}, err
+	// }
 
 	// Let's create an item
 	var item models.Item

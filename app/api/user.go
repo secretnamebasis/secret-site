@@ -9,13 +9,28 @@ import (
 // CreateUser creates a new user via HTTP request
 func CreateUserOrder(c *fiber.Ctx) error {
 	order := parseUserData(c)
-	if err := controllers.ValidateWalletAddress(order.Wallet); err != nil {
-		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
+	// if err := controllers.ValidateWalletAddress(order.Wallet); err != nil {
+	// 	return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
+	// }
+
+	checkout, err := controllers.CreateUserCheckout(&order)
+
+	if err != nil {
+		return ErrorResponse(
+			c,
+			fiber.StatusInternalServerError,
+			err.Error(),
+		)
 	}
-	if err := controllers.CreateUserRecord(&order); err != nil {
-		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
-	}
-	return SuccessResponse(c, "user created", &order)
+	// we are going to need to make this async... which will be interesting
+	// if err := controllers.CreateUserRecord(&order); err != nil {
+	// 	return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
+	// }
+	return SuccessResponse(
+		c,
+		"user checkout created, and is valid for 5 minutes",
+		checkout.Address,
+	)
 }
 
 // AllUsers retrieves all users from the database
@@ -66,27 +81,17 @@ func parseUserData(c *fiber.Ctx) models.JSON_User_Order {
 
 	if form, err := c.MultipartForm(); err == nil && form != nil {
 		order.Name = form.Value["name"][0]
-		order.Wallet = form.Value["wallet"][0]
-		order.Password = form.Value["password"][0]
 	} else {
 		if err := c.BodyParser(&order); err != nil {
 			return models.JSON_User_Order{}
 		}
-		username,
-			password,
-			_ := getCredentials(c)
+		username, _, _ := getCredentials(c)
 
 		if order.Name == "" {
 			order.Name = username
 		}
-		if order.Password == "" {
-			order.Password = password
-		}
-		if order.Wallet == "" {
-			order.Wallet = c.Params("wallet")
-		}
-	}
 
+	}
 	return order
 }
 

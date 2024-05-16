@@ -7,6 +7,16 @@ import (
 	"github.com/secretnamebasis/secret-site/app/views"
 )
 
+type resource struct {
+	group fiber.Router
+	name  string
+	getAll,
+	getByID,
+	create,
+	update,
+	delete func(*fiber.Ctx) error
+}
+
 // Draw defines all the routes for the application
 func Draw(app *fiber.App) {
 	// Initialize middleware
@@ -33,68 +43,41 @@ func defineViewsRoutes(app *fiber.App, mw *middleware.Middleware) {
 	viewsGroup.Static("/", "./app/assets")
 	viewsGroup.Static("/items", "./app/assets")
 
-	// Define view routes
-	viewRoutes := []struct {
-		Path   string
-		Handle func(*fiber.Ctx) error
-	}{
-		{
-			Path:   "/",
-			Handle: views.Home,
-		},
-		{
-			Path:   "/about",
-			Handle: views.About,
-		},
-		{
-			Path:   "/items",
-			Handle: views.Items,
-		},
-		{
-			Path:   "/items/new",
-			Handle: views.NewItem,
-		},
-		{
-			Path:   "/items/:scid",
-			Handle: views.Item,
-		},
-		{
-			Path:   "/images/:scid",
-			Handle: views.Images,
-		},
-		{
-			Path:   "/files/:scid",
-			Handle: views.Files,
-		},
-		{
-			Path:   "/users/",
-			Handle: views.Users,
-		},
-		{
-			Path:   "/users/new",
-			Handle: views.NewUser,
-		},
-		{
-			Path:   "/users/:wallet",
-			Handle: views.User,
-		},
+	// Define view routes using a map
+	viewRoutes := map[string]func(*fiber.Ctx) error{
+		"/":              views.Home,
+		"/about":         views.About,
+		"/items":         views.Items,
+		"/items/new":     views.NewItem,
+		"/items/:scid":   views.Item,
+		"/images/:scid":  views.Images,
+		"/files/:scid":   views.Files,
+		"/users/":        views.Users,
+		"/users/new":     views.NewUser,
+		"/users/:wallet": views.User,
 	}
 
 	// Register view routes
-	for _, route := range viewRoutes {
-		viewsGroup.Get(
-			route.Path,
-			route.Handle,
-		)
+	for path, handler := range viewRoutes {
+		viewsGroup.Get(path, handler)
 	}
+
 	// Actions
-	viewsGroup.Post("/users/submit", views.SubmitUser)
-	viewsGroup.Post("/items/submit", views.SubmitItem)
+	viewRoutes = map[string]func(*fiber.Ctx) error{
+		"/users/submit": views.SubmitUser,
+		"/items/submit": views.SubmitItem,
+	}
+
+	// Register post routes
+	for path, handler := range viewRoutes {
+		viewsGroup.Post(path, handler)
+	}
 
 }
 
 // DefineAPIRoutes defines routes for APIs
 func defineAPIRoutes(app *fiber.App, mw *middleware.Middleware) {
+	var r = resource{}
 
 	// Create a route group for API endpoints
 	apiGroup := app.Group("/api")
@@ -109,46 +92,50 @@ func defineAPIRoutes(app *fiber.App, mw *middleware.Middleware) {
 	apiGroup.Get("/ping", api.Ping)
 
 	// here there be monsters
-	roles := []string{"user"}
-	apiGroup.Use(mw.AuthRequired(roles[0]))
+	roles := []string{
+		"user",
+		// "admin", // we need to start thinking about user roles
+	}
+
+	apiGroup.Use(
+		mw.AuthRequired(
+			roles[0],
+		),
+	)
+
+	r = resource{
+		group:   apiGroup,
+		name:    "items",
+		getAll:  api.AllItems,
+		getByID: api.ItemByID,
+		create:  api.CreateItemOrder,
+		update:  api.UpdateItem,
+		delete:  api.DeleteItem,
+	}
 
 	// Define API routes for items
-	defineResourceRoutes(
-		apiGroup,
-		"items",
-		api.AllItems,
-		api.ItemByID,
-		api.CreateItemOrder,
-		api.UpdateItem,
-		api.DeleteItem,
-	)
+	defineResourceRoutes(r)
+
+	r = resource{
+		group:   apiGroup,
+		name:    "users",
+		getAll:  api.AllUsers,
+		getByID: api.UserByID,
+		create:  api.CreateUserOrder,
+		update:  api.UpdateUser,
+		delete:  api.DeleteUser,
+	}
 
 	// Define API routes for users
-	defineResourceRoutes(
-		apiGroup,
-		"users",
-		api.AllUsers,
-		api.UserByID,
-		api.CreateUserOrder,
-		api.UpdateUser,
-		api.DeleteUser,
-	)
+	defineResourceRoutes(r)
 }
 
 // Define resource routes for CRUD operations
-func defineResourceRoutes(
-	group fiber.Router,
-	resourceName string,
-	getAll,
-	getByID,
-	create,
-	update,
-	delete func(*fiber.Ctx) error,
-) {
-	resource := group.Group("/" + resourceName)
-	resource.Get("/", getAll)
-	resource.Post("/", create)
-	resource.Get("/:id", getByID)
-	resource.Put("/:id", update)
-	resource.Delete("/:id", delete)
+func defineResourceRoutes(r resource) {
+	resource := r.group.Group("/" + r.name)
+	resource.Get("/", r.getAll)
+	resource.Post("/", r.create)
+	resource.Get("/:id", r.getByID)
+	resource.Put("/:id", r.update)
+	resource.Delete("/:id", r.delete)
 }

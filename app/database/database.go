@@ -9,17 +9,14 @@ import (
 	"strconv"
 
 	"github.com/secretnamebasis/secret-site/app/config"
-	"github.com/secretnamebasis/secret-site/app/cryptography"
 	"github.com/secretnamebasis/secret-site/app/models"
 
 	"go.etcd.io/bbolt"
 )
 
 var (
-	db             *bbolt.DB
-	itemsBucket    = []byte("items")
-	usersBucket    = []byte("users")
-	checkoutBucket = []byte("checkouts")
+	db                                       *bbolt.DB
+	itemsBucket, usersBucket, checkoutBucket = []byte("items"), []byte("users"), []byte("checkouts")
 
 	// this was my first byte array.
 	buckets = [][]byte{
@@ -60,7 +57,7 @@ func Initialize(c config.Server) error {
 }
 
 // CreateRecord creates a record in the database for the given item/user after encrypting the content.
-func CreateRecord(bucketName string, record interface{}) error {
+func CreateRecord(bucketName string, record any) error {
 	return db.Update(
 		func(tx *bbolt.Tx) error {
 			b := tx.Bucket([]byte(bucketName))
@@ -111,7 +108,7 @@ func GetRecordByID(bucketName, id string, record interface{}) error {
 }
 
 // GetAllRecords retrieves all records from the specified bucket and unmarshals them into the provided slice.
-func GetAllRecords(bucketName string, records interface{}) error {
+func GetAllRecords(bucketName string, records any) error {
 	return db.View(
 		func(tx *bbolt.Tx) error {
 			b := tx.Bucket([]byte(bucketName))
@@ -120,34 +117,16 @@ func GetAllRecords(bucketName string, records interface{}) error {
 			}
 
 			// Define a helper function to unmarshal records
-			unmarshalRecord := func(recordType interface{}) error {
+			unmarshalRecord := func(recordType any) error {
 				return b.ForEach(
 					func(k, v []byte) error {
 						r := reflect.TypeOf(recordType).Elem()
 						// Create a new instance of the record type
-						newRecord := reflect.New(
-							r,
-						).Interface()
+						newRecord := reflect.New(r).Interface()
 
 						// Unmarshal the JSON data into the new record
 						if err := json.Unmarshal(v, newRecord); err != nil {
 							return err
-						}
-
-						// Decrypt the content if the record type is models.Item
-						if item, ok := newRecord.(*models.Item); ok {
-							// Decrypt the content before assigning it to the record
-							_, err := cryptography.DecryptData(
-								item.Data,
-								config.Env(
-									config.EnvPath,
-									"SECRET",
-								),
-							)
-							if err != nil {
-								return err
-							}
-
 						}
 
 						// Append the record to the slice
@@ -170,6 +149,8 @@ func GetAllRecords(bucketName string, records interface{}) error {
 				return unmarshalRecord(&models.Item{})
 			case *[]models.User:
 				return unmarshalRecord(&models.User{})
+			case *[]models.Checkout:
+				return unmarshalRecord(&models.Checkout{})
 			default:
 				return fmt.Errorf("unsupported record type")
 			}
@@ -350,22 +331,32 @@ func DeleteRecord(bucketName, id string) error {
 
 func NextID(bucketName string) (int, error) {
 	var id int
-	err := db.Update(
-		func(tx *bbolt.Tx) error {
-			b := tx.Bucket([]byte(bucketName))
-			if b == nil {
-				return fmt.Errorf("bucket %q not found ", bucketName)
-			}
+	err := db.Update(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte(bucketName))
+		if b == nil {
+			return fmt.Errorf("bucket %q not found", bucketName)
+		}
 
-			// Get the current sequence number
-			seq, err := b.NextSequence()
-			if err != nil {
+		// Check if the bucket is empty
+		stats := b.Stats()
+		if stats.KeyN == 0 {
+			// If the bucket is empty, set the sequence number to 1
+			if err := b.SetSequence(1); err != nil {
 				return err
 			}
-
-			id = int(seq)
+			id = 1
 			return nil
-		})
+		}
+
+		// Get the current sequence number
+		seq, err := b.NextSequence()
+		if err != nil {
+			return err
+		}
+
+		id = int(seq)
+		return nil
+	})
 
 	if err != nil {
 		return 0, err
