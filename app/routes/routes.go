@@ -114,28 +114,38 @@ func defineAPIRoutes(app *fiber.App, mw *middleware.Middleware) {
 	}
 
 	// Define API routes for items
-	defineResourceRoutes(r)
+	defineItemRoutes(r)
 
 	r = resource{
 		group:   apiGroup,
 		name:    "users",
 		getAll:  api.AllUsers,
-		getByID: api.UserByID,
+		getByID: api.UserByWallet,
 		create:  api.CreateUserOrder,
 		update:  api.UpdateUser,
 		delete:  api.DeleteUser,
 	}
 
 	// Define API routes for users
-	defineResourceRoutes(r)
+	defineUserRoutes(r)
 }
 
 // Define resource routes for CRUD operations
-func defineResourceRoutes(r resource) {
+func defineUserRoutes(r resource) {
 	resource := r.group.Group("/" + r.name)
 	resource.Get("/", r.getAll)
 	resource.Post("/", r.create)
-	resource.Get("/:id", r.getByID)
-	resource.Put("/:id", r.update)
-	resource.Delete("/:id", r.delete)
+	resource.Get("/:wallet", r.getByID)
+	resource.Put("/:wallet", r.update)
+	resource.Delete("/:wallet", r.delete)
+}
+
+// Define resource routes for CRUD operations
+func defineItemRoutes(r resource) {
+	resource := r.group.Group("/" + r.name)
+	resource.Get("/", r.getAll)
+	resource.Post("/", r.create)
+	resource.Get("/:scid", r.getByID)
+	resource.Put("/:scid", r.update)
+	resource.Delete("/:scid", r.delete)
 }

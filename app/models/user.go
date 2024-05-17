@@ -9,11 +9,11 @@ import (
 )
 
 type User struct {
-	ID         int       `json:"id"`
-	Name       string    `json:"name"`
-	Wallet     string    `json:"wallet"`
-	Password   []byte    `json:"password"`
-	Role       []string  `json:"roles"`
+	ID     int    `json:"id"`
+	Name   string `json:"name"`
+	Wallet string `json:"wallet"`
+	// Password   []byte    `json:"password"`
+	Role       string    `json:"role"`
 	LastSignIn time.Time `json:"last_sign_in"`
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
@@ -24,11 +24,11 @@ func (u *User) Initialize() *User {
 	// Generate ID and password
 
 	return &User{
-		ID:        u.ID,
-		Name:      u.Name,
-		Wallet:    u.Wallet,
-		Password:  u.Password,
-		Role:      []string{"user"},
+		ID:     u.ID,
+		Name:   u.Name,
+		Wallet: u.Wallet,
+		// Password:  u.Password,
+		Role:      "user",
 		CreatedAt: u.CreatedAt,
 		UpdatedAt: u.UpdatedAt,
 	}
@@ -38,18 +38,16 @@ func (u *User) Initialize() *User {
 func (u *User) Validate() error {
 
 	if err := u.isEmpty(); err != nil {
-
 		return errors.New("submission is empty")
-
 	}
 	if err := hasValidWallet(u.Wallet); err != nil {
 		return errors.New("invalid wallet address")
 	}
 
-	// when creating a user... they don't have a password on file yet
-	if u.Password == nil {
-		return errors.New("password cannot be empty")
-	}
+	// we are no longer going to use passwords
+	// if u.Password == nil {
+	// 	return errors.New("password cannot be empty")
+	// }
 	// Add more validation rules as needed
 	return nil
 }
@@ -68,8 +66,10 @@ func hasValidWallet(wallet string) error {
 func (u *User) isEmpty() error {
 	if u.Name == "" ||
 		u.Wallet == "" ||
-		u.ID == 0 ||
-		u.Password == nil {
+		// we aren't using passwords anymore
+		// the validation is from the async operation from the wallet
+		// u.Password == nil ||
+		u.ID == 0 {
 		return errors.New("user and wallet fields are required")
 	}
 	return nil

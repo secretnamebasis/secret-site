@@ -52,6 +52,16 @@ func UserByID(c *fiber.Ctx) error {
 	return SuccessResponse(c, "user retreived", user)
 }
 
+// UserByID retrieves a user from the database by ID
+func UserByWallet(c *fiber.Ctx) error {
+	wallet := c.Params("wallet")
+	user, err := controllers.GetUserByWallet(wallet)
+	if err != nil {
+		return ErrorResponse(c, fiber.StatusNotFound, err.Error())
+	}
+	return SuccessResponse(c, "user retreived", user)
+}
+
 // UpdateUser updates a user in the database
 func UpdateUser(c *fiber.Ctx) error {
 	updatedUser := parseUpdatedUserData(c)

@@ -44,6 +44,11 @@ var (
 	SimulatorDir   string
 )
 
+var (
+	UserRegistrationFee  uint64 = 10000
+	UserRegistrationPort uint64 = 1337
+)
+
 // Config func to get env value from key
 func Env(envPath, key string) string {
 	if envPath == "" {
@@ -88,6 +93,7 @@ var (
 )
 
 var delay = 2 * time.Second // Delay for simulator startup
+
 func Initialize() Server {
 
 	// Parse flags

@@ -13,8 +13,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
-	"github.com/secretnamebasis/secret-site/app/api"
-	"github.com/secretnamebasis/secret-site/app/database"
 )
 
 // Middleware provides a collection of middleware handlers
@@ -72,18 +70,19 @@ func (m *Middleware) LogRequests() fiber.Handler {
 // AuthRequired middleware authenticates incoming requests and checks for required roles
 func (m *Middleware) AuthRequired(roles ...string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
+		// this is essentially a permissionless database at this point.
 		// Get the Authorization header from the request
-		username, _, err := getCredentials(c)
-		if err != nil {
-			// Error getting credentials
-			return c.Status(fiber.StatusUnauthorized).SendString("Unauthorized")
-		}
+		// username, _, err := getCredentials(c)
+		// if err != nil {
+		// 	// Error getting credentials
+		// 	return c.Status(fiber.StatusUnauthorized).SendString("Unauthorized")
+		// }
 
-		_, err = database.GetUserByUsername(username)
-		if err != nil {
-			// Error extracting credentials, return unauthorized
-			return api.ErrorResponse(c, fiber.StatusInternalServerError, "Unauthorized: we don't know you")
-		}
+		// _, err = database.GetUserByUsername(username)
+		// if err != nil {
+		// 	// Error extracting credentials, return unauthorized
+		// 	return api.ErrorResponse(c, fiber.StatusInternalServerError, "Unauthorized: we don't know you")
+		// }
 
 		// if user == nil {
 		// 	// User not found in the database, return unauthorized

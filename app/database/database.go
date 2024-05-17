@@ -32,7 +32,10 @@ func Initialize(c config.Server) error {
 		return err
 	}
 
-	dbPath := filepath.Join(c.DatabasePath, c.Environment+".db")
+	dbPath := filepath.Join(
+		c.DatabasePath,
+		c.Environment+".db",
+	)
 
 	// Open or create the database file
 	var err error
@@ -134,7 +137,9 @@ func GetAllRecords(bucketName string, records any) error {
 						sliceValue.Set(
 							reflect.Append(
 								sliceValue,
-								reflect.ValueOf(newRecord).Elem(),
+								reflect.ValueOf(
+									newRecord,
+								).Elem(), // which is an interface
 							),
 						)
 
@@ -304,7 +309,8 @@ func GetUserByField(field string, value string) (models.User, error) {
 	if err != nil {
 		return user, err
 	}
-
+	// here we are running into a problem.
+	// we don't have an error, but we don't have a valid user either
 	if user.ID == 0 {
 		return user, nil // User not found
 	}

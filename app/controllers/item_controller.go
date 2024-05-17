@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"log"
@@ -277,17 +276,17 @@ func authenticateUser(order models.JSON_User_Order) error {
 		log.Printf("user does not exist: %v", err)
 		return errors.New("user does not exist")
 	}
+	// we are not using passwords anymore
+	// // Hash the password for comparison
+	// hashedPass := cryptography.HashString(
+	// 	order.Password,
+	// )
 
-	// Hash the password for comparison
-	hashedPass := cryptography.HashString(
-		order.Password,
-	)
-
-	// Compare hashed passwords to authenticate
-	if !bytes.Equal(existingUser.Password, hashedPass) {
-		log.Println("Invalid password")
-		return errors.New("error invalid password")
-	}
+	// // Compare hashed passwords to authenticate
+	// if !bytes.Equal(existingUser.Password, hashedPass) {
+	// 	log.Println("Invalid password")
+	// 	return errors.New("error invalid password")
+	// }
 
 	return nil
 }

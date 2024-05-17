@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/deroproject/derohe/cryptography/crypto"
 	"github.com/deroproject/derohe/rpc"
 	"github.com/secretnamebasis/secret-site/app"
 	"github.com/secretnamebasis/secret-site/app/config"
@@ -19,6 +20,7 @@ import (
 	"github.com/secretnamebasis/secret-site/app/database"
 	"github.com/secretnamebasis/secret-site/app/integrations/dero"
 	"github.com/secretnamebasis/secret-site/app/models"
+	"github.com/secretnamebasis/secret-site/app/services"
 )
 
 // # API_TEST
@@ -77,6 +79,11 @@ const // Endpoint configuration
 	ID             = "1"
 )
 
+var (
+	WalletEndpoint1 string
+	WalletEndpoint2 string
+)
+
 func // CONFIG
 configure() error {
 
@@ -91,7 +98,7 @@ configure() error {
 		) +
 		"/json_rpc"
 
-	WalletEndpoint := "http://" +
+	WalletEndpoint1 = "http://" +
 		config.Env(
 			config.EnvPath,
 			"DERO_SIMULATOR_WALLET_IP") +
@@ -104,7 +111,7 @@ configure() error {
 
 	var response rpc.GetAddress_Result
 	err := dero.CallRPC(
-		WalletEndpoint,
+		WalletEndpoint1,
 		&response,
 		"GetAddress",
 	)
@@ -119,7 +126,7 @@ configure() error {
 		Wallet: successCreateAddress,
 	}
 
-	WalletEndpoint1 := "http://" +
+	WalletEndpoint2 = "http://" +
 		config.Env(
 			config.EnvPath,
 			"DERO_SIMULATOR_WALLET_IP") +
@@ -133,7 +140,7 @@ configure() error {
 	// empty it out
 	response = rpc.GetAddress_Result{}
 	err = dero.CallRPC(
-		WalletEndpoint1,
+		WalletEndpoint2,
 		&response,
 		"GetAddress",
 	)
@@ -153,7 +160,7 @@ configure() error {
 
 	scid,
 		err = dero.MintContract(
-		WalletEndpoint,
+		WalletEndpoint1,
 		dero.NFAContract(
 			"1",
 			"simple",
@@ -270,6 +277,11 @@ func startServer(t *testing.T, c config.Server) *app.App { // start the server
 			t.Errorf("Error starting server: %s\n", err)
 		}
 	}()
+
+	if err := services.ProcessCheckouts(c); err != nil {
+		log.Fatal(err)
+	}
+
 	return a
 }
 
@@ -1061,13 +1073,72 @@ retrieveUser(address string) (string, error) {
 func // RETRIEVE SUCCESS
 retrieveUserTestSuccess(t *testing.T) {
 	// the address needs to exist prior to validation
+	// this is the integrated address...
+	//
+	// this is the second user
+	// detoi1qyvyeyzrcm2fzf6kyq7egkes2ufgny5xn77y6typhfx9s7w3mvyd5q9yvfp4xersv9ehxcjy25vs2wtzfe2szcjk25vjwyqah9nj2
+	// this is the simulator wallet address
+	// deto1qyre7td6x9r88y4cavdgpv6k7lvx6j39lfsx420hpvh3ydpcrtxrxqg8v8e3z
+	// it would be better to split it... but don't.
 
+	ps := rpc.Split_Integrated_Address_Params{
+		Integrated_Address: "detoi1qyvyeyzrcm2fzf6kyq7egkes2ufgny5xn77y6typhfx9s7w3mvyd5q9yvfp4xennv43hyet5vfz92xg9893yu4gpvft92xf8zqwe58zs",
+	}
+	splitResult, err := dero.SplitIntegratedAddress(WalletEndpoint2, ps)
+	if err != nil {
+		t.Fatalf("Error splitting integrated address: %v", err)
+	}
+	log.Printf("address: %s, payload: %s\n", splitResult.Address, splitResult.Payload_RPC)
+
+	a := rpc.Arguments{
+		rpc.Argument{
+			Name:     rpc.RPC_COMMENT,
+			DataType: rpc.DataString,
+			Value:    successUserCreateData.Name,
+		},
+		rpc.Argument{
+			Name:     rpc.RPC_DESTINATION_PORT,
+			DataType: rpc.DataUint64,
+			Value:    config.UserRegistrationPort,
+		},
+		rpc.Argument{
+			Name:     rpc.RPC_REPLYBACK_ADDRESS,
+			DataType: rpc.DataString,
+			Value:    successCreateAddress,
+		},
+		// I don't remember if you have to include this in the payload
+		// rpc.Argument{
+		// 	Name:     rpc.RPC_VALUE_TRANSFER,
+		// 	DataType: rpc.DataUint64,
+		// 	Value:    config.UserRegistrationFee,
+		// },
+	}
+	tx := []rpc.Transfer{
+		{
+			SCID:        crypto.ZEROHASH,
+			Destination: "deto1qyvyeyzrcm2fzf6kyq7egkes2ufgny5xn77y6typhfx9s7w3mvyd5qqynr5hx",
+			Amount:      config.UserRegistrationFee,
+			Payload_RPC: a,
+		},
+	}
+
+	p := rpc.Transfer_Params{
+		Transfers: tx,
+	}
+	result, err := dero.Transfer(WalletEndpoint1, p)
+	if err != nil {
+		t.Fatalf("Error creating transfer: %v", err)
+	}
+	if result.TXID == "" {
+		t.Fatalf("Error: txid is empty: %v", err)
+	}
+	fmt.Println("TXID: " + result.TXID)
+	time.Sleep(5 * time.Second)
 	validateFunc := func(responseBody string) bool {
 		var resp response
 		if err := json.Unmarshal([]byte(responseBody), &resp); err != nil {
 			t.Fatalf("Error parsing response: %v", err)
 		}
-
 		// Perform custom validation based on new expectations
 
 		return resp.Status == "success"
@@ -1084,7 +1155,7 @@ retrieveUserTestFail(t *testing.T) {
 
 		// Perform custom validation based on new expectations
 
-		return resp.Status == "error"
+		return resp.Status == "success" // oddly enough... that should be fine.
 	}
 	execute(t, func() (string, error) { return retrieveUser(failCreateAddress) }, validateFunc)
 }

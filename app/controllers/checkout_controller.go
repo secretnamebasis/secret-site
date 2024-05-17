@@ -14,10 +14,8 @@ func CreateUserCheckout(order *models.JSON_User_Order) (checkout models.Checkout
 	if err = order.Validate(); err != nil {
 		return checkout, err
 	}
-	var price uint64 = 1
 	var timestamp time.Time = time.Now()
 	var expiration time.Time = time.Now().Add(5 * time.Minute)
-	var port uint64 = uint64(timestamp.Unix())
 	destination, err := dero.GetWalletAddress(config.WalletEndpoint)
 	if err != nil {
 		return checkout, err
@@ -31,7 +29,7 @@ func CreateUserCheckout(order *models.JSON_User_Order) (checkout models.Checkout
 		rpc.Argument{
 			Name:     rpc.RPC_VALUE_TRANSFER,
 			DataType: rpc.DataUint64,
-			Value:    price,
+			Value:    config.UserRegistrationFee,
 		},
 		// rpc.Argument{ // this doesn't work as expected
 		// 	Name:     rpc.RPC_EXPIRY,
@@ -41,7 +39,7 @@ func CreateUserCheckout(order *models.JSON_User_Order) (checkout models.Checkout
 		rpc.Argument{
 			Name:     rpc.RPC_DESTINATION_PORT,
 			DataType: rpc.DataUint64,
-			Value:    port,
+			Value:    config.UserRegistrationPort,
 		},
 		rpc.Argument{
 			Name:     rpc.RPC_NEEDS_REPLYBACK_ADDRESS,
