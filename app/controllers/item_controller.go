@@ -149,7 +149,7 @@ func GetItemByID(id string) (models.Item, error) {
 	return existingItem, err
 }
 
-// GetItemByID retrieves an item from the database by SCID.
+// GetItemBySCID retrieves an item from the database by SCID.
 func GetItemBySCID(scid string) (models.Item, error) {
 
 	item, err := database.GetItemByField("scid", scid)
@@ -171,11 +171,13 @@ func GetItemBySCID(scid string) (models.Item, error) {
 
 // UpdateItem updates an item in the database with the provided ID and updated data.
 func UpdateItem(scid string, order models.JSON_Item_Order) error {
-	if err := authenticateUser(order.User); err != nil {
-		return err
-	}
 
-	existingItem, err := GetItemBySCID(scid)
+	// you are trying to get rid of passwords
+	// if err := authenticateUser(order.User); err != nil {
+	// 	return err
+	// }
+
+	existingItem, err := GetItemBySCID(order.SCID)
 	if err != nil {
 		return err
 	}
@@ -183,17 +185,23 @@ func UpdateItem(scid string, order models.JSON_Item_Order) error {
 	// 	return err
 	// }
 
-	decryptedData, // seeing as this is a big garbaldy goop...
-		err := cryptography.DecryptData(
-		existingItem.Data,
-		config.Env(config.EnvPath, "SECRET"),
-	)
-	if err != nil {
-		return err
-	}
+	// decryptedData, // seeing as this is a big garbaldy goop...
+	// 	err := cryptography.DecryptData(
+	// 	existingItem.Data,
+	// 	config.Env(
+	// 		config.EnvPath,
+	// 		"SECRET",
+	// 	),
+	// )
+	// if err != nil {
+	// 	return err
+	// }
 	// let's go put this all back together
 	var existingItemData models.ItemData
-	if err := json.Unmarshal(decryptedData, &existingItemData); err != nil {
+	if err := json.Unmarshal(
+		existingItem.Data,
+		&existingItemData,
+	); err != nil {
 		return err
 	}
 	if order.Title != "" {
@@ -243,8 +251,8 @@ func UpdateItem(scid string, order models.JSON_Item_Order) error {
 }
 
 // DeleteItem deletes an item from the database by ID.
-func DeleteItem(id string) error {
-	return database.DeleteRecord(bucketItems, id)
+func DeleteItem(scid string) error {
+	return database.DeleteRecord(bucketItems, scid)
 }
 
 // NextItemID returns the next available item ID.

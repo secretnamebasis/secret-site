@@ -3,9 +3,11 @@ package api
 import (
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -30,14 +32,15 @@ func CreateItemOrder(c *fiber.Ctx) error {
 		}
 
 	}
-	checkout, err := controllers.CreateItemCheckout(&order)
-	if err != nil {
-		return ErrorResponse(
-			c,
-			fiber.StatusInternalServerError,
-			err.Error(),
-		)
-	}
+
+	// checkout, err := controllers.CreateItemCheckout(&order)
+	// if err != nil {
+	// 	return ErrorResponse(
+	// 		c,
+	// 		fiber.StatusInternalServerError,
+	// 		err.Error(),
+	// 	)
+	// }
 	// if err := processItemOrderCredentials(
 	// 	c,
 	// 	&order,
@@ -46,13 +49,13 @@ func CreateItemOrder(c *fiber.Ctx) error {
 	// }
 
 	// Create the item record
-	// item, err := controllers.CreateItemRecord(&order)
-	// if err != nil {
-	// 	return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
-	// }
+	item, err := controllers.CreateItemRecord(&order)
+	if err != nil {
+		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
+	}
 
 	// Return success response
-	return SuccessResponse(c, "item created", checkout.Address)
+	return SuccessResponse(c, "item created", &item)
 }
 
 func ItemBySCID(c *fiber.Ctx) error {
@@ -79,7 +82,8 @@ func AllItems(c *fiber.Ctx) error {
 }
 
 func UpdateItem(c *fiber.Ctx) error {
-	scid := c.Params("scid")
+
+	// scid := c.Params("scid")
 	var updatedItem models.JSON_Item_Order
 
 	if err := c.BodyParser(&updatedItem); err != nil {
@@ -92,7 +96,9 @@ func UpdateItem(c *fiber.Ctx) error {
 		return ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
 	}
 	// Check if the item exists
-	item, err := controllers.GetItemBySCID(scid)
+
+	item, err := controllers.GetItemBySCID(updatedItem.SCID)
+
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			return ErrorResponse(c, fiber.StatusNotFound, "Item not found")
@@ -100,7 +106,8 @@ func UpdateItem(c *fiber.Ctx) error {
 		return ErrorResponse(c, fiber.StatusInternalServerError, "Error checking item")
 	}
 
-	if err := controllers.UpdateItem(scid, updatedItem); err != nil {
+	// update
+	if err := controllers.UpdateItem(item.SCID, updatedItem); err != nil {
 		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
@@ -108,17 +115,18 @@ func UpdateItem(c *fiber.Ctx) error {
 }
 
 func DeleteItem(c *fiber.Ctx) error {
-	id := c.Params("id")
+	scid := c.Params("scid")
+
 	// Check if the user exists
-	_, err := controllers.GetItemByID(id)
+	item, err := controllers.GetItemBySCID(scid)
 	if err != nil {
-		return ErrorResponse(c, fiber.StatusNotFound, "User not found")
+		return ErrorResponse(c, fiber.StatusNotFound, "Item not found")
 	}
-	err = controllers.DeleteItem(id)
-	if err != nil {
+	if err := controllers.DeleteItem(strconv.Itoa(item.ID)); err != nil {
 		return ErrorResponse(c, fiber.StatusInternalServerError, "Error deleting item")
 	}
-	return SuccessResponse(c, "Item deleted successfully", nil)
+	fmt.Printf("%+v", item)
+	return SuccessResponse(c, "Item deleted successfully", &item)
 }
 
 // private functions

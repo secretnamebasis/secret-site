@@ -204,7 +204,11 @@ response struct {
 var // DELAY
 delay = 1 * time.Nanosecond
 
-func pause(i time.Duration) { time.Sleep(i * time.Second) }
+func pause(i time.Duration) {
+	time.Sleep(
+		i * time.Second,
+	)
+}
 
 // MAIN
 func TestAPI(t *testing.T) {
@@ -1165,7 +1169,7 @@ updateUser(updateData interface{}) func() (string, error) {
 	return func() (string, error) {
 		return action(
 			"PUT",
-			endpoint+routeApiUsers+ID,
+			endpoint+routeApiUsers+successUpdateAddress, // this is kind of hacky
 			updateData,
 		)
 	}
@@ -1199,12 +1203,14 @@ updateUserTestSuccess(t *testing.T) {
 	execute(t, updateUser(successUserUpdateData), validateFunc)
 }
 func // DELETE
-deleteUser() (string, error) {
-	return action(
-		"DELETE",
-		endpoint+routeApiUsers+ID,
-		nil,
-	)
+deleteUser(address string) func() (string, error) {
+	return func() (string, error) {
+		return action(
+			"DELETE",
+			endpoint+routeApiUsers+address,
+			nil,
+		)
+	}
 }
 func // DELETE FAIL
 deleteUserTestFail(t *testing.T) {
@@ -1218,7 +1224,7 @@ deleteUserTestFail(t *testing.T) {
 
 		return resp.Status == "error"
 	}
-	execute(t, deleteUser, validateFunc)
+	execute(t, deleteUser(successCreateAddress), validateFunc)
 }
 func // DELETE SUCCESS
 deleteUserTestSuccess(t *testing.T) {
@@ -1232,7 +1238,7 @@ deleteUserTestSuccess(t *testing.T) {
 
 		return resp.Status == "success"
 	}
-	execute(t, deleteUser, validateFunc)
+	execute(t, deleteUser(successCreateAddress), validateFunc)
 }
 
 var // DATA

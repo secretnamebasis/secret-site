@@ -6,7 +6,6 @@ require (
 	github.com/deroproject/derohe v0.0.0-20240229002921-e9df1205b660
 	github.com/gofiber/fiber/v2 v2.52.4
 	github.com/joho/godotenv v1.5.1
-	github.com/stretchr/testify v1.9.0
 	github.com/ybbus/jsonrpc v2.1.2+incompatible
 	go.etcd.io/bbolt v1.3.9
 	golang.org/x/crypto v0.18.0
@@ -30,6 +29,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/satori/go.uuid v1.2.0 // indirect
+	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/tinylib/msgp v1.1.8 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.51.0 // indirect
@@ -37,6 +37,6 @@ require (
 	github.com/x448/float16 v0.8.4 // indirect
 	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/sys v0.16.0 // indirect
-	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543 // indirect
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

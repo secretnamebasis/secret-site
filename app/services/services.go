@@ -123,9 +123,49 @@ func ProcessCheckouts(c config.Server) error {
 
 						switch addrPort {
 						case config.UserRegistrationPort:
-							order := new( // this feel redundant
-								models.JSON_User_Order, // we already had "the order"
-							) // now we are having to make a new one
+							order := new(
+								models.JSON_User_Order,
+							)
+							/*
+								// this feel redundant
+									// we already had "the order"
+										// now we are having to make a new one
+											order := I see what the problem is here,
+											we are trying to rebuild the order because
+											there is no order...
+
+											we would need to be recording the details
+											of the item to be able to retreive it.
+											What this means is that we are able to handle
+											the item like we do for the user; who is recorded
+											in the rpc_payload (which is broken right now btw)
+
+											anyway, I think that in order for this to work...
+											you will have to record the item to the db and then
+											you are going to have to do a "hasPaid" check on
+											the function and then you are going to always
+											be dealing with content that will be abused.
+
+											The more ideal way for this would be to create a
+											credits system... but then you are having to
+											remember stuff, and that's not ideal.
+
+											The thing that you are trying to do is make
+											it so that the user is always having to interact
+											with sending the server DERO; but I think that
+											this model fails for 3 reasons:
+												1. I think that a customer having to load^2
+												more DERO into your website is good for you,
+												but it isn't really all that good for them.
+												They want to be able to be pulling deri out
+												dayly, and not the other way around...
+												2. you will need to need a way for them to
+												make money on the platform. That will mean
+												that you will need to host the data and make
+												the items pay per view.
+											So listings should be free, but the revenue will
+											need to be made so that they are renting content.
+							*/
 							order.Name = txComment
 							order.Wallet = result.String()
 							if err := controllers.CreateUserRecord(order); err != nil {
@@ -138,6 +178,7 @@ func ProcessCheckouts(c config.Server) error {
 							}
 							fmt.Println(user)
 						}
+
 					}
 				}
 			}

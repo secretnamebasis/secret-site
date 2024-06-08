@@ -1,6 +1,8 @@
 package api
 
 import (
+	"strconv"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/secretnamebasis/secret-site/app/controllers"
 	"github.com/secretnamebasis/secret-site/app/models"
@@ -73,11 +75,17 @@ func UpdateUser(c *fiber.Ctx) error {
 
 // DeleteUser deletes a user from the database
 func DeleteUser(c *fiber.Ctx) error {
-	id := c.Params("id")
-	if _, err := controllers.GetUserByID(id); err != nil {
+	wallet := c.Params("wallet")
+	user, err := controllers.GetUserByWallet(wallet)
+	if err != nil {
 		return ErrorResponse(c, fiber.StatusNotFound, "User not found")
 	}
-	if err := controllers.DeleteUser(id); err != nil {
+
+	if user.Name == "" && user.ID == 0 && user.Wallet == "" {
+		return ErrorResponse(c, fiber.StatusNotFound, "User not found")
+	}
+
+	if err := controllers.DeleteUser(strconv.Itoa(user.ID)); err != nil {
 		return ErrorResponse(c, fiber.StatusInternalServerError, "Error deleting user")
 	}
 	return SuccessResponse(c, "user deleted", nil)
