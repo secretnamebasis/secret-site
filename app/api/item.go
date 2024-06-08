@@ -30,6 +30,14 @@ func CreateItemOrder(c *fiber.Ctx) error {
 		}
 
 	}
+	checkout, err := controllers.CreateItemCheckout(&order)
+	if err != nil {
+		return ErrorResponse(
+			c,
+			fiber.StatusInternalServerError,
+			err.Error(),
+		)
+	}
 	// if err := processItemOrderCredentials(
 	// 	c,
 	// 	&order,
@@ -38,19 +46,19 @@ func CreateItemOrder(c *fiber.Ctx) error {
 	// }
 
 	// Create the item record
-	item, err := controllers.CreateItemRecord(&order)
-	if err != nil {
-		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
-	}
+	// item, err := controllers.CreateItemRecord(&order)
+	// if err != nil {
+	// 	return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
+	// }
 
 	// Return success response
-	return SuccessResponse(c, "item created", item)
+	return SuccessResponse(c, "item created", checkout.Address)
 }
 
-func ItemByID(c *fiber.Ctx) error {
-	id := c.Params("id")
+func ItemBySCID(c *fiber.Ctx) error {
+	scid := c.Params("scid")
 
-	item, err := controllers.GetItemByID(id)
+	item, err := controllers.GetItemBySCID(scid)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			return ErrorResponse(c, fiber.StatusNotFound, err.Error())
@@ -71,7 +79,7 @@ func AllItems(c *fiber.Ctx) error {
 }
 
 func UpdateItem(c *fiber.Ctx) error {
-	id := c.Params("id")
+	scid := c.Params("scid")
 	var updatedItem models.JSON_Item_Order
 
 	if err := c.BodyParser(&updatedItem); err != nil {
@@ -84,7 +92,7 @@ func UpdateItem(c *fiber.Ctx) error {
 		return ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
 	}
 	// Check if the item exists
-	item, err := controllers.GetItemByID(id)
+	item, err := controllers.GetItemBySCID(scid)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			return ErrorResponse(c, fiber.StatusNotFound, "Item not found")
@@ -92,7 +100,7 @@ func UpdateItem(c *fiber.Ctx) error {
 		return ErrorResponse(c, fiber.StatusInternalServerError, "Error checking item")
 	}
 
-	if err := controllers.UpdateItem(id, updatedItem); err != nil {
+	if err := controllers.UpdateItem(scid, updatedItem); err != nil {
 		return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
@@ -116,7 +124,6 @@ func DeleteItem(c *fiber.Ctx) error {
 // private functions
 func processItemOrderForm(form *multipart.Form, order *models.JSON_Item_Order) error {
 	var imageBase64 string
-	imageBase64 = ""
 	if file, ok := form.File["item_data.image"]; ok && len(file) > 0 {
 		imageFile, err := file[0].Open()
 		if err != nil {
@@ -149,7 +156,7 @@ func processItemOrderForm(form *multipart.Form, order *models.JSON_Item_Order) e
 	}
 
 	var fileBase64 string
-	fileBase64 = ""
+
 	if file, ok := form.File["item_data.file"]; ok && len(file) > 0 {
 		fileFile, err := file[0].Open()
 		if err != nil {

@@ -19,7 +19,7 @@ type JSON_Item_Order struct {
 // Validate method validates the fields of the Item struct
 func (i *JSON_Item_Order) Validate() error {
 	if i.Title == "" || i.Description == "" || i.SCID == "" {
-		return errors.New("cannot be empty")
+		return errors.New("cannot be empty item json")
 	}
 	if err := hasValidSCID(i.SCID); err != nil {
 		return err
@@ -36,7 +36,7 @@ type JSON_User_Order struct {
 // Validate method validates the fields of the JSON_User_Order struct
 func (u *JSON_User_Order) Validate() error {
 	if u.Name == "" {
-		return errors.New("name and wallet cannot be empty")
+		return errors.New("name and wallet cannot be empty user json")
 	}
 	if len(u.Name) > // also you are being lazy, we all know that isn't 66 characters
 		66 { // this is an arbitrary number (tbh, it is probably still too big)

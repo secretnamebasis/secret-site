@@ -47,6 +47,12 @@ var (
 var (
 	UserRegistrationFee  uint64 = 10000
 	UserRegistrationPort uint64 = 1337
+
+	ItemListingFee  uint64 = 100
+	ItemListingPort uint64 = 1338
+
+	ItemUpdateFee  uint64 = 100
+	ItemUpdatePort uint64 = 1339
 )
 
 // Config func to get env value from key

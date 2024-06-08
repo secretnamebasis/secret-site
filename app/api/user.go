@@ -8,7 +8,7 @@ import (
 
 // CreateUser creates a new user via HTTP request
 func CreateUserOrder(c *fiber.Ctx) error {
-	order := parseUserData(c)
+	var order = parseUserData(c)
 	// if err := controllers.ValidateWalletAddress(order.Wallet); err != nil {
 	// 	return ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	// }

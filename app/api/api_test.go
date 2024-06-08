@@ -76,10 +76,10 @@ const // Endpoint configuration
 	user           = "secret"
 	pass           = "pass"
 	user2          = pass
-	ID             = "1"
 )
 
 var (
+	ID              string
 	WalletEndpoint1 string
 	WalletEndpoint2 string
 )
@@ -175,6 +175,7 @@ configure() error {
 	if err != nil {
 		return err
 	}
+	ID = scid.TXID
 
 	// Success cases
 	successItemCreateData = models.JSON_Item_Order{

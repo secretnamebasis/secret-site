@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/deroproject/derohe/rpc"
@@ -10,56 +11,97 @@ import (
 	"github.com/secretnamebasis/secret-site/app/models"
 )
 
-func CreateUserCheckout(order *models.JSON_User_Order) (checkout models.Checkout, err error) {
-	if err = order.Validate(); err != nil {
-		return checkout, err
+func CreateItemCheckout(order *models.JSON_Item_Order) (models.Checkout, error) {
+	return createCheckout(
+		order,
+		order.Title,
+		config.ItemListingFee,
+		config.ItemListingPort,
+	)
+}
+
+func CreateUserCheckout(order *models.JSON_User_Order) (models.Checkout, error) {
+	return createCheckout(
+		order,
+		order.Name,
+		config.UserRegistrationFee,
+		config.UserRegistrationPort,
+	)
+}
+func createCheckout(
+	order interface{},
+	comment string,
+	valueTransfer uint64,
+	destinationPort uint64,
+) (models.Checkout, error) {
+	var checkout models.Checkout
+	var errors []error
+
+	// Validate order
+	switch o := order.(type) {
+	case *models.JSON_Item_Order:
+		if err := o.Validate(); err != nil {
+			errors = append(errors, err)
+		}
+	case *models.JSON_User_Order:
+		if err := o.Validate(); err != nil {
+			errors = append(errors, err)
+		}
+	default:
+		return checkout, fmt.Errorf("unsupported order type")
 	}
-	var timestamp time.Time = time.Now()
-	var expiration time.Time = time.Now().Add(5 * time.Minute)
+
+	timestamp := time.Now()
+	expiration := timestamp.Add(5 * time.Minute)
+
+	// Get wallet address
 	destination, err := dero.GetWalletAddress(config.WalletEndpoint)
 	if err != nil {
-		return checkout, err
+		errors = append(errors, err)
 	}
+
+	// Prepare arguments for integrated address
 	a := rpc.Arguments{
-		rpc.Argument{
+		{
 			Name:     rpc.RPC_COMMENT,
 			DataType: rpc.DataString,
-			Value:    order.Name,
+			Value:    comment,
 		},
-		rpc.Argument{
+		{
 			Name:     rpc.RPC_VALUE_TRANSFER,
 			DataType: rpc.DataUint64,
-			Value:    config.UserRegistrationFee,
+			Value:    valueTransfer,
 		},
-		// rpc.Argument{ // this doesn't work as expected
-		// 	Name:     rpc.RPC_EXPIRY,
-		// 	DataType: rpc.DataTime,
-		// 	Value:    expiration,
-		// },
-		rpc.Argument{
+		{
 			Name:     rpc.RPC_DESTINATION_PORT,
 			DataType: rpc.DataUint64,
-			Value:    config.UserRegistrationPort,
+			Value:    destinationPort,
 		},
-		rpc.Argument{
+		{
 			Name:     rpc.RPC_NEEDS_REPLYBACK_ADDRESS,
 			DataType: rpc.DataUint64,
 			Value:    uint64(1),
 		},
 	}
+
 	p := rpc.Make_Integrated_Address_Params{
 		Address:     destination.String(),
 		Payload_RPC: a,
 	}
+
+	// Make integrated address
 	addr, err := dero.MakeIntegratedAddress(p)
 	if err != nil {
-		return checkout, err
+		errors = append(errors, err)
 	}
 
+	// Generate next checkout ID
 	id, err := NextCheckoutID()
 	if err != nil {
-		return checkout, err
+		errors = append(errors, err)
 	}
+
+	// Create checkout object
 	checkout = models.Checkout{
 		ID:         id,
 		Address:    addr.Integrated_Address,
@@ -67,14 +109,25 @@ func CreateUserCheckout(order *models.JSON_User_Order) (checkout models.Checkout
 		Expiration: expiration,
 	}
 
+	// Validate checkout
 	if err := checkout.Validate(); err != nil {
-		return checkout, err
+		errors = append(errors, err)
 	}
 
+	// Initialize checkout
 	checkout.Initialize()
 
-	err = database.CreateRecord(bucketCheckouts, &checkout)
-	return checkout, err
+	// Create record in database
+	if err := database.CreateRecord(bucketCheckouts, &checkout); err != nil {
+		errors = append(errors, err)
+	}
+
+	// Check for errors
+	if len(errors) > 0 {
+		return checkout, errors[0]
+	}
+
+	return checkout, nil
 }
 
 // NextUserID returns the next available user ID.

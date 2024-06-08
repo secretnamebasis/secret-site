@@ -27,7 +27,7 @@ func (c *Checkout) Validate() error {
 		c.CreatedAt == (time.Time{}) ||
 		c.Expiration == (time.Time{}) {
 
-		return errors.New("cannot be empty")
+		return errors.New("cannot be empty checkout")
 	}
 
 	return nil

@@ -149,7 +149,7 @@ func GetItemByID(id string) (models.Item, error) {
 	return existingItem, err
 }
 
-// GetItemByID retrieves an item from the database by ID.
+// GetItemByID retrieves an item from the database by SCID.
 func GetItemBySCID(scid string) (models.Item, error) {
 
 	item, err := database.GetItemByField("scid", scid)
@@ -170,15 +170,18 @@ func GetItemBySCID(scid string) (models.Item, error) {
 }
 
 // UpdateItem updates an item in the database with the provided ID and updated data.
-func UpdateItem(id string, order models.JSON_Item_Order) error {
+func UpdateItem(scid string, order models.JSON_Item_Order) error {
 	if err := authenticateUser(order.User); err != nil {
 		return err
 	}
-	var existingItem models.Item
 
-	if err := database.GetRecordByID(bucketItems, id, &existingItem); err != nil {
+	existingItem, err := GetItemBySCID(scid)
+	if err != nil {
 		return err
 	}
+	// if err := database.GetRecordByID(bucketItems, id, &existingItem); err != nil {
+	// 	return err
+	// }
 
 	decryptedData, // seeing as this is a big garbaldy goop...
 		err := cryptography.DecryptData(
@@ -204,6 +207,13 @@ func UpdateItem(id string, order models.JSON_Item_Order) error {
 		existingItemData.Description = order.Description
 	}
 
+	if order.File != "" {
+		existingItemData.File = order.File
+	}
+	if order.Image != "" {
+		existingItemData.Image = order.Image
+	}
+
 	// Marshal the updated data and encrypt it
 	updatedBytes, err := json.Marshal(existingItemData)
 	if err != nil {
@@ -212,7 +222,7 @@ func UpdateItem(id string, order models.JSON_Item_Order) error {
 
 	// currently we are encrypting with our password
 	// we could futher hash the password for greater security...
-	//
+	// or we could use DERO
 	encryptedBytes,
 		err := cryptography.EncryptData(
 		updatedBytes,

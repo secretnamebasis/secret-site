@@ -52,7 +52,7 @@ func (i *Item) Validate() error {
 		i.CreatedAt == (time.Time{}) ||
 		i.UpdatedAt == (time.Time{}) {
 
-		return errors.New("cannot be empty")
+		return errors.New("cannot be empty item")
 	}
 
 	return nil
