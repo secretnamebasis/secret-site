@@ -1089,11 +1089,11 @@ retrieveUserTestSuccess(t *testing.T) {
 	ps := rpc.Split_Integrated_Address_Params{
 		Integrated_Address: "detoi1qyvyeyzrcm2fzf6kyq7egkes2ufgny5xn77y6typhfx9s7w3mvyd5q9yvfp4xennv43hyet5vfz92xg9893yu4gpvft92xf8zqwe58zs",
 	}
-	splitResult, err := dero.SplitIntegratedAddress(WalletEndpoint2, ps)
+	_, err := dero.SplitIntegratedAddress(WalletEndpoint2, ps)
 	if err != nil {
 		t.Fatalf("Error splitting integrated address: %v", err)
 	}
-	log.Printf("address: %s, payload: %s\n", splitResult.Address, splitResult.Payload_RPC)
+	// log.Printf("address: %s, payload: %s\n", splitResult.Address, splitResult.Payload_RPC)
 
 	a := rpc.Arguments{
 		rpc.Argument{
@@ -1137,8 +1137,8 @@ retrieveUserTestSuccess(t *testing.T) {
 	if result.TXID == "" {
 		t.Fatalf("Error: txid is empty: %v", err)
 	}
-	fmt.Println("TXID: " + result.TXID)
-	time.Sleep(5 * time.Second)
+	// fmt.Println("TXID: " + result.TXID)
+	time.Sleep(500000 * time.Microsecond) // this is really fast, half a second
 	validateFunc := func(responseBody string) bool {
 		var resp response
 		if err := json.Unmarshal([]byte(responseBody), &resp); err != nil {
