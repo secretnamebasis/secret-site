@@ -109,7 +109,7 @@ func defineAPIRoutes(app *fiber.App, mw *middleware.Middleware) {
 		getAll:  api.AllItems,
 		getByID: api.ItemBySCID,
 		create:  api.CreateItemOrder,
-		update:  api.CreateItemOrder, // work around for the time being.
+		update:  api.UpdateItem, // work around for the time being.
 		delete:  api.DeleteItem,
 	}
 
